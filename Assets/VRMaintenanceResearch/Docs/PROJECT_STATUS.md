@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Recovery, information-source media, and QA foundation are stable. The next phase is build preparation and a physical-device pilot once hardware is available.
+Recovery, information-source media, and QA foundation are stable. Windows build preparation was attempted and is paused at the Unity build pipeline; the Editor MCP bridge did not return a build result after 300 seconds.
 
 ## Recovered foundation
 
@@ -20,9 +20,11 @@ Recovery, information-source media, and QA foundation are stable. The next phase
 - Current training-enabled Computer -> Fan session completed with Training, Computer, and Fan summaries and recoverable error/retry paths.
 - Earlier Fan -> Computer session completed after the summary/timestamp fixes.
 - Final normal video lifecycle produced zero Console errors.
+- A Windows 64-bit Development + Allow Debugging build was invoked with the five enabled build scenes. No executable was produced under `Builds/Windows` and no build-success or build-failure record was emitted before the MCP request timed out. The Editor log stopped after the Performance Test preprocessor wrote its generated `Assets/Resources/PerformanceTestRun*.json` files; those untracked generated files were left untouched.
+- The build attempt changed two original XRI renderer-data assets. They were restored to their tracked baseline immediately; no original XRI asset remains changed by this work.
 
 See `TEST_REPORT.md` for exact evidence paths, Console classification, and remaining limits.
 
 ## Next action
 
-Create and verify a Windows development build; then perform the documented Meta Quest 3 hardware/translation approval steps before study deployment.
+Recover the stalled Unity build pipeline without discarding unsaved Editor work, reconnect Unity MCP, confirm compilation and Console state, then retry and verify the Windows development build. Perform the documented Meta Quest 3 hardware/translation approval steps before study deployment.

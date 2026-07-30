@@ -30,6 +30,10 @@ The compiled menu command `VR Maintenance Research/Run Foundation Edit Mode Test
 
 No research-script Console error was present after the final natural video completion check or the current Computer -> Fan flow. The external Input System/XInput device-layout discovery error has a `com.unity.inputsystem` package stack frame, not a research script. Other warnings are Adaptive Performance initialization, XR audio/haptics simulator behavior, Unity AI account/relay connectivity, and a Windows Media Foundation color-primaries fallback for the self-authored development MP4. These are recorded separately from research logic.
 
+## Windows build attempt (not a validation pass)
+
+`BuildPipeline.BuildPlayer` was invoked for the five enabled scenes with `StandaloneWindows64`, `Development`, and `AllowDebugging`. The Unity MCP request did not return within 300 seconds; `Builds/Windows` contained no output files, and `Editor.log` recorded only the Performance Test build preprocessor writing `Assets/Resources/PerformanceTestRunInfo.json` and `PerformanceTestRunSettings.json`. It contains no matching build-success or build-failure result. The generated JSON files remain untracked and untouched. Two incidental XRI renderer-data edits caused during the attempt were restored to their tracked baseline. No Windows executable or build-run result is claimed.
+
 ## Not validated
 
-Physical Meta Quest 3 operation, participant usability, approved translations, ethics/research approval, and a release Windows executable have not been validated in this report.
+Physical Meta Quest 3 operation, participant usability, approved translations, ethics/research approval, and a Windows executable have not been validated in this report.
