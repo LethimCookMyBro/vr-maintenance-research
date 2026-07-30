@@ -19,3 +19,6 @@ First action/source timestamps, source switching, repeat access, source-open dur
 
 ## Privacy
 Use pseudonymous participant codes only. First-person recording remains disabled unless recorded consent is set. The runtime performs basic technical-note checks for names, email-like markers, and phone-like numbers; researchers remain responsible for reviewing entries.
+## Timestamp semantics update
+
+For task rows, `timestamp_seconds` is elapsed from the task attempt start. The adjacent absolute timestamp remains ISO 8601 session-clock evidence. `task_summary.csv` is append-only within one session and writes one row per completed task attempt.

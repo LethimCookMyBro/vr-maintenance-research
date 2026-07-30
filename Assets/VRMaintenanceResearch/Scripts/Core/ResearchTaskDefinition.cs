@@ -16,6 +16,10 @@ namespace TMUVR.MaintenanceResearch
         public bool showTimerToParticipant;
         [TextArea] public string englishTitle = "Development maintenance task";
         [TextArea(3, 12)] public string englishParticipantInstructions = "Inspect, use any information source if desired, and test the device when ready.";
+        [TextArea] public string thaiTitle = "";
+        [TextArea] public string japaneseTitle = "";
+        [TextArea(3, 12)] public string thaiParticipantInstructions = "";
+        [TextArea(3, 12)] public string japaneseParticipantInstructions = "";
         public string[] availableComponents = Array.Empty<string>();
         public string[] availableTools = Array.Empty<string>();
         public string[] availableReplacementParts = Array.Empty<string>();

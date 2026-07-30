@@ -87,9 +87,15 @@ namespace TMUVR.MaintenanceResearch
 
             try
             {
+                var sessionElapsedSeconds = ElapsedSeconds;
+                var taskElapsedSeconds = taskId == ResearchTaskId.Session
+                    ? sessionElapsedSeconds
+                    : taskLogs.TryGetValue(taskId, out var activeTaskLog)
+                        ? Math.Max(0d, sessionElapsedSeconds - activeTaskLog.startedAtSeconds)
+                        : sessionElapsedSeconds;
                 var record = new EventRecord
                 {
-                    elapsedSeconds = ElapsedSeconds,
+                    elapsedSeconds = taskElapsedSeconds,
                     sequence = ++nextEventSequence,
                     eventType = eventType,
                     objectId = objectId ?? string.Empty,
@@ -103,7 +109,7 @@ namespace TMUVR.MaintenanceResearch
                     return;
                 }
 
-                CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskContext, config.taskOrder, config.participantGroup, config.language, layoutId, config.informationSourceLayoutId, record.elapsedSeconds, sessionStartedUtc.AddSeconds(record.elapsedSeconds), record.sequence, eventType, objectId, objectCategory, informationSourceId, informationSourceType, sourceSlot, actionResult, taskState, measurementMethod, "task-local", position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w, additionalValue, config.applicationBuildVersion, config.taskContentVersion);
+                CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskContext, config.taskOrder, config.participantGroup, config.language, layoutId, config.informationSourceLayoutId, record.elapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), record.sequence, eventType, objectId, objectCategory, informationSourceId, informationSourceType, sourceSlot, actionResult, taskState, measurementMethod, "task-local", position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w, additionalValue, config.applicationBuildVersion, config.taskContentVersion);
                 if (taskId != ResearchTaskId.Session && taskLogs.TryGetValue(taskId, out taskLog))
                     taskLog.records.Add(record);
             }
@@ -119,10 +125,12 @@ namespace TMUVR.MaintenanceResearch
                 return;
             try
             {
+                var sessionElapsedSeconds = ElapsedSeconds;
+                var taskElapsedSeconds = Math.Max(0d, sessionElapsedSeconds - taskLog.startedAtSeconds);
                 var hasPose = pose != null;
                 var position = hasPose ? pose.position : Vector3.zero;
                 var rotation = hasPose ? pose.rotation : Quaternion.identity;
-                CsvUtility.WriteRow(taskLog.movement, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, ElapsedSeconds, sessionStartedUtc.AddSeconds(ElapsedSeconds), ++taskLog.movementSequence, deviceType, "task-local", PoseCell(hasPose, position.x), PoseCell(hasPose, position.y), PoseCell(hasPose, position.z), RotationCell(hasPose, rotation.x), RotationCell(hasPose, rotation.y), RotationCell(hasPose, rotation.z), RotationCell(hasPose, rotation.w), hasPose, config.simulatorMode, samplingHz, config.applicationBuildVersion, config.taskContentVersion);
+                CsvUtility.WriteRow(taskLog.movement, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskElapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), ++taskLog.movementSequence, deviceType, "task-local", PoseCell(hasPose, position.x), PoseCell(hasPose, position.y), PoseCell(hasPose, position.z), RotationCell(hasPose, rotation.x), RotationCell(hasPose, rotation.y), RotationCell(hasPose, rotation.z), RotationCell(hasPose, rotation.w), hasPose, config.simulatorMode, samplingHz, config.applicationBuildVersion, config.taskContentVersion);
             }
             catch (Exception exception)
             {
@@ -187,8 +195,11 @@ namespace TMUVR.MaintenanceResearch
             }
             var durations = DeriveDurations(records);
             var summaryPath = Path.Combine(rootPath, "task_summary.csv");
-            using var writer = CsvUtility.CreateUtf8Writer(summaryPath, SummaryHeader);
-            var completionTime = records.Count == 0 ? 0d : records[records.Count - 1].elapsedSeconds - taskLog.startedAtSeconds;
+            var hasSummary = File.Exists(summaryPath) && new FileInfo(summaryPath).Length > 0;
+            using var writer = hasSummary
+                ? new StreamWriter(summaryPath, true, new UTF8Encoding(false)) { AutoFlush = true }
+                : CsvUtility.CreateUtf8Writer(summaryPath, SummaryHeader);
+            var completionTime = records.Count == 0 ? 0d : records[records.Count - 1].elapsedSeconds;
             var actionBeforeInformation = meaningful.sequence > 0 && (firstSource.sequence == 0 || (meaningful.eventType != ResearchEventType.InformationSourceOpened && meaningful.sequence < firstSource.sequence));
             CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskLog.definition.taskId, taskLog.attemptId, "1.0", meaningful.sequence == 0 ? "" : meaningful.eventType.ToString(), meaningful.sequence == 0 ? "" : (object)meaningful.elapsedSeconds, firstSource.sequence == 0 ? "" : firstSource.informationSourceId, firstSource.sequence == 0 ? "" : (object)firstSource.elapsedSeconds, actionBeforeInformation, firstFailure.sequence > 0 && sourceOpens.Any(source => source.sequence > firstFailure.sequence), switches, repeats, durations.totalInformation, durations.manual, durations.text, durations.video, durations.visual, records.Count(record => IsFailure(record.eventType)), records.Count(record => record.eventType == ResearchEventType.RetryStarted), records.Count(record => record.eventType == ResearchEventType.DeviceTestStarted), durations.lowActivityPeriods, durations.lowActivity, terminalState.ToString(), completionTime, terminalState == TaskState.TimedOut, terminalState == TaskState.Aborted || terminalState == TaskState.SafetyStopped);
         }

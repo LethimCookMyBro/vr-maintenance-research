@@ -155,6 +155,7 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: b76ad67af3137e84e8828f6541d73500, type: 2}
   task: {fileID: 652341148}
   contentPanel: {fileID: 0}
+  videoPlayer: {fileID: 0}
   currentPage: 0
 --- !u!114 &493448470
 MonoBehaviour:

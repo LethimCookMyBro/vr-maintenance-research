@@ -12,6 +12,8 @@ namespace TMUVR.MaintenanceResearch
         [TextArea(3, 12)] public string englishContent = "Development content pending advisor review.";
         [TextArea] public string thaiTitle = "";
         [TextArea] public string japaneseTitle = "";
+        [TextArea(3, 12)] public string thaiContent = "";
+        [TextArea(3, 12)] public string japaneseContent = "";
         public bool developmentPlaceholder = true;
     }
 }

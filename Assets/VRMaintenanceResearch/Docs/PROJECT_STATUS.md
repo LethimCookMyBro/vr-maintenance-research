@@ -1,27 +1,28 @@
-# VR Maintenance Research - Project Status
+﻿# VR Maintenance Research - Project Status
 
 ## Current phase
-Recovered foundation and simulator validation complete. The next study-facing step is content/translation approval plus physical-device pilot testing.
 
-## Preserved workspace state
-- Research work is isolated under `Assets/VRMaintenanceResearch`.
-- Original XRI examples/scenes/prefabs and package versions remain unchanged.
-- Pre-existing modified project/package files remain unstaged and were not changed by these commits.
-- Eight earlier v1 information assets have a missing script reference (`m_Script: {fileID: 0}`); they remain untracked and unreferenced because Unity MCP rejected destructive asset deletion. All task definitions reference the eight valid `_v2` assets.
+Recovery, information-source media, and QA foundation are stable. The next phase is build preparation and a physical-device pilot once hardware is available.
 
-## Recovered and verified
-- Fixed the `InformationSourceDefinition` class/file split and regenerated valid information-source ScriptableObjects through Unity MCP.
-- Reassigned serialized task IDs after inserting `Training` into `ResearchTaskId`: Training, Computer, and Fan now resolve correctly.
-- Validated one XRI origin, one `XRInteractionManager`, one `EventSystem`, and one `XRUIInputModule` in each research XR scene.
-- Added logged neutral training objects and one world-space instruction canvas.
-- Corrected session restart state and deferred simulator controller binding until tracked pose drivers are initialized.
-- Unity is idle and not in Play Mode. Source-import inspection reported 0 errors. A later final audit contained one external Input System/XInput device-layout discovery error with no research-script frame; warnings are XR simulator/audio/haptics or Unity AI account connectivity.
+## Recovered foundation
 
-## Executed evidence
-- Computer Play Mode: correct repair, device test, source open/close, completed raw summary.
-- Fan Play Mode: incorrect fuse, retry, correct fuse, device test, completed raw summary.
-- Training Play Mode: neutral source, three neutral object events, task completion, tracked headset/left/right controller rows.
-- Configured ComputerThenFan flow: one session with both task folders, ordered `TaskLoaded` records, two task completions, and manifest status `Completed`.
-- FanThenComputer branch: a second session on the same manager selected Fan first after session closure.
+- All custom content remains under `Assets/VRMaintenanceResearch`; original XRI example scenes/assets and package versions remain untouched.
+- Unity import is complete and scripts compile. Research scenes remain out of Play Mode after validation.
+- The invalid unreferenced v1 source assets still have missing script references. Unity MCP rejected their deletion; valid task definitions reference only the eight `_v2` assets.
+- Current source panel layout is identical across tasks: fixed source slots and participant-facing panels at `(slot x, 1.65, 1.50)`.
+- Computer and Fan video sources use real, 20-second silent self-authored baseline MP4s, Unity `VideoPlayer`, RenderTextures, and shared Play/Pause/Stop/Seek controls.
+- Natural video completion records `VideoCompleted`, clearing playback state before later close/scene teardown.
+- Task log timestamps are task-relative with ISO 8601 absolute timestamps retained; multi-task summaries append one row per completed task.
 
-See `TEST_REPORT.md` for exact local evidence paths and limits.
+## Latest executed evidence
+
+- Six compiled Edit Mode foundation tests passed.
+- Current training-enabled Computer -> Fan session completed with Training, Computer, and Fan summaries and recoverable error/retry paths.
+- Earlier Fan -> Computer session completed after the summary/timestamp fixes.
+- Final normal video lifecycle produced zero Console errors.
+
+See `TEST_REPORT.md` for exact evidence paths, Console classification, and remaining limits.
+
+## Next action
+
+Create and verify a Windows development build; then perform the documented Meta Quest 3 hardware/translation approval steps before study deployment.

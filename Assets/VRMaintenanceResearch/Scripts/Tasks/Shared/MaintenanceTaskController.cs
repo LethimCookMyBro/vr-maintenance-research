@@ -13,8 +13,11 @@ namespace TMUVR.MaintenanceResearch
         ResearchLogService logger;
         float activeElapsed;
         float lastMeaningfulActionAt;
+        float lastHoverAt;
         bool repairActionPerformed;
         bool lowActivityOpen;
+        int openInformationSourceCount;
+        bool videoPlaying;
 
         public ResearchTaskId TaskId => definition == null ? ResearchTaskId.Session : definition.taskId;
         public int AttemptId { get; private set; } = 1;
@@ -59,7 +62,13 @@ namespace TMUVR.MaintenanceResearch
                 return;
             }
 
-            if (!lowActivityOpen && activeElapsed - lastMeaningfulActionAt >= lowActivityThresholdSeconds)
+            if (openInformationSourceCount > 0 || videoPlaying)
+            {
+                CloseLowActivity("information_active");
+                return;
+            }
+
+            if (!lowActivityOpen && activeElapsed - Mathf.Max(lastMeaningfulActionAt, lastHoverAt) >= lowActivityThresholdSeconds)
             {
                 lowActivityOpen = true;
                 Log(ResearchEventType.LowActivityStarted, "task.low-activity", "task", "observed", "interaction_inactivity");
@@ -71,6 +80,7 @@ namespace TMUVR.MaintenanceResearch
             if (!IsActive || interactable == null)
                 return;
 
+            lastHoverAt = activeElapsed;
             var eventType = interactable.Kind == ResearchInteractionKind.Device ? ResearchEventType.DeviceHovered :
                 interactable.Kind == ResearchInteractionKind.Tool ? ResearchEventType.ToolHovered : ResearchEventType.ComponentHovered;
             Log(eventType, interactable.StableObjectId, interactable.ObjectCategory, "observed", "controller-ray hover");
@@ -161,8 +171,32 @@ namespace TMUVR.MaintenanceResearch
         {
             if (!IsActive || source == null)
                 return;
-            if (eventType == ResearchEventType.InformationSourceOpened)
-                RegisterMeaningfulAction();
+
+            switch (eventType)
+            {
+                case ResearchEventType.InformationSourceOpened:
+                    openInformationSourceCount++;
+                    RegisterMeaningfulAction();
+                    break;
+                case ResearchEventType.InformationSourceClosed:
+                    openInformationSourceCount = Mathf.Max(0, openInformationSourceCount - 1);
+                    RegisterMeaningfulAction();
+                    break;
+                case ResearchEventType.InformationPageChanged:
+                case ResearchEventType.VideoSeeked:
+                    RegisterMeaningfulAction();
+                    break;
+                case ResearchEventType.VideoPlayed:
+                    videoPlaying = true;
+                    RegisterMeaningfulAction();
+                    break;
+                case ResearchEventType.VideoPaused:
+                case ResearchEventType.VideoStopped:
+                    videoPlaying = false;
+                    RegisterMeaningfulAction();
+                    break;
+            }
+
             Log(eventType, source.sourceId, "information-source", "observed", detail, source);
         }
 
@@ -192,8 +226,11 @@ namespace TMUVR.MaintenanceResearch
         {
             activeElapsed = 0f;
             lastMeaningfulActionAt = 0f;
+            lastHoverAt = 0f;
             repairActionPerformed = false;
             lowActivityOpen = false;
+            openInformationSourceCount = 0;
+            videoPlaying = false;
             State = TaskState.Active;
             logger.BeginTask(definition, AttemptId);
             if (movementLogger == null)
@@ -204,10 +241,15 @@ namespace TMUVR.MaintenanceResearch
         void RegisterMeaningfulAction()
         {
             lastMeaningfulActionAt = activeElapsed;
+            CloseLowActivity("meaningful_action");
+        }
+
+        void CloseLowActivity(string detail)
+        {
             if (!lowActivityOpen)
                 return;
             lowActivityOpen = false;
-            Log(ResearchEventType.LowActivityEnded, "task.low-activity", "task", "observed", "meaningful_action");
+            Log(ResearchEventType.LowActivityEnded, "task.low-activity", "task", "observed", detail);
         }
 
         void Log(ResearchEventType eventType, string objectId, string category, string result, string detail, InformationSourceDefinition source = null)
