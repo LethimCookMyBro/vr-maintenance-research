@@ -14,7 +14,7 @@
 - `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260730T134642Z_96a13598` (full ComputerThenFan session)
 
 ## Compile and Console
-Unity import/compilation completed successfully after each source change. Latest inspected Console count: 0 errors. Remaining warnings originated from the XR simulator/audio/haptics and Unity AI account connectivity.
+Unity import/compilation completed successfully after each source change. The source-import Console check had 0 errors. A final audit reported one external `com.unity.inputsystem` XInput device-layout discovery error (no research-script stack frame); remaining warnings originated from the XR simulator/audio/haptics and Unity AI account connectivity.
 
 ## Edit Mode runner
 The existing NUnit Edit Mode class compiles, including the new closed-session restart regression. Unity's `TestRunnerApi` is available, but Unity MCP rejects execution of that API as interactive; therefore no Edit Mode test is reported as executed.

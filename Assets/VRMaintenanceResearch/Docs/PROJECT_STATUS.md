@@ -15,7 +15,7 @@ Recovered foundation and simulator validation complete. The next study-facing st
 - Validated one XRI origin, one `XRInteractionManager`, one `EventSystem`, and one `XRUIInputModule` in each research XR scene.
 - Added logged neutral training objects and one world-space instruction canvas.
 - Corrected session restart state and deferred simulator controller binding until tracked pose drivers are initialized.
-- Unity is idle and not in Play Mode. Latest Console inspection: 0 errors; warnings are XR simulator/audio/haptics or Unity AI account connectivity, not research-script errors.
+- Unity is idle and not in Play Mode. Source-import inspection reported 0 errors. A later final audit contained one external Input System/XInput device-layout discovery error with no research-script frame; warnings are XR simulator/audio/haptics or Unity AI account connectivity.
 
 ## Executed evidence
 - Computer Play Mode: correct repair, device test, source open/close, completed raw summary.
