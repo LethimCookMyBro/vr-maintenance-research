@@ -1,31 +1,27 @@
-# VR Maintenance Research — Project Status
+# VR Maintenance Research - Project Status
 
 ## Current phase
-Phase 0/1 — baseline inspected and research foundation in progress.
+Recovered foundation and simulator validation complete. The next study-facing step is content/translation approval plus physical-device pilot testing.
 
-## Confirmed baseline
-- Project: Unity `6000.3.20f1`, URP `17.3.0`, Input System `1.19.0`, XRI `3.4.0`, OpenXR `1.16.1`.
-- Unity MCP read-only command compiled and ran on 2026-07-30. Active scene and only enabled build scene: `Assets/XRI_Examples/Scenes/XRI_Examples_Main.unity` (19 roots).
-- Official reusable assets are present: Starter Assets `XR Origin (XR Rig).prefab` and `XR Interaction Simulator.prefab`.
-- Baseline Console: 0 errors, 5 pre-existing warnings: Unity AI Account API timeout; XR package-list timeout; and three Codex executable-signature warnings.
-- Baseline Git commit: `881f7e1` (`Merge pull request #149 from Unity-Technologies/XRI-v3.4.0`). Work proceeds on `codex/vr-maintenance-research`.
+## Preserved workspace state
+- Research work is isolated under `Assets/VRMaintenanceResearch`.
+- Original XRI examples/scenes/prefabs and package versions remain unchanged.
+- Pre-existing modified project/package files remain unstaged and were not changed by these commits.
+- Eight earlier v1 information assets have a missing script reference (`m_Script: {fileID: 0}`); they remain untracked and unreferenced because Unity MCP rejected destructive asset deletion. All task definitions reference the eight valid `_v2` assets.
 
-## Preserved pre-existing working-tree changes
-`Assets/UniversalRenderPipelineGlobalSettings.asset`, `Assets/XR/Settings/OpenXRPackageSettings.asset`, package manifests/lockfile, `ProjectVersion.txt`, Adaptive Performance files, `Assets/New Folder.meta`, and the solution file were already modified/untracked. They are deliberately excluded from research commits.
+## Recovered and verified
+- Fixed the `InformationSourceDefinition` class/file split and regenerated valid information-source ScriptableObjects through Unity MCP.
+- Reassigned serialized task IDs after inserting `Training` into `ResearchTaskId`: Training, Computer, and Fan now resolve correctly.
+- Validated one XRI origin, one `XRInteractionManager`, one `EventSystem`, and one `XRUIInputModule` in each research XR scene.
+- Added logged neutral training objects and one world-space instruction canvas.
+- Corrected session restart state and deferred simulator controller binding until tracked pose drivers are initialized.
+- Unity is idle and not in Play Mode. Latest Console inspection: 0 errors; warnings are XR simulator/audio/haptics or Unity AI account connectivity, not research-script errors.
 
-## Completed work
-- Confirmed project/editor/MCP connectivity without altering XRI content.
-- Created the isolated `Assets/VRMaintenanceResearch` namespace and the required folder layout.
-- Documented baseline, implementation plan, protocol changes, and intended official-XRI reuse.
+## Executed evidence
+- Computer Play Mode: correct repair, device test, source open/close, completed raw summary.
+- Fan Play Mode: incorrect fuse, retry, correct fuse, device test, completed raw summary.
+- Training Play Mode: neutral source, three neutral object events, task completion, tracked headset/left/right controller rows.
+- Configured ComputerThenFan flow: one session with both task folders, ordered `TaskLoaded` records, two task completions, and manifest status `Completed`.
+- FanThenComputer branch: a second session on the same manager selected Fan first after session closure.
 
-## Tests executed
-- Unity MCP inspection command: compilation successful; execution successful.
-- Unity Console read: 0 errors; 5 pre-existing warnings.
-
-## Known issues and limits
-- No physical Meta Quest 3 validation has occurred.
-- Research task scenes, runtime code, and verification are pending.
-- Existing warnings must remain separated from warnings introduced by this work.
-
-## Next action
-Implement the persistent researcher session and append-only CSV logging foundation, then compile in Unity before scene construction.
+See `TEST_REPORT.md` for exact local evidence paths and limits.

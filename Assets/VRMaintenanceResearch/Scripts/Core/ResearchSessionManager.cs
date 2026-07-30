@@ -51,7 +51,11 @@ namespace TMUVR.MaintenanceResearch
                 return false;
 
             IsConfigured = true;
-            return logger.BeginSession(configuration, out error);
+            if (!logger.BeginSession(configuration, out error))
+                return false;
+
+            completedTasks = 0;
+            return true;
         }
 
         public void StartConfiguredFlow()

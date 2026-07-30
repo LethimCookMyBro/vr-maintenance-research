@@ -49,5 +49,22 @@ namespace TMUVR.MaintenanceResearch
             UnityEngine.Object.DestroyImmediate(definition);
             UnityEngine.Object.DestroyImmediate(sessionObject);
         }
+
+        [Test]
+        public void LoggerCanStartAnotherSessionAfterClosing()
+        {
+            var sessionObject = new GameObject("LoggerRestartTest");
+            var logger = sessionObject.AddComponent<ResearchLogService>();
+            var first = new ResearchSessionConfig { participantCode = "TEST_RESTART", sessionId = "restart_one_" + Guid.NewGuid().ToString("N").Substring(0, 8), developmentMode = true };
+            var second = new ResearchSessionConfig { participantCode = "TEST_RESTART", sessionId = "restart_two_" + Guid.NewGuid().ToString("N").Substring(0, 8), developmentMode = true };
+
+            Assert.That(logger.BeginSession(first, out var firstError), Is.True, firstError);
+            logger.EndSession("FirstComplete");
+            Assert.That(logger.BeginSession(second, out var secondError), Is.True, secondError);
+            Assert.That(logger.IsStarted, Is.True);
+            logger.EndSession("SecondComplete");
+
+            UnityEngine.Object.DestroyImmediate(sessionObject);
+        }
     }
 }

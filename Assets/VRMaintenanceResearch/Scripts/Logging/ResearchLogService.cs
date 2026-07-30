@@ -38,6 +38,8 @@ namespace TMUVR.MaintenanceResearch
 
             try
             {
+                closed = false;
+                nextEventSequence = 0;
                 config = sessionConfig;
                 config.EnsureSessionId();
                 sessionStartedUtc = DateTimeOffset.UtcNow;

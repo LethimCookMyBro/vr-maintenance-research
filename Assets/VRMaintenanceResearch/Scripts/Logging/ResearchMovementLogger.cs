@@ -25,6 +25,10 @@ namespace TMUVR.MaintenanceResearch
             if (task == null || !task.IsActive || Time.unscaledTime < nextSampleAt)
                 return;
 
+            if (leftController == null)
+                leftController = FindController("Left Controller");
+            if (rightController == null)
+                rightController = FindController("Right Controller");
             nextSampleAt = Time.unscaledTime + 1f / samplingHz;
             var logger = ResearchSessionManager.Instance?.Logger;
             if (logger == null)
@@ -33,6 +37,14 @@ namespace TMUVR.MaintenanceResearch
             logger.LogMovement(task.TaskId, task.AttemptId, "Headset", headset, samplingHz);
             logger.LogMovement(task.TaskId, task.AttemptId, "LeftController", leftController, samplingHz);
             logger.LogMovement(task.TaskId, task.AttemptId, "RightController", rightController, samplingHz);
+        }
+
+        static Transform FindController(string name)
+        {
+            foreach (var candidate in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (candidate.name == name && candidate.GetComponent("TrackedPoseDriver") != null)
+                    return candidate;
+            return null;
         }
     }
 }
