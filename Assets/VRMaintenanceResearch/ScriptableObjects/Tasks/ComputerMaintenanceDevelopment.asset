@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cfea8225f1d9c242b9eb93f0bba3321, type: 3}
+  m_Name: ComputerMaintenanceDevelopment
+  m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.ResearchTaskDefinition
+  taskId: 2
+  taskContext: computer-maintenance
+  taskContentVersion: development-1
+  activeFaultId: computer.disconnected-main-motherboard-power
+  layoutId: computer-layout-development-a
+  informationSourceLayoutId: sources-layout-development-a
+  maximumTimeSeconds: 900
+  showTimerToParticipant: 0
+  englishTitle: Computer Maintenance (Development)
+  englishParticipantInstructions: Inspect freely, use any information source in any
+    order if desired, attempt repairs, and test the device when ready.
+  availableComponents:
+  - computer.case
+  - computer.motherboard-power-connector
+  - computer.psu-switch
+  - computer.power-button
+  - computer.ram
+  availableTools:
+  - tool.screwdriver
+  - tool.multimeter
+  availableReplacementParts:
+  - computer.main-power-connector
+  informationSources:
+  - {fileID: 11400000, guid: 78b20a0905c507d4fbb598e18cf4c299, type: 2}
+  - {fileID: 11400000, guid: 5723cd1ec287f89459c0ed09f9b9e843, type: 2}
+  - {fileID: 11400000, guid: 0772952d95d33844eb4195bacb5816e8, type: 2}
+  - {fileID: 11400000, guid: 427c27c929d973a49890bc58f66c1e47, type: 2}
+  permittedInteractions:
+  - inspect
+  - information-access
+  - grab
+  - repair-attempt
+  - device-test
+  - retry
+  validationRules:
+  - Device test passes only after the configured development repair action.
+  stoppingConditions:
+  - completed
+  - timeout
+  - researcher-abort
+  - safety-stop
+  scenePath: Assets/VRMaintenanceResearch/Scenes/ComputerRepairTask.unity
+  movementSamplingHz: 10
+  lowActivityThresholdSeconds: 30
