@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -20,6 +21,9 @@ namespace TMUVR.MaintenanceResearch
         bool isVideoPlaying;
         bool isHovered;
         Vector3 selectorBaseScale;
+        Color selectorColor;
+        Coroutine selectorTransition;
+        static bool localizedFallbacksRegistered;
         readonly HashSet<string> activeHoverInteractors = new HashSet<string>();
 
         public InformationSourceDefinition Definition => definition;
@@ -36,6 +40,7 @@ namespace TMUVR.MaintenanceResearch
             if (contentPanel != null)
                 contentPanel.SetActive(false);
             selectorBaseScale = transform.localScale;
+            selectorColor = ResearchUiKit.SlateSoft;
             RefreshLocalizedContent();
             RefreshSelectorState();
         }
@@ -66,32 +71,38 @@ namespace TMUVR.MaintenanceResearch
                 videoPlayer.loopPointReached -= OnVideoCompleted;
         }
 
+        void Update()
+        {
+            if (isOpen && definition != null && definition.sourceType == InformationSourceType.InstructionalVideo)
+                RefreshVideoStatus();
+        }
+
         void OnMouseEnter()
         {
-            isHovered = true;
-            RefreshSelectorState();
             RecordHover("mouse");
+            isHovered = activeHoverInteractors.Count > 0;
+            RefreshSelectorState();
         }
 
         void OnMouseExit()
         {
-            isHovered = false;
-            RefreshSelectorState();
             RecordHoverExit("mouse");
+            isHovered = activeHoverInteractors.Count > 0;
+            RefreshSelectorState();
         }
         void OnMouseDown() => Toggle();
         void OnHoverEntered(HoverEnterEventArgs args)
         {
-            isHovered = true;
-            RefreshSelectorState();
             RecordHover(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+            isHovered = activeHoverInteractors.Count > 0;
+            RefreshSelectorState();
         }
 
         void OnHoverExited(HoverExitEventArgs args)
         {
-            isHovered = false;
-            RefreshSelectorState();
             RecordHoverExit(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+            isHovered = activeHoverInteractors.Count > 0;
+            RefreshSelectorState();
         }
         void OnSelectEntered(SelectEnterEventArgs args) => Toggle();
 
@@ -154,7 +165,32 @@ namespace TMUVR.MaintenanceResearch
         void RefreshSelectorState()
         {
             var accent = isOpen ? ResearchUiKit.Accent : isHovered ? ResearchUiKit.AccentDim : ResearchUiKit.SlateSoft;
-            transform.localScale = selectorBaseScale * (isOpen ? 1.035f : isHovered ? 1.02f : 1f);
+            var targetScale = selectorBaseScale * (isOpen ? 1.035f : isHovered ? 1.02f : 1f);
+            var duration = isOpen ? 0.16f : isHovered ? 0.12f : 0.10f;
+            if (selectorTransition != null)
+                StopCoroutine(selectorTransition);
+            selectorTransition = StartCoroutine(TransitionSelector(targetScale, accent, duration));
+        }
+
+        IEnumerator TransitionSelector(Vector3 targetScale, Color targetColor, float duration)
+        {
+            var startScale = transform.localScale;
+            var startColor = selectorColor;
+            for (var elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
+            {
+                var t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                transform.localScale = Vector3.Lerp(startScale, targetScale, t);
+                ApplySelectorAccent(Color.Lerp(startColor, targetColor, t));
+                yield return null;
+            }
+            transform.localScale = targetScale;
+            ApplySelectorAccent(targetColor);
+            selectorTransition = null;
+        }
+
+        void ApplySelectorAccent(Color accent)
+        {
+            selectorColor = accent;
             var accentBar = transform.Find("GEN Accent Bar");
             if (accentBar == null)
                 return;
@@ -174,6 +210,8 @@ namespace TMUVR.MaintenanceResearch
             if (definition == null)
                 return;
 
+            EnsureLocalizedFontFallbacks();
+
             var language = ResearchLanguage.English;
             var session = ResearchSessionManager.Instance;
             if (session != null)
@@ -192,7 +230,11 @@ namespace TMUVR.MaintenanceResearch
                     if (label.name == "GEN Title")
                         label.text = title;
                     else if (label.name == "GEN Body")
-                        label.text = body;
+                    {
+                        label.enabled = definition.sourceType != InformationSourceType.InstructionalVideo;
+                        if (label.enabled)
+                            label.text = body;
+                    }
                 }
 
                 foreach (var label in contentPanel.GetComponentsInChildren<TextMesh>(true))
@@ -240,6 +282,32 @@ namespace TMUVR.MaintenanceResearch
             }
         }
 
+        static void EnsureLocalizedFontFallbacks()
+        {
+            if (localizedFallbacksRegistered)
+                return;
+
+            foreach (var path in new[] { "Fonts/TMP_NotoSansThai_v2", "Fonts/TMP_NotoSansJP_v2" })
+            {
+                var font = Resources.Load<TMP_FontAsset>(path);
+                if (font != null && !TMP_Settings.fallbackFontAssets.Contains(font))
+                    TMP_Settings.fallbackFontAssets.Add(font);
+            }
+
+            localizedFallbacksRegistered = true;
+        }
+
+        void RefreshVideoStatus()
+        {
+            if (contentPanel == null || videoPlayer == null || !videoPlayer.isPrepared)
+                return;
+            var current = Mathf.Max(0, Mathf.FloorToInt((float)videoPlayer.time));
+            var duration = Mathf.Max(0, Mathf.FloorToInt((float)videoPlayer.length));
+            foreach (var label in contentPanel.GetComponentsInChildren<TMP_Text>(true))
+                if (label.name == "GEN Video Status")
+                    label.text = string.Format("{0:00}:{1:00} / {2:00}:{3:00}", current / 60, current % 60, duration / 60, duration % 60);
+        }
+
         public void ChangePage(int page)
         {
             if (!isOpen)
@@ -276,6 +344,17 @@ namespace TMUVR.MaintenanceResearch
             videoPlayer.Stop();
             isVideoPlaying = false;
             task?.NotifyInformation(definition, ResearchEventType.VideoStopped, "video_stopped");
+        }
+
+        public void VideoRestart()
+        {
+            if (!isOpen || definition == null || videoPlayer == null || videoPlayer.clip == null)
+                return;
+            videoPlayer.Stop();
+            videoPlayer.time = 0d;
+            videoPlayer.Play();
+            isVideoPlaying = true;
+            task?.NotifyInformation(definition, ResearchEventType.VideoRestarted, "video_restarted");
         }
 
         public void VideoSeek(float seconds)

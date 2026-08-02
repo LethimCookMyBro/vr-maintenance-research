@@ -143,3 +143,19 @@ The XR `preloadedAssets` entries that the build post-processor strips from
 - Runtime diagnostic: `eventSystems=1; xrModules=1; legacyModules=0; trackedRaycasters=1; graphicRaycasters=1`.
 - A fresh Windows Mono Development build at `Builds/Windows/VRMaintenanceResearch-Final/VRMaintenanceResearch.exe` reported `Succeeded; errors=0; warnings=0` and was launched outside Unity. Its log is `Builds/Windows/VRMaintenanceResearch-Final/Standalone-Validation-Player.log`.
 - The standalone log reached OpenXR startup, then reported `XR_ERROR_FORM_FACTOR_UNAVAILABLE` because no headset form factor was available. It does not validate the interactive standalone task flow or Quest 3 hardware behavior.
+
+## Localized reader and video-reader regression - 2026-08-03
+
+- Initial Thai Play Mode capture showed missing-glyph boxes, reproducing a real reader defect.
+- Added locally licensed Noto Sans Thai and Noto Sans JP TMP fallback assets, then reopened the same Fan Product Manual in Play Mode. The reopened Thai and Japanese reader captures contain rendered script rather than replacement boxes:
+  - `Docs/Screenshots/Final/FanThaiManual_Runtime.png`
+  - `Docs/Screenshots/Final/FanJapaneseManual_Runtime.png`
+- The source controller registered exactly two active fallback assets in the clean validation path. The Thai and Japanese font assets each retained one serialized atlas texture.
+- Computer and Fan video readers render their existing 60-second MP4 RenderTextures in the reader panel. The visible control set is Play, Pause, Stop, +10 s, Restart and Close; the status label is `MM:SS / MM:SS`.
+
+## Final clean Windows artifact - 2026-08-03
+
+- Build output: `Builds/Windows/VRMaintenanceResearch-Final-Localized-Clean/VRMaintenanceResearch.exe`
+- Unity build result: `Succeeded; errors=0; warnings=485; size=356181522`.
+- EXE SHA-256: `F5AF8F2582C77647AA735CDD9F4D9CAE9FF79AAB0910F9524CF71018F28D8B50`.
+- Hidden desktop smoke launch ran for 12 seconds, initialized Direct3D 12 on the NVIDIA GeForce RTX 4050 Laptop GPU, and reached OpenXR initialization. The log then recorded `XR_ERROR_FORM_FACTOR_UNAVAILABLE`; the process was stopped. This verifies process startup only, not an interactive standalone flow or headset behavior.

@@ -14,7 +14,7 @@ pending the Visual Studio C++ toolchain and Windows SDK.
 - All custom content remains under `Assets/VRMaintenanceResearch`; original XRI example scenes/assets and package versions remain untouched.
 - Unity import is complete and scripts compile. Research scenes remain out of Play Mode after validation.
 - The invalid unreferenced v1 source assets still have missing script references and are still untracked, unstaged and unreferenced. Valid task definitions reference only the eight `_v2` assets.
-- Computer and Fan video sources use real, 20-second silent self-authored baseline MP4s, Unity `VideoPlayer`, RenderTextures, and shared Play/Pause/Stop/Seek controls.
+- Computer and Fan video sources use real, 60-second silent self-authored baseline MP4s, Unity `VideoPlayer`, RenderTextures, and shared Play/Pause/Stop/Seek/Restart controls.
 - Natural video completion records `VideoCompleted`, clearing playback state before later close/scene teardown.
 - Task log timestamps are task-relative with ISO 8601 absolute timestamps retained; multi-task summaries append one row per completed task.
 - All 31 stable research IDs (13 Computer, 15 Fan, 3 Training) are byte-identical to the baseline.
@@ -58,3 +58,10 @@ with the advisor before data collection.
 - Runtime source-switch verification opened Manual, advanced to page 1, switched to Text Troubleshooting Guide, and reported `active_reader_count=1`. No research-script runtime error was logged.
 - A new Windows Mono Development build completed at `Builds/Windows/VRMaintenanceResearch-Final/VRMaintenanceResearch.exe`: `Succeeded; errors=0; warnings=0`. It launched outside Unity and wrote `Standalone-Validation-Player.log`; OpenXR reported no available form factor on this desktop.
 - Physical Quest 3 validation and an interactive standalone full-flow remain pending.
+
+## Localization and reader correction - 2026-08-03
+
+- The reader now registers local dynamic TMP fallback assets for Thai and Japanese. Actual Play Mode captures show both scripts without missing-glyph boxes: `Docs/Screenshots/Final/FanThaiManual_Runtime.png` and `Docs/Screenshots/Final/FanJapaneseManual_Runtime.png`.
+- The video reader now shows the existing RenderTexture in-panel, includes Close and Restart controls, and displays elapsed/total time. `ComputerVideoReader_Runtime.png` and `FanVideoReader_Runtime.png` are the corresponding runtime captures.
+- The rendered visual children retain the original functional roots, colliders, `ResearchInteractable` components and stable IDs; only their visible presentation changed.
+- Fresh artifact: `Builds/Windows/VRMaintenanceResearch-Final-Localized-Clean/VRMaintenanceResearch.exe` built `Succeeded; errors=0; warnings=485; size=356181522`. Its executable SHA-256 is `F5AF8F2582C77647AA735CDD9F4D9CAE9FF79AAB0910F9524CF71018F28D8B50`.

@@ -4,7 +4,7 @@
 
 - This is a research-development prototype, not a validated learning intervention.
 - No Meta Quest 3 hardware run has occurred.
-- Development source content and silent media are English placeholders; Thai/Japanese content is configurable but awaits approved translation and equivalence review.
+- Silent development media remains English placeholder content. Thai and Japanese reader fields render through local font fallbacks, but the wording still awaits approved translation and equivalence review.
 - The self-authored MP4s are functionally verified in Windows Editor but Windows Media Foundation emits a color-primaries fallback warning; no research-script error followed the normal completion lifecycle.
 - Low activity is interaction inactivity, not a clinical or cognitive measure.
 - Current Play Mode runs prove schema, flow, simulator integration, and source media behavior; they do not prove participant behavior, hardware tracking quality, or research outcomes.
@@ -26,11 +26,11 @@
 - **Interaction was validated through the component API, not by hand.** Grab, socket placement, controller-ray hover and poke were confirmed present and wired, and the XR simulator rig, rays and controller visuals render, but a human did not drive a controller through the full task in this pass.
 - **The `ResearcherSetup` interface is built at runtime in code**, not as an editable prefab. This removes prefab-wiring drift but means the layout cannot be adjusted in the Inspector; edit `ResearcherSetupController.cs`.
 - **The task status board and training board are runtime-built world-space canvases.** They do not appear in Editor scene view screenshots; the Play Mode captures in `Docs/Screenshots` show them.
-- **World-space text is English-only and not yet localised.** The information-source captions, panel titles and body text render `englishTitle`/`englishContent` from the source definitions; Thai and Japanese fields exist but are not yet displayed.
-- **The information-source layout was deliberately not changed** even though the brief suggested moving the station to the participant's left. The four tiles are recorded against `information_source_layout_id`, and moving them would alter relative salience without changing the logged layout ID. Only appearance was equalised.
+- **Translated wording is not yet approved.** The information-source captions, panel titles and body text select Thai/Japanese fields when configured, with actual Editor captures showing no missing-glyph boxes; linguistic equivalence review remains outstanding.
+- **The information-source layout changed to a fixed left-side station.** The updated reader and four equal source cards preserve the logged `information_source_layout_id`; advisor review is still needed before data collection because relative salience changed.
 - **Two Poly Haven textures were downloaded but only partially used.** `beige_wall_001` contributes its normal map only; its diffuse was dropped because the warm beige conflicted with the neutral off-white target. The unused roughness maps were deleted rather than left as dead assets.
 
 ## Final spatial verification update - 2026-08-03
 
 - A fresh Windows Mono Development build launches on this desktop, but its Player log reports `XR_ERROR_FORM_FACTOR_UNAVAILABLE` without an available headset form factor. This establishes startup only; it does not establish the standalone interactive flow.
-- The compact source station, reader, status card, simulator-HUD gate, and F9-only researcher controls were runtime-checked in the Unity Editor. Quest 3 validation, full standalone interaction, and multilingual glyph review remain pending.
+- The compact source station, reader, status card, simulator-HUD gate, and F9-only researcher controls were runtime-checked in the Unity Editor. Quest 3 validation and full standalone interaction remain pending; Thai/Japanese glyph rendering was checked in the Editor, not on hardware.

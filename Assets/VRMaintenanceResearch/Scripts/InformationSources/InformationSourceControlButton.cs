@@ -4,7 +4,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace TMUVR.MaintenanceResearch
 {
-    public enum InformationSourceControlAction { PreviousPage, NextPage, VideoPlay, VideoPause, VideoStop, VideoSeekForward }
+    // Keep existing values stable: scenes serialize these enum values directly.
+    public enum InformationSourceControlAction { PreviousPage, NextPage, VideoPlay, VideoPause, VideoStop, VideoSeekForward, Close, VideoRestart }
 
     [RequireComponent(typeof(Collider))]
     public sealed class InformationSourceControlButton : MonoBehaviour
@@ -45,6 +46,8 @@ namespace TMUVR.MaintenanceResearch
                 case InformationSourceControlAction.VideoPause: source.VideoPause(); break;
                 case InformationSourceControlAction.VideoStop: source.VideoStop(); break;
                 case InformationSourceControlAction.VideoSeekForward: source.VideoSeek(seekSeconds); break;
+                case InformationSourceControlAction.Close: source.Close(); break;
+                case InformationSourceControlAction.VideoRestart: source.VideoRestart(); break;
             }
         }
     }

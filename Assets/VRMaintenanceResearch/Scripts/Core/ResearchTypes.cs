@@ -14,7 +14,7 @@ namespace TMUVR.MaintenanceResearch
     public enum ResearchEventType
     {
         SessionStarted, SessionEnded, TaskLoaded, TaskStarted, TaskPaused, TaskResumed, TaskCompleted, TaskTimedOut, TaskAborted, TaskReset, SafetyStop, TechnicalError,
-        InformationSourceHovered, InformationSourceOpened, InformationSourceClosed, InformationPageChanged, VideoPlayed, VideoPaused, VideoStopped, VideoSeeked, VideoCompleted,
+        InformationSourceHovered, InformationSourceOpened, InformationSourceClosed, InformationPageChanged, VideoPlayed, VideoPaused, VideoStopped, VideoRestarted, VideoSeeked, VideoCompleted,
         DeviceHovered, ComponentHovered, ToolHovered, UIElementHovered, ControllerRayEntered, ControllerRayExited, HeadRayDwellStarted, HeadRayDwellEnded,
         ObjectGrabbed, ObjectReleased, ObjectPlaced, ComponentRemoved, ComponentInstalled, ToolSelected, ToolUsed, IncorrectToolSelected, IncorrectComponentInteraction,
         UnsuccessfulAction, DeviceTestStarted, DeviceTestPassed, DeviceTestFailed, RetryStarted, ResearcherAction, LowActivityStarted, LowActivityEnded

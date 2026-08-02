@@ -37,9 +37,9 @@ The participant starts about 1.2 m from the bench. The reader is fixed left of t
 | State | Visual treatment | Duration |
 |---|---|---:|
 | Idle | Slate/navy surface, neutral border | — |
-| Hover | Blue accent rule plus 2% scale increase | Immediate |
+| Hover | Blue accent rule plus 2% scale increase | 0.12 s ease |
 | Press | XRI select activation | Input frame |
-| Selected | Persistent blue accent rule plus 3.5% scale increase | Immediate |
+| Selected | Persistent blue accent rule plus 3.5% scale increase | 0.16 s ease |
 | Disabled | Muted label and low-contrast surface | — |
 | Open/close | Single fixed content panel, no duplicate | Immediate |
 
@@ -51,7 +51,9 @@ Motion is intentionally restricted to user-triggered state changes. No participa
 - The task status, training board, selector, and reader have no `ComfortFollowPanel` component.
 - Exactly one active XR origin, interaction manager, input action manager, event system, and XR UI input module remain a scene-level invariant.
 - The four source definitions and all research event names are preserved; selector styling does not encode correctness.
+- Video readers render their existing RenderTexture in-panel and include Play, Pause, Stop, +10 s, Restart, Close and an elapsed/total status label.
+- Thai and Japanese reader strings use local TMP fallback assets so the same fixed reader can render all configured scripts.
 
 ## Verification still required
 
-Runtime evidence must prove two ray paths, fixed-world behavior after head movement, readable EN/TH/JA rendering, selected/hover states, and a clean standalone build. Quest 3 validation remains pending.
+Runtime captures prove readable EN/TH/JA strings and the visible controller rays; future participant QA must still exercise both ray paths and fixed-world behavior after head movement. Quest 3 validation remains pending.

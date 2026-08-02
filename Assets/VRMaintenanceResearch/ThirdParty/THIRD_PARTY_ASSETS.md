@@ -99,6 +99,24 @@ to keep the imported asset set small.
 
 ---
 
+## Noto Sans Thai and Noto Sans JP — SIL Open Font License 1.1
+
+| Field | Noto Sans Thai | Noto Sans JP |
+|---|---|---|
+| Source | <https://github.com/google/fonts/tree/main/ofl/notosansthai> | <https://github.com/google/fonts/tree/main/ofl/notosansjp> |
+| License | SIL Open Font License 1.1 | SIL Open Font License 1.1 |
+| Local font | `Fonts/NotoSansThai.ttf` (218,652 bytes) | `Fonts/NotoSansJP.ttf` (9,589,900 bytes) |
+| Local license | `Fonts/NotoSansThai-OFL.txt` | `Fonts/NotoSansJP-OFL.txt` |
+| Modification | Unity-generated dynamic TMP fallback asset only | Unity-generated dynamic TMP fallback asset only |
+| Intended use | Thai titles, captions and reader text | Japanese titles, captions and reader text |
+
+Imported on 2026-08-03. The generated fallback assets are
+`Resources/Fonts/TMP_NotoSansThai_v2.asset` and
+`Resources/Fonts/TMP_NotoSansJP_v2.asset`; they are loaded only by the
+information-reader localization path. English continues to use the existing TMP font.
+
+---
+
 ## Assets deliberately NOT imported
 
 | Candidate | Reason |

@@ -190,6 +190,51 @@ Runtime review images:
 The images were reopened and visually inspected. The training image shows the compact neutral board and controller visuals. The Computer image shows the compact task status board and source cards.
 
 Known remaining boundary: Quest 3 hardware validation, advisor approval, and real-device audio validation remain follow-up work. The 486 build warnings are shader/import warnings; the player build completed with zero build errors.
+
+## Reader localization and video evidence - 2026-08-03
+
+Initial Thai rendering was captured with missing-glyph boxes, then corrected by adding
+locally licensed Noto Sans Thai and Noto Sans JP dynamic TMP fallback assets. The
+following reopened images were visually inspected after the correction:
+
+```text
+Assets/VRMaintenanceResearch/Docs/Screenshots/Final/FanThaiManual_Runtime.png
+Assets/VRMaintenanceResearch/Docs/Screenshots/Final/FanJapaneseManual_Runtime.png
+Assets/VRMaintenanceResearch/Docs/Screenshots/Final/ComputerVideoReader_Runtime.png
+Assets/VRMaintenanceResearch/Docs/Screenshots/Final/FanVideoReader_Runtime.png
+```
+
+Literal runtime checks:
+
+```text
+THAI_READER_PERSISTED fallbacks=4; thaiAtlas=1; japaneseAtlas=1
+TMP_FALLBACKS_CLEAN=2
+THAI_CAPTURE_SAVED
+JAPANESE_READER_OPEN
+JAPANESE_CAPTURE_SAVED
+```
+
+The transient `fallbacks=4` result included two obsolete in-memory assets from the
+same Editor session; removing those left exactly the two persisted fallback assets.
+The resulting Thai and Japanese captures contain rendered text and no replacement
+boxes. This is Editor evidence only; hardware typography and Quest 3 validation are
+still pending.
+
+## Clean localized Windows build - 2026-08-03
+
+```text
+BUILD_PATH=D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch-Final-Localized-Clean\VRMaintenanceResearch.exe
+BUILD_RESULT=Succeeded; errors=0; warnings=485; size=356181522
+BUILD_SHA256=F5AF8F2582C77647AA735CDD9F4D9CAE9FF79AAB0910F9524CF71018F28D8B50
+SMOKE_PID=49476
+RUNNING_AFTER_12S=True
+SMOKE_STOPPED=True
+PLAYER_LOG_SHA256=74B9D7A274FEE472CDC0CEEFD45BA5B11EB3913BD8675095C9910A2525EA89B6
+```
+
+The player initialized Direct3D 12 and OpenXR, then logged
+`XR_ERROR_FORM_FACTOR_UNAVAILABLE` on this desktop. No standalone task interaction
+or Quest 3 behavior is represented by this smoke record.
 ## Verification artifact import
 
 Unity refresh command:
