@@ -118,3 +118,17 @@ Priority order:
 
 Each would need pivot/scale alignment against the existing interaction colliders
 before use, and must remain a visual child of the functional root.
+
+---
+
+## Poly Haven model imports
+
+The following CC0 model imports are visual children of the existing interaction roots; the stable colliders and research IDs remain on the original scene objects. The 1k FBX and diffuse map files were downloaded from the official Poly Haven API on 2026-08-02. Exact MD5 and byte checks are recorded in `PolyHaven/DOWNLOAD_VERIFICATION.csv`.
+
+| Model | Source page | Scene use | Local files |
+|---|---|---|---|
+| Screwdriver | <https://polyhaven.com/a/screwdriver> | `computer.tool.screwdriver`, `fan.tool.screwdriver` | `PolyHaven/Screwdriver/` |
+| Power Box 01 | <https://polyhaven.com/a/power_box_01> | `computer.case` visual | `PolyHaven/PowerBox/` |
+| Ceiling Fan | <https://polyhaven.com/a/ceiling_fan> | `fan.body` visual reconstruction | `PolyHaven/CeilingFan/` |
+
+Local URP Lit materials in `PolyHaven/Materials/` bind the downloaded diffuse maps. The assets are intentionally kept at 1k for the current desktop/Quest candidate budget; lighting and physical interaction remain owned by the research scene.
