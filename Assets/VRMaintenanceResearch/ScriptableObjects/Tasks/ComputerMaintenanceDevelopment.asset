@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.ResearchTaskDefinition
   taskId: 2
   taskContext: computer-maintenance
-  taskContentVersion: development-1
+  taskContentVersion: research-v2
   activeFaultId: computer.disconnected-main-motherboard-power
   layoutId: computer-layout-development-a
   informationSourceLayoutId: sources-layout-development-a
@@ -25,13 +25,12 @@ MonoBehaviour:
     order if desired, attempt repairs, and test the device when ready.
   availableComponents:
   - computer.case
-  - computer.motherboard-power-connector
+  - computer.motherboard
   - computer.psu-switch
   - computer.power-button
   - computer.ram
   availableTools:
-  - tool.screwdriver
-  - tool.multimeter
+  - computer.tool.screwdriver
   availableReplacementParts:
   - computer.main-power-connector
   informationSources:

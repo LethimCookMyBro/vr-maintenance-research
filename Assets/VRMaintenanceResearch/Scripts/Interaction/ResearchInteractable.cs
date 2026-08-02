@@ -35,6 +35,7 @@ namespace TMUVR.MaintenanceResearch
             if (xrInteractable == null)
                 return;
             xrInteractable.hoverEntered.AddListener(OnHoverEntered);
+            xrInteractable.hoverExited.AddListener(OnHoverExited);
             xrInteractable.selectEntered.AddListener(OnSelectEntered);
         }
 
@@ -43,12 +44,15 @@ namespace TMUVR.MaintenanceResearch
             if (xrInteractable == null)
                 return;
             xrInteractable.hoverEntered.RemoveListener(OnHoverEntered);
+            xrInteractable.hoverExited.RemoveListener(OnHoverExited);
             xrInteractable.selectEntered.RemoveListener(OnSelectEntered);
         }
 
-        void OnMouseEnter() => task?.RecordHover(this);
+        void OnMouseEnter() => task?.RecordHover(this, "mouse");
+        void OnMouseExit() => task?.RecordHoverExit(this, "mouse");
         void OnMouseDown() => task?.RecordInteraction(this);
-        void OnHoverEntered(HoverEnterEventArgs args) => task?.RecordHover(this);
+        void OnHoverEntered(HoverEnterEventArgs args) => task?.RecordHover(this, args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+        void OnHoverExited(HoverExitEventArgs args) => task?.RecordHoverExit(this, args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
         void OnSelectEntered(SelectEnterEventArgs args) => task?.RecordInteraction(this);
     }
 }

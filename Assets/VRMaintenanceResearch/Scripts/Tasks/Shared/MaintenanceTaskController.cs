@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TMUVR.MaintenanceResearch
@@ -9,6 +10,7 @@ namespace TMUVR.MaintenanceResearch
         [SerializeField] string requiredRepairObjectId = "repair.correct";
         [SerializeField] bool allowDevelopmentReset = true;
         [SerializeField] ResearchMovementLogger movementLogger;
+        [SerializeField] TaskCoordinateRoot coordinateRoot;
         [SerializeField, Min(1f)] float lowActivityThresholdSeconds = 30f;
         ResearchLogService logger;
         float activeElapsed;
@@ -18,6 +20,7 @@ namespace TMUVR.MaintenanceResearch
         bool lowActivityOpen;
         int openInformationSourceCount;
         bool videoPlaying;
+        readonly HashSet<string> activeHoverPairs = new HashSet<string>();
 
         public ResearchTaskId TaskId => definition == null ? ResearchTaskId.Session : definition.taskId;
         public int AttemptId { get; private set; } = 1;
@@ -75,15 +78,29 @@ namespace TMUVR.MaintenanceResearch
             }
         }
 
-        public void RecordHover(ResearchInteractable interactable)
+        public void RecordHover(ResearchInteractable interactable, string interactorId = "unknown")
         {
             if (!IsActive || interactable == null)
                 return;
 
+            interactorId = string.IsNullOrEmpty(interactorId) ? "unknown" : interactorId;
+            if (!activeHoverPairs.Add(interactable.StableObjectId + "|" + interactorId))
+                return;
             lastHoverAt = activeElapsed;
             var eventType = interactable.Kind == ResearchInteractionKind.Device ? ResearchEventType.DeviceHovered :
                 interactable.Kind == ResearchInteractionKind.Tool ? ResearchEventType.ToolHovered : ResearchEventType.ComponentHovered;
-            Log(eventType, interactable.StableObjectId, interactable.ObjectCategory, "observed", "controller-ray hover");
+            Log(eventType, interactable.StableObjectId, interactable.ObjectCategory, "observed", "raw_hover_enter;interactor=" + interactorId);
+        }
+
+        public void RecordHoverExit(ResearchInteractable interactable, string interactorId = "unknown")
+        {
+            if (!IsActive || interactable == null)
+                return;
+
+            interactorId = string.IsNullOrEmpty(interactorId) ? "unknown" : interactorId;
+            if (!activeHoverPairs.Remove(interactable.StableObjectId + "|" + interactorId))
+                return;
+            Log(ResearchEventType.ControllerRayExited, interactable.StableObjectId, interactable.ObjectCategory, "observed", "raw_hover_exit;interactor=" + interactorId);
         }
 
         public void RecordInteraction(ResearchInteractable interactable)
@@ -227,12 +244,17 @@ namespace TMUVR.MaintenanceResearch
             activeElapsed = 0f;
             lastMeaningfulActionAt = 0f;
             lastHoverAt = 0f;
+            activeHoverPairs.Clear();
             repairActionPerformed = false;
             lowActivityOpen = false;
             openInformationSourceCount = 0;
             videoPlaying = false;
             State = TaskState.Active;
             logger.BeginTask(definition, AttemptId);
+            if (coordinateRoot == null)
+                coordinateRoot = FindFirstObjectByType<TaskCoordinateRoot>();
+            if (coordinateRoot == null)
+                Debug.LogError("TaskCoordinateRoot is required for task-local-v2 logging.");
             if (movementLogger == null)
                 movementLogger = gameObject.GetComponent<ResearchMovementLogger>() ?? gameObject.AddComponent<ResearchMovementLogger>();
             movementLogger.Begin(this, definition.movementSamplingHz > 0 ? definition.movementSamplingHz : ResearchSessionManager.Instance.Configuration.movementSamplingHz);
@@ -256,7 +278,9 @@ namespace TMUVR.MaintenanceResearch
         {
             if (logger == null)
                 return;
-            logger.LogEvent(TaskId, AttemptId, definition.taskContext, definition.layoutId, eventType, objectId, category, source == null ? "" : source.sourceId, source == null ? "" : source.sourceType.ToString(), source == null ? "" : source.sourceSlot, result, State, "observed", transform.position, transform.rotation, detail);
+            var position = coordinateRoot == null ? Vector3.zero : coordinateRoot.InverseTransformPoint(transform.position);
+            var rotation = coordinateRoot == null ? Quaternion.identity : coordinateRoot.InverseTransformRotation(transform.rotation);
+            logger.LogEvent(TaskId, AttemptId, definition.taskContext, definition.layoutId, eventType, objectId, category, source == null ? "" : source.sourceId, source == null ? "" : source.sourceType.ToString(), source == null ? "" : source.sourceSlot, result, State, "observed", position, rotation, detail);
         }
     }
 }

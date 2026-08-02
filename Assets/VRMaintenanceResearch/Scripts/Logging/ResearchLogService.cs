@@ -109,7 +109,7 @@ namespace TMUVR.MaintenanceResearch
                     return;
                 }
 
-                CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskContext, config.taskOrder, config.participantGroup, config.language, layoutId, config.informationSourceLayoutId, record.elapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), record.sequence, eventType, objectId, objectCategory, informationSourceId, informationSourceType, sourceSlot, actionResult, taskState, measurementMethod, "task-local", position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w, additionalValue, config.applicationBuildVersion, config.taskContentVersion);
+                CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskContext, config.taskOrder, config.participantGroup, config.language, layoutId, config.informationSourceLayoutId, record.elapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), record.sequence, eventType, objectId, objectCategory, informationSourceId, informationSourceType, sourceSlot, actionResult, taskState, measurementMethod, TaskCoordinateRoot.CoordinateSpaceId, position.x, position.y, position.z, rotation.x, rotation.y, rotation.z, rotation.w, additionalValue, config.applicationBuildVersion, config.taskContentVersion);
                 if (taskId != ResearchTaskId.Session && taskLogs.TryGetValue(taskId, out taskLog))
                     taskLog.records.Add(record);
             }
@@ -119,7 +119,7 @@ namespace TMUVR.MaintenanceResearch
             }
         }
 
-        public void LogMovement(ResearchTaskId taskId, int attemptId, string deviceType, Transform pose, float samplingHz)
+        public void LogMovement(ResearchTaskId taskId, int attemptId, string deviceType, TaskCoordinateRoot coordinateRoot, Transform pose, float samplingHz)
         {
             if (!IsStarted || !taskLogs.TryGetValue(taskId, out var taskLog))
                 return;
@@ -127,10 +127,10 @@ namespace TMUVR.MaintenanceResearch
             {
                 var sessionElapsedSeconds = ElapsedSeconds;
                 var taskElapsedSeconds = Math.Max(0d, sessionElapsedSeconds - taskLog.startedAtSeconds);
-                var hasPose = pose != null;
-                var position = hasPose ? pose.position : Vector3.zero;
-                var rotation = hasPose ? pose.rotation : Quaternion.identity;
-                CsvUtility.WriteRow(taskLog.movement, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskElapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), ++taskLog.movementSequence, deviceType, "task-local", PoseCell(hasPose, position.x), PoseCell(hasPose, position.y), PoseCell(hasPose, position.z), RotationCell(hasPose, rotation.x), RotationCell(hasPose, rotation.y), RotationCell(hasPose, rotation.z), RotationCell(hasPose, rotation.w), hasPose, config.simulatorMode, samplingHz, config.applicationBuildVersion, config.taskContentVersion);
+                var hasPose = pose != null && coordinateRoot != null;
+                var position = hasPose ? coordinateRoot.InverseTransformPoint(pose.position) : Vector3.zero;
+                var rotation = hasPose ? coordinateRoot.InverseTransformRotation(pose.rotation) : Quaternion.identity;
+                CsvUtility.WriteRow(taskLog.movement, SchemaVersion, config.participantCode, config.sessionId, taskId, attemptId, taskElapsedSeconds, sessionStartedUtc.AddSeconds(sessionElapsedSeconds), ++taskLog.movementSequence, deviceType, TaskCoordinateRoot.CoordinateSpaceId, PoseCell(hasPose, position.x), PoseCell(hasPose, position.y), PoseCell(hasPose, position.z), RotationCell(hasPose, rotation.x), RotationCell(hasPose, rotation.y), RotationCell(hasPose, rotation.z), RotationCell(hasPose, rotation.w), hasPose, config.simulatorMode, samplingHz, config.applicationBuildVersion, config.taskContentVersion);
             }
             catch (Exception exception)
             {
@@ -238,7 +238,7 @@ namespace TMUVR.MaintenanceResearch
             return (manual + text + video + visual, manual, text, video, visual, lowPeriods, low);
         }
 
-        static bool IsMeaningful(ResearchEventType type) => type == ResearchEventType.InformationSourceOpened || type == ResearchEventType.DeviceHovered || type == ResearchEventType.ComponentHovered || type == ResearchEventType.ToolHovered || type == ResearchEventType.ObjectGrabbed || type == ResearchEventType.ObjectPlaced || type == ResearchEventType.ComponentRemoved || type == ResearchEventType.ComponentInstalled || type == ResearchEventType.ToolSelected || type == ResearchEventType.ToolUsed || type == ResearchEventType.DeviceTestStarted || type == ResearchEventType.RetryStarted || IsFailure(type);
+        static bool IsMeaningful(ResearchEventType type) => type == ResearchEventType.InformationSourceOpened || type == ResearchEventType.ObjectGrabbed || type == ResearchEventType.ObjectPlaced || type == ResearchEventType.ComponentRemoved || type == ResearchEventType.ComponentInstalled || type == ResearchEventType.ToolSelected || type == ResearchEventType.ToolUsed || type == ResearchEventType.DeviceTestStarted || type == ResearchEventType.RetryStarted || IsFailure(type);
         static bool IsFailure(ResearchEventType type) => type == ResearchEventType.UnsuccessfulAction || type == ResearchEventType.IncorrectToolSelected || type == ResearchEventType.IncorrectComponentInteraction || type == ResearchEventType.DeviceTestFailed;
         static string PoseCell(bool tracked, float value) => tracked ? value.ToString("0.000000", CultureInfo.InvariantCulture) : "";
         static string RotationCell(bool tracked, float value) => tracked ? value.ToString("0.0000000", CultureInfo.InvariantCulture) : "";

@@ -7,6 +7,7 @@ namespace TMUVR.MaintenanceResearch
         [SerializeField] Transform headset;
         [SerializeField] Transform leftController;
         [SerializeField] Transform rightController;
+        [SerializeField] TaskCoordinateRoot coordinateRoot;
         [SerializeField, Min(0.1f)] float samplingHz = 10f;
         MaintenanceTaskController task;
         float nextSampleAt;
@@ -17,6 +18,8 @@ namespace TMUVR.MaintenanceResearch
             samplingHz = Mathf.Clamp(configuredSamplingHz, 0.1f, 120f);
             if (headset == null && Camera.main != null)
                 headset = Camera.main.transform;
+            if (coordinateRoot == null)
+                coordinateRoot = FindFirstObjectByType<TaskCoordinateRoot>();
             nextSampleAt = Time.unscaledTime;
         }
 
@@ -34,9 +37,9 @@ namespace TMUVR.MaintenanceResearch
             if (logger == null)
                 return;
 
-            logger.LogMovement(task.TaskId, task.AttemptId, "Headset", headset, samplingHz);
-            logger.LogMovement(task.TaskId, task.AttemptId, "LeftController", leftController, samplingHz);
-            logger.LogMovement(task.TaskId, task.AttemptId, "RightController", rightController, samplingHz);
+            logger.LogMovement(task.TaskId, task.AttemptId, "Headset", coordinateRoot, headset, samplingHz);
+            logger.LogMovement(task.TaskId, task.AttemptId, "LeftController", coordinateRoot, leftController, samplingHz);
+            logger.LogMovement(task.TaskId, task.AttemptId, "RightController", coordinateRoot, rightController, samplingHz);
         }
 
         static Transform FindController(string name)

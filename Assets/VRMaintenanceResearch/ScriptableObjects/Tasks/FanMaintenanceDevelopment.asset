@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.ResearchTaskDefinition
   taskId: 3
   taskContext: fan-maintenance
-  taskContentVersion: development-1
+  taskContentVersion: research-v2
   activeFaultId: fan.faulty-replaceable-fuse
   layoutId: fan-layout-development-a
   informationSourceLayoutId: sources-layout-development-a
@@ -24,14 +24,13 @@ MonoBehaviour:
   englishParticipantInstructions: Inspect freely, use any information source in any
     order if desired, attempt repairs, and test the device when ready.
   availableComponents:
-  - fan.cover
+  - fan.front-cover
   - fan.blade
   - fan.fuse-holder
   - fan.speed-selector
   - fan.power-cord
   availableTools:
-  - tool.screwdriver
-  - tool.multimeter
+  - fan.tool.screwdriver
   availableReplacementParts:
   - fan.working-fuse
   informationSources:

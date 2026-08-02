@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -37,12 +38,15 @@ namespace TMUVR.MaintenanceResearch
         {
             if (task == null)
                 task = FindFirstObjectByType<MaintenanceTaskController>();
+
+            if (toggleKey == Key.None || !Enum.IsDefined(typeof(Key), toggleKey))
+                toggleKey = Key.F9;
         }
 
         void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard[toggleKey].wasPressedThisFrame)
+            if (keyboard != null && keyboard[toggleKey] != null && keyboard[toggleKey].wasPressedThisFrame)
                 expanded = !expanded;
         }
 

@@ -33,7 +33,7 @@ namespace TMUVR.MaintenanceResearch
         public string headsetModel = "XR Interaction Simulator";
         public string applicationBuildVersion = "development";
         public string gitCommitHash = "configured-at-build";
-        public string taskContentVersion = "development-1";
+        public string taskContentVersion = "research-v2";
         public string configurationVersion = "development-1";
         public string computerLayoutId = "computer-layout-development-a";
         public string fanLayoutId = "fan-layout-development-a";
