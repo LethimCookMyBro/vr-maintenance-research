@@ -133,5 +133,5 @@ The XR `preloadedAssets` entries that the build post-processor strips from
 ## Not executed
 
 - The built Windows player was **not** relaunched after this redesign; the build itself succeeded but the redesigned scenes were exercised in the Editor, not in the standalone artifact.
-- Grab, socket-placement and controller-ray interaction were exercised through the interactable API and confirmed present, but were **not** driven by hand through the XR simulator in this pass.
+- Grab, socket-placement and controller-ray interaction were exercised through the interactable API and confirmed present, but were **not** driven by hand through the XR simulator in this pass. Physics was checked: the three training grabbables settle on the new workbench collider at `y = 0.996` (bench top `0.92`) rather than falling to the floor.
 - No Meta Quest 3 hardware run occurred. No Quest performance claim is made.
