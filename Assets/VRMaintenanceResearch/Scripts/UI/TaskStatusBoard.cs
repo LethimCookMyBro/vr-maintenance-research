@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 namespace TMUVR.MaintenanceResearch
 {
@@ -14,8 +15,8 @@ namespace TMUVR.MaintenanceResearch
     {
         [SerializeField] MaintenanceTaskController task;
         [SerializeField] string taskTitle = "Maintenance Task";
-        [SerializeField] Vector3 boardPosition = new Vector3(0f, 1.55f, -0.15f);
-        [SerializeField] Vector2 boardSize = new Vector2(1.7f, 0.48f);
+        [SerializeField] Vector3 boardPosition = new Vector3(2.1f, 1.48f, 1.25f);
+        [SerializeField] Vector2 boardSize = new Vector2(0.95f, 0.34f);
 
         TextMeshProUGUI stateLabel;
         TextMeshProUGUI attemptLabel;
@@ -42,13 +43,12 @@ namespace TMUVR.MaintenanceResearch
 
             var canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
+            canvas.worldCamera = Camera.main;
             var rect = (RectTransform)canvasObject.transform;
             rect.sizeDelta = new Vector2(1040f, 1040f * (boardSize.y / boardSize.x));
             rect.localScale = Vector3.one * (boardSize.x / 1040f);
             canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 3f;
-            var comfortFollow = canvasObject.AddComponent<ComfortFollowPanel>();
-            comfortFollow.Configure(1.45f, 0.20f, 25f);
-            comfortFollow.Recenter();
+            canvasObject.AddComponent<TrackedDeviceGraphicRaycaster>();
 
             var background = ResearchUiKit.Panel("Background", canvasObject.transform, ResearchUiKit.Navy);
             ResearchUiKit.Stretch(background.rectTransform);

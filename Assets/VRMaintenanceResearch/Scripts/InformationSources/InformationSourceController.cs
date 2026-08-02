@@ -12,11 +12,14 @@ namespace TMUVR.MaintenanceResearch
         [SerializeField] InformationSourceDefinition definition;
         [SerializeField] MaintenanceTaskController task;
         [SerializeField] GameObject contentPanel;
+        [SerializeField] bool legacyContentPresentation = true;
         [SerializeField] VideoPlayer videoPlayer;
         [SerializeField] int currentPage;
         XRBaseInteractable xrInteractable;
         bool isOpen;
         bool isVideoPlaying;
+        bool isHovered;
+        Vector3 selectorBaseScale;
         readonly HashSet<string> activeHoverInteractors = new HashSet<string>();
 
         public InformationSourceDefinition Definition => definition;
@@ -32,7 +35,9 @@ namespace TMUVR.MaintenanceResearch
             xrInteractable = GetComponent<XRBaseInteractable>();
             if (contentPanel != null)
                 contentPanel.SetActive(false);
+            selectorBaseScale = transform.localScale;
             RefreshLocalizedContent();
+            RefreshSelectorState();
         }
 
         void OnEnable()
@@ -61,11 +66,33 @@ namespace TMUVR.MaintenanceResearch
                 videoPlayer.loopPointReached -= OnVideoCompleted;
         }
 
-        void OnMouseEnter() => RecordHover("mouse");
-        void OnMouseExit() => RecordHoverExit("mouse");
+        void OnMouseEnter()
+        {
+            isHovered = true;
+            RefreshSelectorState();
+            RecordHover("mouse");
+        }
+
+        void OnMouseExit()
+        {
+            isHovered = false;
+            RefreshSelectorState();
+            RecordHoverExit("mouse");
+        }
         void OnMouseDown() => Toggle();
-        void OnHoverEntered(HoverEnterEventArgs args) => RecordHover(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
-        void OnHoverExited(HoverExitEventArgs args) => RecordHoverExit(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+        void OnHoverEntered(HoverEnterEventArgs args)
+        {
+            isHovered = true;
+            RefreshSelectorState();
+            RecordHover(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+        }
+
+        void OnHoverExited(HoverExitEventArgs args)
+        {
+            isHovered = false;
+            RefreshSelectorState();
+            RecordHoverExit(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
+        }
         void OnSelectEntered(SelectEnterEventArgs args) => Toggle();
 
         void RecordHover(string interactorId)
@@ -94,15 +121,20 @@ namespace TMUVR.MaintenanceResearch
         {
             if (isOpen || definition == null)
                 return;
+
+            // The reader is one fixed station. Close the active source before
+            // opening this one so switching does not duplicate content panels.
+            foreach (var other in FindObjectsByType<InformationSourceController>(FindObjectsSortMode.None))
+                if (other != this && other.isOpen)
+                    other.Close();
+
             isOpen = true;
             RefreshLocalizedContent();
             if (contentPanel != null)
             {
-                var follow = contentPanel.GetComponent<ComfortFollowPanel>() ?? contentPanel.AddComponent<ComfortFollowPanel>();
-                contentPanel.SetActive(true);
-                follow.Configure(1.45f, -0.10f, 25f);
-                follow.Recenter();
+                contentPanel.SetActive(legacyContentPresentation);
             }
+            RefreshSelectorState();
             task?.NotifyInformation(definition, ResearchEventType.InformationSourceOpened, "opened");
         }
 
@@ -113,9 +145,28 @@ namespace TMUVR.MaintenanceResearch
             if (isVideoPlaying)
                 VideoStop();
             isOpen = false;
-            if (contentPanel != null)
+            if (contentPanel != null && legacyContentPresentation)
                 contentPanel.SetActive(false);
+            RefreshSelectorState();
             task?.NotifyInformation(definition, ResearchEventType.InformationSourceClosed, "closed");
+        }
+
+        void RefreshSelectorState()
+        {
+            var accent = isOpen ? ResearchUiKit.Accent : isHovered ? ResearchUiKit.AccentDim : ResearchUiKit.SlateSoft;
+            transform.localScale = selectorBaseScale * (isOpen ? 1.035f : isHovered ? 1.02f : 1f);
+            var accentBar = transform.Find("GEN Accent Bar");
+            if (accentBar == null)
+                return;
+
+            foreach (var renderer in accentBar.GetComponentsInChildren<Renderer>(true))
+            {
+                var material = renderer.material;
+                if (material.HasProperty("_BaseColor"))
+                    material.SetColor("_BaseColor", accent);
+                else if (material.HasProperty("_Color"))
+                    material.color = accent;
+            }
         }
 
         void RefreshLocalizedContent()
@@ -130,6 +181,7 @@ namespace TMUVR.MaintenanceResearch
 
             var title = language == ResearchLanguage.Thai && !string.IsNullOrEmpty(definition.thaiTitle) ? definition.thaiTitle :
                 language == ResearchLanguage.Japanese && !string.IsNullOrEmpty(definition.japaneseTitle) ? definition.japaneseTitle : definition.englishTitle;
+            title = title.Replace(" (Development)", string.Empty);
             var body = language == ResearchLanguage.Thai && !string.IsNullOrEmpty(definition.thaiContent) ? definition.thaiContent :
                 language == ResearchLanguage.Japanese && !string.IsNullOrEmpty(definition.japaneseContent) ? definition.japaneseContent : definition.englishContent;
 
@@ -142,9 +194,17 @@ namespace TMUVR.MaintenanceResearch
                     else if (label.name == "GEN Body")
                         label.text = body;
                 }
+
+                foreach (var label in contentPanel.GetComponentsInChildren<TextMesh>(true))
+                    if (label.name.EndsWith(" Text"))
+                        label.text = title + "\n\n" + body;
             }
 
             foreach (var label in GetComponentsInChildren<TMP_Text>(true))
+                if (label.name == "GEN Caption")
+                    label.text = SourceLabel(language);
+
+            foreach (var label in GetComponentsInChildren<TextMesh>(true))
                 if (label.name == "GEN Caption")
                     label.text = SourceLabel(language);
         }

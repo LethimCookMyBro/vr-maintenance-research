@@ -209,6 +209,7 @@ namespace TMUVR.MaintenanceResearch
                     break;
                 case ResearchEventType.VideoPaused:
                 case ResearchEventType.VideoStopped:
+                case ResearchEventType.VideoCompleted:
                     videoPlaying = false;
                     RegisterMeaningfulAction();
                     break;

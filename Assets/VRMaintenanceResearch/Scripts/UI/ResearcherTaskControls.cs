@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,7 +11,7 @@ namespace TMUVR.MaintenanceResearch
     /// Changes are presentation only:
     ///  - still gated on developmentMode, and now additionally collapsed by default so
     ///    it does not sit over the participant view during normal operation,
-    ///  - opened with the on-screen handle or the F9 key,
+    ///  - opened with the F9 key,
     ///  - Safety Stop separated by a rule and given the reserved amber/red treatment.
     /// </summary>
     public sealed class ResearcherTaskControls : MonoBehaviour
@@ -21,6 +20,9 @@ namespace TMUVR.MaintenanceResearch
 
         [SerializeField] MaintenanceTaskController task;
         [SerializeField] bool trainingScene;
+        // F9 is fixed by the research protocol. Older scenes may serialize a
+        // different numeric Key value, so never use that value as an index into
+        // Keyboard; Input System throws for values outside its key-control table.
         [SerializeField] Key toggleKey = Key.F9;
 
         bool expanded;
@@ -28,25 +30,23 @@ namespace TMUVR.MaintenanceResearch
         GUIStyle captionStyle;
         GUIStyle normalButton;
         GUIStyle dangerButton;
-        GUIStyle handleButton;
         Texture2D panelTexture;
         Texture2D ruleTexture;
         Texture2D dangerTexture;
-        Texture2D handleTexture;
 
         void Awake()
         {
             if (task == null)
                 task = FindFirstObjectByType<MaintenanceTaskController>();
 
-            if (toggleKey == Key.None || !Enum.IsDefined(typeof(Key), toggleKey))
+            if (toggleKey != Key.F9)
                 toggleKey = Key.F9;
         }
 
         void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard[toggleKey] != null && keyboard[toggleKey].wasPressedThisFrame)
+            if (keyboard != null && keyboard.f9Key != null && keyboard.f9Key.wasPressedThisFrame)
                 expanded = !expanded;
         }
 
@@ -55,7 +55,6 @@ namespace TMUVR.MaintenanceResearch
             Destroy(panelTexture);
             Destroy(ruleTexture);
             Destroy(dangerTexture);
-            Destroy(handleTexture);
         }
 
         void OnGUI()
@@ -66,16 +65,11 @@ namespace TMUVR.MaintenanceResearch
 
             EnsureStyles();
 
-            var handleWidth = expanded ? PanelWidth : 132f;
-            if (GUI.Button(new Rect(Screen.width - handleWidth - 12f, 12f, handleWidth, 24f),
-                    expanded ? "Researcher  ▴" : "Researcher  ▾  (F9)", handleButton))
-                expanded = !expanded;
-
             if (!expanded)
                 return;
 
             var height = trainingScene ? 116f : 268f;
-            GUILayout.BeginArea(new Rect(Screen.width - PanelWidth - 12f, 40f, PanelWidth, height), GUIContent.none, PanelStyle());
+            GUILayout.BeginArea(new Rect(Screen.width - PanelWidth - 12f, 12f, PanelWidth, height), GUIContent.none, PanelStyle());
             GUILayout.Space(8f);
 
             if (trainingScene)
@@ -129,7 +123,6 @@ namespace TMUVR.MaintenanceResearch
             panelTexture = Solid(new Color(0.078f, 0.10f, 0.13f, 0.93f));
             ruleTexture = Solid(new Color(0.35f, 0.40f, 0.46f, 0.7f));
             dangerTexture = Solid(new Color(0.62f, 0.16f, 0.12f, 0.95f));
-            handleTexture = Solid(new Color(0.118f, 0.165f, 0.227f, 0.88f));
 
             headingStyle = new GUIStyle(GUI.skin.label)
             {
@@ -166,16 +159,6 @@ namespace TMUVR.MaintenanceResearch
             dangerButton.hover.textColor = new Color(1f, 0.90f, 0.62f);
             dangerButton.active.textColor = Color.white;
 
-            handleButton = new GUIStyle(GUI.skin.button)
-            {
-                fontSize = 11,
-                alignment = TextAnchor.MiddleCenter,
-            };
-            handleButton.normal.background = handleTexture;
-            handleButton.hover.background = handleTexture;
-            handleButton.active.background = handleTexture;
-            handleButton.normal.textColor = new Color(0.85f, 0.88f, 0.92f);
-            handleButton.hover.textColor = Color.white;
         }
 
         GUIStyle PanelStyle()

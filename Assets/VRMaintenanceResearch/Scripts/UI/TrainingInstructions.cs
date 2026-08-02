@@ -17,8 +17,8 @@ namespace TMUVR.MaintenanceResearch
     /// </summary>
     public sealed class TrainingInstructions : MonoBehaviour
     {
-        [SerializeField] Vector3 boardPosition = new Vector3(0f, 1.24f, -0.25f);
-        [SerializeField] Vector2 boardSize = new Vector2(1.65f, 0.65f);
+        [SerializeField] Vector3 boardPosition = new Vector3(-1.55f, 1.36f, 1.35f);
+        [SerializeField] Vector2 boardSize = new Vector2(1.05f, 0.52f);
         [SerializeField] Sprite satisfiedIcon;
         [SerializeField] Sprite outstandingIcon;
 
@@ -84,12 +84,10 @@ namespace TMUVR.MaintenanceResearch
             canvasObject.transform.SetParent(transform, false);
             // Identity rotation faces the participant, who stands on the -Z side looking towards +Z.
             canvasObject.transform.SetPositionAndRotation(boardPosition, Quaternion.identity);
-            var follow = canvasObject.AddComponent<ComfortFollowPanel>();
-            follow.Configure(1.35f, 0.15f, 25f);
-            follow.Recenter();
 
             var canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
+            canvas.worldCamera = Camera.main;
             var rect = (RectTransform)canvasObject.transform;
             rect.sizeDelta = new Vector2(1280f, 1280f * (boardSize.y / boardSize.x));
             rect.localScale = Vector3.one * (boardSize.x / 1280f);
