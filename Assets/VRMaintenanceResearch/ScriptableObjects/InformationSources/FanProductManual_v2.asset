@@ -15,10 +15,10 @@ MonoBehaviour:
   sourceId: fan.source.manual
   sourceType: 0
   sourceSlot: A
-  englishTitle: Fan Product Manual (Development)
-  englishContent: 'Essential facts: inspect the power path; identify the replaceable
-    fuse; install the working fuse before testing; use the speed control for a neutral
-    device test.'
-  thaiTitle: 
-  japaneseTitle: 
-  developmentPlaceholder: 1
+  englishTitle: Fan Product Manual
+  englishContent: 'Disconnect power before opening the guard. Trace the power cord to the fuse holder, identify the working replacement fuse, install it, then use the speed control for the neutral device test.'
+  thaiTitle: คู่มือผลิตภัณฑ์พัดลม
+  japaneseTitle: 扇風機製品マニュアル
+  thaiContent: 'ก่อนเปิดตะแกรง ให้ถอดปลั๊ก ตรวจสายไฟไปยังช่องฟิวส์ ระบุฟิวส์สำรองที่ใช้งานได้ ติดตั้งฟิวส์ แล้วใช้ปุ่มปรับความเร็วเพื่อทดสอบอุปกรณ์'
+  japaneseContent: 'ガードを開ける前に電源プラグを抜きます。電源コードからヒューズホルダーまでを確認し、使用できる交換ヒューズを特定して取り付け、速度調整で装置を確認します。'
+  developmentPlaceholder: 0

@@ -15,10 +15,10 @@ MonoBehaviour:
   sourceId: computer.source.visual
   sourceType: 3
   sourceSlot: D
-  englishTitle: Computer Visual Guide (Development)
-  englishContent: 'Essential facts: inspect the power path; identify the motherboard
-    power connector; reconnect it before testing; use the power button for a neutral
-    device test.'
-  thaiTitle: 
-  japaneseTitle: 
-  developmentPlaceholder: 1
+  englishTitle: Computer Visual Guide
+  englishContent: 'Before opening, disconnect power. Trace the external power cable to the PSU and main connector. Identify the motherboard power connector, reconnect it, then press the power button for the neutral device test.'
+  thaiTitle: คู่มือภาพขั้นตอนซ่อมคอมพิวเตอร์
+  japaneseTitle: コンピューター修理ビジュアルガイド
+  thaiContent: 'ก่อนเปิดฝา ให้ถอดแหล่งจ่ายไฟ ตรวจเส้นทางสายไฟภายนอกไปยัง PSU และขั้วต่อหลัก ระบุขั้วต่อไฟของเมนบอร์ด เสียบกลับให้แน่น แล้วกดปุ่มเปิดเครื่องเพื่อทดสอบอุปกรณ์'
+  japaneseContent: '開ける前に電源を切り、外部電源ケーブルから PSU と主電源コネクターまでを確認します。マザーボード電源コネクターを特定して接続し直し、電源ボタンを押して装置を確認します。'
+  developmentPlaceholder: 0
