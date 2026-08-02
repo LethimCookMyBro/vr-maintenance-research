@@ -50,3 +50,11 @@ Physical Meta Quest 3 validation, approved translations and participant QA remai
 pending. Relaunch the standalone Windows artifact to confirm the redesigned scenes
 outside the Editor, and review the spatial changes recorded in `PROTOCOL_CHANGE_LOG.md`
 with the advisor before data collection.
+
+## Final spatial verification update - 2026-08-03
+
+- Commit `ac8837e` moves the four equal source cards and the single reader to a fixed left-side station in both task scenes. The source selector is 0.58 m x 0.28 m per card; the reader is 0.90 m x 0.53 m; the task card is 0.95 m x 0.34 m.
+- Runtime verification in `ComputerRepairTask` confirmed one EventSystem, one XRUIInputModule, no legacy input module, one tracked-device graphic raycaster, grounded desktop locomotion, a hidden simulator HUD, and a compact fixed task card.
+- Runtime source-switch verification opened Manual, advanced to page 1, switched to Text Troubleshooting Guide, and reported `active_reader_count=1`. No research-script runtime error was logged.
+- A new Windows Mono Development build completed at `Builds/Windows/VRMaintenanceResearch-Final/VRMaintenanceResearch.exe`: `Succeeded; errors=0; warnings=0`. It launched outside Unity and wrote `Standalone-Validation-Player.log`; OpenXR reported no available form factor on this desktop.
+- Physical Quest 3 validation and an interactive standalone full-flow remain pending.

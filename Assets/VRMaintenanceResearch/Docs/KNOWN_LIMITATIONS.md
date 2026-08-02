@@ -29,3 +29,8 @@
 - **World-space text is English-only and not yet localised.** The information-source captions, panel titles and body text render `englishTitle`/`englishContent` from the source definitions; Thai and Japanese fields exist but are not yet displayed.
 - **The information-source layout was deliberately not changed** even though the brief suggested moving the station to the participant's left. The four tiles are recorded against `information_source_layout_id`, and moving them would alter relative salience without changing the logged layout ID. Only appearance was equalised.
 - **Two Poly Haven textures were downloaded but only partially used.** `beige_wall_001` contributes its normal map only; its diffuse was dropped because the warm beige conflicted with the neutral off-white target. The unused roughness maps were deleted rather than left as dead assets.
+
+## Final spatial verification update - 2026-08-03
+
+- A fresh Windows Mono Development build launches on this desktop, but its Player log reports `XR_ERROR_FORM_FACTOR_UNAVAILABLE` without an available headset form factor. This establishes startup only; it does not establish the standalone interactive flow.
+- The compact source station, reader, status card, simulator-HUD gate, and F9-only researcher controls were runtime-checked in the Unity Editor. Quest 3 validation, full standalone interaction, and multilingual glyph review remain pending.

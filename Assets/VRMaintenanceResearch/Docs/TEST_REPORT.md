@@ -135,3 +135,11 @@ The XR `preloadedAssets` entries that the build post-processor strips from
 - The built Windows player was **not** relaunched after this redesign; the build itself succeeded but the redesigned scenes were exercised in the Editor, not in the standalone artifact.
 - Grab, socket-placement and controller-ray interaction were exercised through the interactable API and confirmed present, but were **not** driven by hand through the XR simulator in this pass. Physics was checked: the three training grabbables settle on the new workbench collider at `y = 0.996` (bench top `0.92`) rather than falling to the floor.
 - No Meta Quest 3 hardware run occurred. No Quest performance claim is made.
+
+## Final spatial verification update - 2026-08-03
+
+- `ResearchFoundationDirectTestRunner.Run()` completed: **PASS 6 tests**.
+- `ComputerRepairTask` Play Mode source-switch check: Manual opened, page advanced to 1, Text Troubleshooting Guide replaced it, and the runtime reported `active_reader_count=1`.
+- Runtime diagnostic: `eventSystems=1; xrModules=1; legacyModules=0; trackedRaycasters=1; graphicRaycasters=1`.
+- A fresh Windows Mono Development build at `Builds/Windows/VRMaintenanceResearch-Final/VRMaintenanceResearch.exe` reported `Succeeded; errors=0; warnings=0` and was launched outside Unity. Its log is `Builds/Windows/VRMaintenanceResearch-Final/Standalone-Validation-Player.log`.
+- The standalone log reached OpenXR startup, then reported `XR_ERROR_FORM_FACTOR_UNAVAILABLE` because no headset form factor was available. It does not validate the interactive standalone task flow or Quest 3 hardware behavior.
