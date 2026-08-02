@@ -1,5 +1,9 @@
 # Meta Quest 3 Next Steps
 
+## Current status - 2026-08-02
+
+Physical Quest 3 validation remains pending. The recovered Windows development build verified the desktop simulator and logging path; it does not establish headset tracking, controller behavior, or OpenXR hardware readiness.
+
 1. Create a non-development pseudonymous pilot configuration and confirm the `Sessions` output path is writable on the intended PC.
 2. Verify OpenXR runtime, Quest Link/Air Link connection, controller tracking, locomotion, grab, socket, ray selection, UI readability, haptics, and audio.
 3. Confirm headset/left/right pose rows have valid coordinates throughout a timed pilot, not only at startup.

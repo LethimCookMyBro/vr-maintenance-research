@@ -1,4 +1,4 @@
-﻿# Test Report - 2026-07-30
+﻿# Test Report - 2026-08-02
 
 ## Executed Edit Mode tests
 
@@ -28,12 +28,22 @@ The compiled menu command `VR Maintenance Research/Run Foundation Edit Mode Test
 
 ## Console classification
 
-No research-script Console error was present after the final natural video completion check or the current Computer -> Fan flow. The external Input System/XInput device-layout discovery error has a `com.unity.inputsystem` package stack frame, not a research script. Other warnings are Adaptive Performance initialization, XR audio/haptics simulator behavior, Unity AI account/relay connectivity, and a Windows Media Foundation color-primaries fallback for the self-authored development MP4. These are recorded separately from research logic.
+- Research scripts: zero Console errors. The recovered direct runner logged `PASS 6 tests` again after the build and runtime checks.
+- Pre-existing or external warnings: Unity AI account/subscription and Codex executable-signature messages, Performance Test JSON rewrite, 486 package shader/build warnings, Adaptive Performance provider initialization, OpenXR form-factor diagnostics without a headset, and simulator haptics/audio messages. The non-destructive scene validator also emitted one editor-only last-scene unload warning.
+- Input System/XInput device-layout: the current Unity Console filters returned zero matching entries. No package or version change was made.
+- The runtime log records OpenXR `XR_ERROR_FORM_FACTOR_UNAVAILABLE` on this desktop without a headset; it is separate from the research scripts and keeps physical Quest 3 validation pending.
 
-## Windows build attempt (not a validation pass)
+## Windows build preparation and recovery - 2026-08-02
 
-`BuildPipeline.BuildPlayer` was invoked for the five enabled scenes with `StandaloneWindows64`, `Development`, and `AllowDebugging`. The Unity MCP request did not return within 300 seconds; `Builds/Windows` contained no output files, and `Editor.log` recorded only the Performance Test build preprocessor writing `Assets/Resources/PerformanceTestRunInfo.json` and `PerformanceTestRunSettings.json`. It contains no matching build-success or build-failure result. The generated JSON files remain untracked and untouched. Two incidental XRI renderer-data edits caused during the attempt were restored to their tracked baseline. No Windows executable or build-run result is claimed.
+- Unity MCP reconnected to the open project. The Editor was responsive, idle, out of Play Mode, and active on `ResearcherSetup`; all five required build scenes remained enabled at indices 0-4.
+- The resumed IL2CPP build fully finished and stopped at the missing Visual Studio C++ toolchain and Windows SDK. No IL2CPP executable was produced; Unity and package versions were unchanged.
+- A temporary in-memory `Mono2x` fallback produced the Windows Development + Allow Debugging build, then restored the serialized Standalone backend to `IL2CPP`. Build result: `Succeeded`, 0 errors, 486 warnings, build report size `337087358` bytes, duration about 95 seconds.
+- Verified artifact: `D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch\VRMaintenanceResearch.exe` (667136 bytes) and `VRMaintenanceResearch_Data` (185 files). The two build-created XRI renderer edits were restored and both working hashes match `HEAD`.
+- Direct launch proof: the visible build loaded ResearcherSetup, a mouse click started VRTraining, foreground keyboard `I` moved the XRI simulator view, and mouse development controls advanced Computer then Fan. The build returned to ResearcherSetup after the Fan step and was closed cleanly.
+- Runtime evidence was written under `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T065545Z_e3534f03`: `session_manifest.csv` is `Completed`, `task_summary.csv` contains Training `Completed` plus Computer and Fan `Aborted` rows, and Training/Computer/Fan event CSVs are present.
+- Screenshots and the player log are under `D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch` (`recovery-*.png`, `keyboard-before2.png`, `keyboard-after2.png`, and `VRMaintenanceResearch-runtime.log`).
+- The eight invalid untracked v1 information-source assets remain untouched and unreferenced. Task definitions still reference only the eight valid `_v2` sources.
 
 ## Not validated
 
-Physical Meta Quest 3 operation, participant usability, approved translations, ethics/research approval, and a Windows executable have not been validated in this report.
+Physical Meta Quest 3 operation, participant usability, approved translations, ethics/research approval, and an IL2CPP release build remain pending.

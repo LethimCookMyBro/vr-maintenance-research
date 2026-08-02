@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Recovery, information-source media, and QA foundation are stable. Windows build preparation was attempted and is paused at the Unity build pipeline; the Editor MCP bridge did not return a build result after 300 seconds.
+Build Preparation recovery is complete. Unity MCP is responsive, the Editor is idle outside Play Mode, and a verified Windows Development + Allow Debugging Mono fallback build is available. The serialized Standalone backend remains IL2CPP; the IL2CPP path is pending the Visual Studio C++ toolchain and Windows SDK.
 
 ## Recovered foundation
 
@@ -20,11 +20,12 @@ Recovery, information-source media, and QA foundation are stable. Windows build 
 - Current training-enabled Computer -> Fan session completed with Training, Computer, and Fan summaries and recoverable error/retry paths.
 - Earlier Fan -> Computer session completed after the summary/timestamp fixes.
 - Final normal video lifecycle produced zero Console errors.
-- A Windows 64-bit Development + Allow Debugging build was invoked with the five enabled build scenes. No executable was produced under `Builds/Windows` and no build-success or build-failure record was emitted before the MCP request timed out. The Editor log stopped after the Performance Test preprocessor wrote its generated `Assets/Resources/PerformanceTestRun*.json` files; those untracked generated files were left untouched.
-- The build attempt changed two original XRI renderer-data assets. They were restored to their tracked baseline immediately; no original XRI asset remains changed by this work.
+- A Windows 64-bit Development + Allow Debugging build now exists at `D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch\VRMaintenanceResearch.exe`, with its required data folder verified. The fallback build completed with 0 errors and 486 package/build warnings.
+- Direct launch verified ResearcherSetup, VRTraining, Computer, Fan, mouse development controls, foreground keyboard simulator movement, and CSV logging under `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T065545Z_e3534f03`.
+- The two build-created XRI renderer-data edits match `HEAD` after restoration; no original XRI asset remains changed by this work. The eight invalid untracked v1 information-source assets remain untouched and unreferenced.
 
 See `TEST_REPORT.md` for exact evidence paths, Console classification, and remaining limits.
 
 ## Next action
 
-Recover the stalled Unity build pipeline without discarding unsaved Editor work, reconnect Unity MCP, confirm compilation and Console state, then retry and verify the Windows development build. Perform the documented Meta Quest 3 hardware/translation approval steps before study deployment.
+Keep physical Meta Quest 3, approved translations, and participant QA pending. If an IL2CPP release artifact is required, install the missing Windows C++ toolchain/SDK and repeat only the build verification while preserving the current project state.
