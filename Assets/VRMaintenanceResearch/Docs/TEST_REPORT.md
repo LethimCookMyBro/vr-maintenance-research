@@ -47,3 +47,91 @@ The compiled menu command `VR Maintenance Research/Run Foundation Edit Mode Test
 ## Not validated
 
 Physical Meta Quest 3 operation, participant usability, approved translations, ethics/research approval, and an IL2CPP release build remain pending.
+
+---
+
+# Visual redesign validation - 2026-08-02 (branch `visual-polish-claude`)
+
+Everything in this section was actually executed. Nothing is inferred.
+
+## Console
+
+- Unity Console errors before the work started: **0**.
+- Unity Console errors after every batch and at the end of the work: **0**.
+- One compiler warning (`TMP_Text.enableWordWrapping` obsolete) was introduced and then fixed.
+
+## Play Mode smoke run A - Computer then Fan, training required
+
+Participant code `FINAL_CF`, development mode, XR simulator.
+Evidence: `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T083541Z_44a43476`
+
+Executed and observed:
+
+- `ResearcherSetup` built the redesigned TextMeshPro canvas (45 TMP labels, 1 EventSystem, 1 camera) and started the session.
+- `VRTraining` loaded; the world-space training board was built; the Continue button reported `interactable = False` before the training requirements were met (gating works).
+- The neutral training information source opened its new content panel.
+- `ComputerRepairTask`: all four information sources were opened, paged and closed; the video source was played, seeked and paused.
+- Wrong part (`computer.ram`) then device test -> task stayed `Active` and logged `IncorrectComponentInteraction` + `DeviceTestFailed`.
+- Pause, Resume, Retry.
+- Correct part (`computer.main-power-connector`) then device test -> `Completed`.
+- `FanRepairTask`: all four sources exercised; wrong fuse -> `Active`; working fuse -> `Completed`.
+- Session ended and returned to `ResearcherSetup`.
+
+CSV output verified on disk:
+
+| File | Result |
+|---|---|
+| `session_manifest.csv` | 1 row, `session_completion_status = Completed`, `logging_status = active` |
+| `task_summary.csv` | 3 rows: Training / Computer / Fan, all `Completed` |
+| `Training/events.csv` | 5 rows, `Training/movement.csv` 1593 rows |
+| `Computer/events.csv` | 30 rows, `Computer/movement.csv` 420 rows |
+| `Fan/events.csv` | 27 rows, `Fan/movement.csv` 321 rows |
+
+## Play Mode smoke run B - Fan then Computer, training skipped
+
+Participant code `FINAL_FC`.
+Evidence: `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T083741Z_66a5f85e`
+
+- `FanRepairTask` loaded first (task-order selection honoured), completed on the working fuse.
+- `ComputerRepairTask` loaded second; `Reset Task` was exercised (attempt 1 recorded as `Reset`, attempt 2 started `Active`), then completed.
+- `task_summary.csv` recorded Fan `Completed`, Computer attempt 1 `Reset`, Computer attempt 2 `Completed` — one row per attempt, as before.
+- `session_manifest.csv`: `Completed` / `active`.
+
+## Stable research IDs after the redesign
+
+Enumerated at runtime from `ResearchInteractable` components; identical to the baseline set.
+
+- Computer (13): `computer.case`, `computer.cooling-fan`, `computer.external-power-cable`, `computer.internal-cable`, `computer.main-power-connector`, `computer.motherboard`, `computer.non-target-module`, `computer.power-button`, `computer.psu`, `computer.psu-switch`, `computer.ram`, `computer.side-panel`, `computer.tool.screwdriver`
+- Fan (15): `fan.blade`, `fan.body`, `fan.fastener`, `fan.faulty-fuse`, `fan.front-cover`, `fan.fuse-holder`, `fan.internal-wire`, `fan.motor-module`, `fan.non-target-module`, `fan.power-cord`, `fan.power-plug`, `fan.power-switch`, `fan.speed-selector`, `fan.tool.screwdriver`, `fan.working-fuse`
+- Training (3): `training.training-cube-a`, `training.training-cube-b`, `training.training-cylinder`
+
+## Scene integrity check (all four build scenes)
+
+| Scene | XR Origin | Interaction Manager | EventSystem | Cameras | Lights | Lab Environment | ResearchInteractables | Renderers | Triangles | Unique materials |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ResearcherSetup | 0 | 0 | 0 (built at runtime) | 1 | 2 | 1 | 0 | 52 | 1,084 | 12 |
+| VRTraining | 1 | 1 | 1 | 1 | 2 | 1 | 3 | 91 | 17,446 | 18 |
+| ComputerRepairTask | 1 | 1 | 1 | 1 | 2 | 1 | 13 | 156 | 19,272 | 26 |
+| FanRepairTask | 1 | 1 | 1 | 1 | 2 | 1 | 15 | 159 | 19,988 | 25 |
+
+A duplicate `Lab Environment` instance was found during validation (the prefab root was renamed on save, so the de-duplication check missed it) and removed; the counts above are after that fix.
+
+## Windows build
+
+`BuildPipeline.BuildPlayer`, Windows 64-bit, Development + Allow Debugging, `Mono2x` fallback (the IL2CPP toolchain is still unavailable on this machine; the serialized project backend was restored to `IL2CPP` immediately after the build).
+
+- Result: **Succeeded**
+- Errors: 0
+- Warnings: 486 (package/shader warnings, same class and count as the recovered baseline)
+- Size: 325 MB
+- Duration: 00:05:59
+- Output: `D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch\VRMaintenanceResearch.exe`
+
+The XR `preloadedAssets` entries that the build post-processor strips from
+`ProjectSettings.asset` were restored so the working tree matches `HEAD` for that field.
+
+## Not executed
+
+- The built Windows player was **not** relaunched after this redesign; the build itself succeeded but the redesigned scenes were exercised in the Editor, not in the standalone artifact.
+- Grab, socket-placement and controller-ray interaction were exercised through the interactable API and confirmed present, but were **not** driven by hand through the XR simulator in this pass.
+- No Meta Quest 3 hardware run occurred. No Quest performance claim is made.

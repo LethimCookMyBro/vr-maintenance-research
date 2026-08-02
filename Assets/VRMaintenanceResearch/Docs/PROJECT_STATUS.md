@@ -1,31 +1,52 @@
-﻿# VR Maintenance Research - Project Status
+# VR Maintenance Research - Project Status
 
 ## Current phase
 
-Build Preparation recovery is complete. Unity MCP is responsive, the Editor is idle outside Play Mode, and a verified Windows Development + Allow Debugging Mono fallback build is available. The serialized Standalone backend remains IL2CPP; the IL2CPP path is pending the Visual Studio C++ toolchain and Windows SDK.
+Visual redesign is complete on branch `visual-polish-claude`, built from the validated
+baseline `f117cc8`. The graybox prototype is now a clean academic VR maintenance
+laboratory. Unity MCP is responsive, the Editor is idle outside Play Mode, the Console
+has zero errors, and a Windows Development + Allow Debugging Mono fallback build
+succeeds. The serialized Standalone backend remains IL2CPP; the IL2CPP path is still
+pending the Visual Studio C++ toolchain and Windows SDK.
 
-## Recovered foundation
+## Recovered foundation (unchanged by the redesign)
 
 - All custom content remains under `Assets/VRMaintenanceResearch`; original XRI example scenes/assets and package versions remain untouched.
 - Unity import is complete and scripts compile. Research scenes remain out of Play Mode after validation.
-- The invalid unreferenced v1 source assets still have missing script references. Unity MCP rejected their deletion; valid task definitions reference only the eight `_v2` assets.
-- Current source panel layout is identical across tasks: fixed source slots and participant-facing panels at `(slot x, 1.65, 1.50)`.
+- The invalid unreferenced v1 source assets still have missing script references and are still untracked, unstaged and unreferenced. Valid task definitions reference only the eight `_v2` assets.
 - Computer and Fan video sources use real, 20-second silent self-authored baseline MP4s, Unity `VideoPlayer`, RenderTextures, and shared Play/Pause/Stop/Seek controls.
 - Natural video completion records `VideoCompleted`, clearing playback state before later close/scene teardown.
 - Task log timestamps are task-relative with ISO 8601 absolute timestamps retained; multi-task summaries append one row per completed task.
+- All 31 stable research IDs (13 Computer, 15 Fan, 3 Training) are byte-identical to the baseline.
+
+## Visual redesign, 2026-08-02
+
+- A shared `LabEnvironment` prefab (`Prefabs/Environment/LabEnvironment.prefab`, ~884 triangles) provides the same 9 x 8 x 3 m room shell, two-light rig, ceiling panels, 0.92 m workbench, parts/tool trays, control pedestal, storage unit and information station to Training, Computer, Fan and ResearcherSetup.
+- 17 shared URP materials under `Materials/Lab` replace the single built-in `Lit` instance that every object previously used. Two Poly Haven CC0 textures and 16 Kenney CC0 icons are the only external assets; see `ThirdParty/THIRD_PARTY_ASSETS.md`.
+- Two objects that rendered magenta (`Default-Material` on the built-in Standard shader, which does not exist in URP) are fixed.
+- The participant no longer spawns inside the device; the start pose is `(0, 0, -1.6)` in all three participant scenes.
+- The four information sources are now identifiable while closed, with identical tile size, icon size, accent weight, caption type size, slot label and viewing geometry. Their transforms are deliberately unchanged.
+- `ResearcherSetup` is a centred two-column TextMeshPro desktop interface over a laboratory backdrop, replacing the IMGUI box. The pseudonymity warning is retained and now visually prominent.
+- Training has a readable world-space board with live progress indicators and a Continue button that unlocks only when the three training requirements are met.
+- Researcher controls keep every function (Pause, Resume, Retry, Reset Task, Abort Task, Safety Stop, Continue to Next Task) but are collapsed behind a handle (or F9) and Safety Stop is separated and given the reserved warning treatment.
+- A read-only task status board mirrors task state and attempt number above the information station.
 
 ## Latest executed evidence
 
-- Six compiled Edit Mode foundation tests passed.
-- Current training-enabled Computer -> Fan session completed with Training, Computer, and Fan summaries and recoverable error/retry paths.
-- Earlier Fan -> Computer session completed after the summary/timestamp fixes.
-- Final normal video lifecycle produced zero Console errors.
-- A Windows 64-bit Development + Allow Debugging build now exists at `D:\TMU_VR\XR-Interaction-Toolkit-Examples\Builds\Windows\VRMaintenanceResearch\VRMaintenanceResearch.exe`, with its required data folder verified. The fallback build completed with 0 errors and 486 package/build warnings.
-- Direct launch verified ResearcherSetup, VRTraining, Computer, Fan, mouse development controls, foreground keyboard simulator movement, and CSV logging under `C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T065545Z_e3534f03`.
-- The two build-created XRI renderer-data edits match `HEAD` after restoration; no original XRI asset remains changed by this work. The eight invalid untracked v1 information-source assets remain untouched and unreferenced.
+- Two full Play Mode sessions on the redesigned scenes: `ResearcherSetup -> VRTraining -> Computer -> Fan` and `ResearcherSetup -> Fan -> Computer`, both ending `Completed` with correct manifest, event, movement and summary CSVs, including a failed device test, a retry and a development reset.
+  - `...\VRMaintenanceResearchData\Development\20260802T083541Z_44a43476`
+  - `...\VRMaintenanceResearchData\Development\20260802T083741Z_66a5f85e`
+- Zero Console errors across the whole redesign.
+- Windows 64-bit Development + Allow Debugging build: **Succeeded**, 0 errors, 486 package/shader warnings, 325 MB, 5 min 59 s.
+- Scene integrity verified: exactly one XR Origin, XR Interaction Manager, EventSystem, camera, `Lab Environment` and two lights per scene.
+- Before/after participant-viewpoint screenshots in `Docs/Screenshots`.
 
-See `TEST_REPORT.md` for exact evidence paths, Console classification, and remaining limits.
+See `TEST_REPORT.md` for exact evidence paths and `CLAUDE_VISUAL_REDESIGN_PLAN.md` for
+the audit, design decisions and the changes that were deliberately not made.
 
 ## Next action
 
-Keep physical Meta Quest 3, approved translations, and participant QA pending. If an IL2CPP release artifact is required, install the missing Windows C++ toolchain/SDK and repeat only the build verification while preserving the current project state.
+Physical Meta Quest 3 validation, approved translations and participant QA remain
+pending. Relaunch the standalone Windows artifact to confirm the redesigned scenes
+outside the Editor, and review the spatial changes recorded in `PROTOCOL_CHANGE_LOG.md`
+with the advisor before data collection.

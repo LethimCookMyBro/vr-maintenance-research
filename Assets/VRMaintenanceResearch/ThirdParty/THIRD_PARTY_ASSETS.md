@@ -1,3 +1,120 @@
 # Third-Party Assets
 
-No external assets are currently used. All current content is Unity primitives or existing official XRI sample content retained in place. Add a row here with source URL, creator, license, access date, imported files, modifications, use, and attribution before importing any external asset.
+All third-party content used by the VR Maintenance Research project lives under
+`Assets/VRMaintenanceResearch/ThirdParty/<Source>/<AssetName>/`. Every entry below
+was license-verified before download. Assets whose license could not be verified
+were not downloaded.
+
+Original XRI example assets shipped with this repository are **not** third-party
+imports of this work and are never modified.
+
+Access date for every entry below: 2026-08-02.
+
+---
+
+## Poly Haven — CC0 1.0 Universal
+
+License page: <https://polyhaven.com/license> (verified: CC0, attribution not required).
+Local copy of the licence statement: `ThirdParty/PolyHaven/LICENSE.txt`.
+
+### Concrete Floor Worn 001
+
+| Field | Value |
+|---|---|
+| Asset name | Concrete Floor Worn 001 (`concrete_floor_worn_001`) |
+| Creator | Dimitrios Savva (photography), Rico Cilliers (processing) |
+| Source | Poly Haven |
+| Source page | <https://polyhaven.com/a/concrete_floor_worn_001> |
+| License | CC0 1.0 Universal |
+| Attribution required | No (credited voluntarily) |
+| Downloaded files | `concrete_floor_worn_001_diff_1k.jpg` (116 KB), `concrete_floor_worn_001_nor_gl_1k.jpg` (108 KB) |
+| Modifications | None to the source files. Imported as Unity textures; smoothness is a constant on the shared URP Lit material, so no roughness map was retained. |
+| Intended use | Laboratory floor material (`Lab_Floor.mat`) in Training, Computer and Fan scenes |
+| Polygon count | n/a (texture only) |
+| Material count | Feeds 1 shared URP Lit material |
+| Texture sizes | 1024 x 1024, JPG |
+
+### Beige Wall 001
+
+| Field | Value |
+|---|---|
+| Asset name | Beige Wall 001 (`beige_wall_001`) |
+| Creator | Dimitrios Savva (photography), Rico Cilliers (processing) |
+| Source | Poly Haven |
+| Source page | <https://polyhaven.com/a/beige_wall_001> |
+| License | CC0 1.0 Universal |
+| Attribution required | No (credited voluntarily) |
+| Downloaded files | `beige_wall_001_diff_1k.jpg` (32 KB), `beige_wall_001_nor_gl_1k.jpg` (150 KB) |
+| Modifications | None to the source files. Imported as Unity textures and tinted to off-white by the shared wall material. |
+| Intended use | Laboratory wall material (`Lab_Wall.mat`) in Training, Computer and Fan scenes |
+| Polygon count | n/a (texture only) |
+| Material count | Feeds 1 shared URP Lit material |
+| Texture sizes | 1024 x 1024, JPG |
+
+---
+
+## Kenney — CC0 1.0 Universal
+
+License page: <https://kenney.nl/assets/game-icons> (verified: "Creative Commons CC0").
+Local copy of the licence statement: `ThirdParty/Kenney/GameIcons/LICENSE.txt`.
+
+| Field | Value |
+|---|---|
+| Asset name | Game Icons |
+| Creator | Kenney Vleugels (kenney.nl) |
+| Source | Kenney |
+| Source page | <https://kenney.nl/assets/game-icons> |
+| Direct download | `https://kenney.nl/media/pages/assets/game-icons/1ebf9c14af-1677661579/kenney_game-icons.zip` (1.05 MB) |
+| License | CC0 1.0 Universal — "Credit would be nice but is not mandatory" |
+| Attribution required | No (credited voluntarily) |
+| Downloaded filename | `kenney_game-icons.zip`; 16 PNG files extracted into the project |
+| Modifications | None to the source files. Imported as Unity sprites (single sprite, point-free bilinear, no compression change). |
+| Intended use | World-space information-source tiles, researcher controls, training UI |
+| Polygon count | n/a (2D sprites) |
+| Material count | Rendered by the default UI sprite material |
+| Texture sizes | 100 x 100 PNG, white glyph on transparent |
+
+Icons retained and their mapped roles:
+
+| File | Role |
+|---|---|
+| `open.png` | Product Manual source tile |
+| `menuList.png` | Text Troubleshooting Guide source tile |
+| `movie.png` | Instructional Video source tile |
+| `menuGrid.png` | Visual Step-by-Step Guide source tile |
+| `zoom.png` | Inspect / device test control |
+| `return.png` | Reset control |
+| `pause.png` | Pause control |
+| `stop.png` | Safety Stop control |
+| `warning.png` | Safety Stop separation / warning accents |
+| `fastForward.png` | Video seek control |
+| `previous.png`, `next.png` | Information page controls |
+| `power.png` | Device power / speed control |
+| `information.png` | Information station signage |
+| `checkmark.png` | Training progress indicator (satisfied) |
+| `exclamation.png` | Training progress indicator (outstanding) |
+
+All 105 icons in the pack are CC0; only the 16 above were copied into the project
+to keep the imported asset set small.
+
+---
+
+## Assets deliberately NOT imported
+
+| Candidate | Reason |
+|---|---|
+| Poly Haven metal textures (`metal_plate`, `rusty_metal_*`, `corrugated_iron_*`) | Every metal texture in the Poly Haven library is heavily rusted or industrial-weathered. None matched the clean academic-laboratory target style. Replaced with an untextured shared URP Lit metal material (metallic 0.75 / smoothness 0.55), which is also cheaper on Quest. |
+| Quaternius / Sketchfab furniture and appliance models | Not required: the workbench, shelving, tool tray and room shell are authored from Unity primitives with shared materials, which keeps the triangle budget and material count far below any imported set and avoids scale/pivot mismatches against the validated interaction colliders. See `Docs/CLAUDE_VISUAL_REDESIGN_PLAN.md`. |
+| GLTF / model-importer packages | The goal forbids adding packages purely to import assets. No package versions were changed. |
+
+## Manual-download shortlist (optional future work)
+
+Not required for the current build; listed only if higher-fidelity props are wanted later.
+Priority order:
+
+1. Quaternius — modular workshop / props packs (CC0) — <https://quaternius.com>
+2. Kenney — "Furniture Kit" (CC0) — <https://kenney.nl/assets/furniture-kit>
+3. Poly Haven — HDRI `studio_small_08` (CC0) — <https://polyhaven.com/a/studio_small_08> for a neutral indoor reflection probe
+
+Each would need pivot/scale alignment against the existing interaction colliders
+before use, and must remain a visual child of the functional root.

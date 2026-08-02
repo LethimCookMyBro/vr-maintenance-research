@@ -1,0 +1,24 @@
+Poly Haven texture assets
+=========================
+
+Source:  https://polyhaven.com
+License: CC0 1.0 Universal (Creative Commons Zero) - public domain dedication
+         https://creativecommons.org/publicdomain/zero/1.0/
+
+Poly Haven states: "You do not need to give credit or attribution when using
+them (although it is appreciated)."
+
+Attribution is therefore NOT required. Credit is given voluntarily in
+Assets/VRMaintenanceResearch/ThirdParty/THIRD_PARTY_ASSETS.md.
+
+Assets used in this project
+---------------------------
+1. Concrete Floor Worn 001  (concrete_floor_worn_001)
+   https://polyhaven.com/a/concrete_floor_worn_001
+   Authors: Dimitrios Savva (photography), Rico Cilliers (processing)
+
+2. Beige Wall 001  (beige_wall_001)
+   https://polyhaven.com/a/beige_wall_001
+   Authors: Dimitrios Savva (photography), Rico Cilliers (processing)
+
+Only the 1k JPG variants (diffuse, OpenGL normal, roughness) were downloaded.
