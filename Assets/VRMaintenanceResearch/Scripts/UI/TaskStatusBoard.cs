@@ -14,8 +14,8 @@ namespace TMUVR.MaintenanceResearch
     {
         [SerializeField] MaintenanceTaskController task;
         [SerializeField] string taskTitle = "Maintenance Task";
-        [SerializeField] Vector3 boardPosition = new Vector3(0f, 2.25f, 3.35f);
-        [SerializeField] Vector2 boardSize = new Vector2(2.6f, 0.86f);
+        [SerializeField] Vector3 boardPosition = new Vector3(0f, 1.55f, -0.15f);
+        [SerializeField] Vector2 boardSize = new Vector2(1.7f, 0.48f);
 
         TextMeshProUGUI stateLabel;
         TextMeshProUGUI attemptLabel;
@@ -46,6 +46,9 @@ namespace TMUVR.MaintenanceResearch
             rect.sizeDelta = new Vector2(1040f, 1040f * (boardSize.y / boardSize.x));
             rect.localScale = Vector3.one * (boardSize.x / 1040f);
             canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 3f;
+            var comfortFollow = canvasObject.AddComponent<ComfortFollowPanel>();
+            comfortFollow.Configure(1.45f, 0.20f, 25f);
+            comfortFollow.Recenter();
 
             var background = ResearchUiKit.Panel("Background", canvasObject.transform, ResearchUiKit.Navy);
             ResearchUiKit.Stretch(background.rectTransform);
@@ -57,17 +60,17 @@ namespace TMUVR.MaintenanceResearch
             accent.rectTransform.sizeDelta = new Vector2(0f, 6f);
             accent.rectTransform.anchoredPosition = Vector2.zero;
 
-            var title = ResearchUiKit.Label("Title", background.transform, taskTitle, 54f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
-            ResearchUiKit.Place(title.rectTransform, 44f, 34f, 700f, 64f);
+            var title = ResearchUiKit.Label("Title", background.transform, taskTitle, 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
+            ResearchUiKit.Place(title.rectTransform, 44f, 24f, 900f, 52f);
 
             statePip = ResearchUiKit.Panel("Pip", background.transform, ResearchUiKit.Accent);
-            ResearchUiKit.Place(statePip.rectTransform, 44f, 122f, 18f, 18f);
+            ResearchUiKit.Place(statePip.rectTransform, 44f, 100f, 18f, 18f);
 
             stateLabel = ResearchUiKit.Label("State", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
-            ResearchUiKit.Place(stateLabel.rectTransform, 74f, 116f, 600f, 40f);
+            ResearchUiKit.Place(stateLabel.rectTransform, 74f, 94f, 600f, 36f);
 
             attemptLabel = ResearchUiKit.Label("Attempt", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Right);
-            ResearchUiKit.Place(attemptLabel.rectTransform, 340f, 116f, 656f, 40f);
+            ResearchUiKit.Place(attemptLabel.rectTransform, 340f, 94f, 656f, 36f);
         }
 
         void Refresh(bool force)

@@ -17,9 +17,8 @@ namespace TMUVR.MaintenanceResearch
     /// </summary>
     public sealed class TrainingInstructions : MonoBehaviour
     {
-        // Mounted above the information station so an opened source panel never covers it.
-        [SerializeField] Vector3 boardPosition = new Vector3(0f, 2.56f, 3.20f);
-        [SerializeField] Vector2 boardSize = new Vector2(3.2f, 0.84f);
+        [SerializeField] Vector3 boardPosition = new Vector3(0f, 1.24f, -0.25f);
+        [SerializeField] Vector2 boardSize = new Vector2(1.65f, 0.65f);
         [SerializeField] Sprite satisfiedIcon;
         [SerializeField] Sprite outstandingIcon;
 
@@ -85,6 +84,9 @@ namespace TMUVR.MaintenanceResearch
             canvasObject.transform.SetParent(transform, false);
             // Identity rotation faces the participant, who stands on the -Z side looking towards +Z.
             canvasObject.transform.SetPositionAndRotation(boardPosition, Quaternion.identity);
+            var follow = canvasObject.AddComponent<ComfortFollowPanel>();
+            follow.Configure(1.35f, 0.15f, 25f);
+            follow.Recenter();
 
             var canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
@@ -92,7 +94,6 @@ namespace TMUVR.MaintenanceResearch
             rect.sizeDelta = new Vector2(1280f, 1280f * (boardSize.y / boardSize.x));
             rect.localScale = Vector3.one * (boardSize.x / 1280f);
             canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 3f;
-            canvasObject.AddComponent<GraphicRaycaster>();
             canvasObject.AddComponent<TrackedDeviceGraphicRaycaster>();
 
             var background = ResearchUiKit.Panel("Background", canvasObject.transform, ResearchUiKit.Navy);

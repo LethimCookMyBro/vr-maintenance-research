@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &226209403
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 226209405}
+  - component: {fileID: 226209404}
+  m_Layer: 0
+  m_Name: TaskCoordinateRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &226209404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226209403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29cdddc679d92984683f5a5a38a5d1b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.TaskCoordinateRoot
+--- !u!4 &226209405
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226209403}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &237811937
 GameObject:
   m_ObjectHideFlags: 0
@@ -725,6 +769,7 @@ MonoBehaviour:
   requiredRepairObjectId: repair.correct
   allowDevelopmentReset: 1
   movementLogger: {fileID: 652341149}
+  coordinateRoot: {fileID: 226209404}
   lowActivityThresholdSeconds: 30
 --- !u!114 &652341149
 MonoBehaviour:
@@ -741,6 +786,7 @@ MonoBehaviour:
   headset: {fileID: 0}
   leftController: {fileID: 0}
   rightController: {fileID: 0}
+  coordinateRoot: {fileID: 226209404}
   samplingHz: 10
 --- !u!114 &652341150
 MonoBehaviour:
@@ -756,7 +802,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.ResearcherTaskControls
   task: {fileID: 0}
   trainingScene: 1
-  toggleKey: 290
+  toggleKey: 102
 --- !u!114 &652341151
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -769,8 +815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec7c515cc7c0dde45b46ce7aa1f61174, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.TrainingInstructions
-  boardPosition: {x: 0, y: 2.56, z: 3.2}
-  boardSize: {x: 3.2, y: 0.84}
+  boardPosition: {x: 0, y: 1.5, z: -0.15}
+  boardSize: {x: 1.65, y: 0.65}
   satisfiedIcon: {fileID: 0}
   outstandingIcon: {fileID: 0}
 --- !u!4 &652341152
@@ -799,6 +845,7 @@ GameObject:
   - component: {fileID: 669999838}
   - component: {fileID: 669999837}
   - component: {fileID: 669999836}
+  - component: {fileID: 669999839}
   m_Layer: 0
   m_Name: Event System
   m_TagString: Untagged
@@ -876,6 +923,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &669999839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 669999835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1511ccae7919cfc46b603b9b337fdc94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.BaseInput
 --- !u!1 &694541183
 GameObject:
   m_ObjectHideFlags: 0
@@ -1089,7 +1148,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294505970
   m_fontColor: {r: 0.9490196, g: 0.9607843, b: 0.972549, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1102,7 +1161,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2833,11 +2892,58 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6010792718146615134, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 1961243350}
+    - target: {fileID: 6693853115490934739, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6984171262422266319, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      propertyPath: m_TurnAmount
+      value: 30
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1351904833967977961, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1441037732}
+    - targetCorrespondingSourceObject: {fileID: 1351904833967977961, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1441037731}
   m_SourcePrefab: {fileID: 100100000, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+--- !u!1 &1441037730 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1351904833967977961, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+  m_PrefabInstance: {fileID: 1441037729}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1441037731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441037730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe2b44080db6e4c4591907147a095661, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.XRResearchRuntimeDiagnostic
+--- !u!114 &1441037732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441037730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5a77b2944cee634ca41175460da2217, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TMUVR.MaintenanceResearch.GroundedDesktopXRWalker
 --- !u!1 &1511518377
 GameObject:
   m_ObjectHideFlags: 0
@@ -3480,6 +3586,19 @@ Transform:
   - {fileID: 237811938}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!134 &1961243350
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &2053007291
 GameObject:
   m_ObjectHideFlags: 0
@@ -3636,7 +3755,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4290818984
   m_fontColor: {r: 0.65882355, g: 0.7019608, b: 0.7529412, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -3649,7 +3768,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3805,3 +3924,4 @@ SceneRoots:
   - {fileID: 736952440}
   - {fileID: 2133170618}
   - {fileID: 1913498630}
+  - {fileID: 226209405}
