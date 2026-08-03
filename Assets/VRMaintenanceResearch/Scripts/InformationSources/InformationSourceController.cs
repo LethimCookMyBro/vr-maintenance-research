@@ -244,41 +244,41 @@ namespace TMUVR.MaintenanceResearch
 
             foreach (var label in GetComponentsInChildren<TMP_Text>(true))
                 if (label.name == "GEN Caption")
-                    label.text = SourceLabel(language);
+                    label.text = CompactSourceLabel(definition.sourceType, language);
 
             foreach (var label in GetComponentsInChildren<TextMesh>(true))
                 if (label.name == "GEN Caption")
-                    label.text = SourceLabel(language);
+                    label.text = CompactSourceLabel(definition.sourceType, language);
         }
 
-        string SourceLabel(ResearchLanguage language)
+        public static string CompactSourceLabel(InformationSourceType type, ResearchLanguage language)
         {
             if (language == ResearchLanguage.Thai)
             {
-                switch (definition.sourceType)
+                switch (type)
                 {
-                    case InformationSourceType.ProductManual: return "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E1C\u0E25\u0E34\u0E15\u0E20\u0E31\u0E13\u0E11\u0E4C";
-                    case InformationSourceType.TextTroubleshootingGuide: return "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E41\u0E01\u0E49\u0E44\u0E02\u0E1B\u0E31\u0E0D\u0E2B\u0E32";
-                    case InformationSourceType.InstructionalVideo: return "\u0E27\u0E34\u0E14\u0E35\u0E42\u0E2D\u0E41\u0E19\u0E30\u0E19\u0E33";
-                    default: return "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E20\u0E32\u0E1E\u0E02\u0E31\u0E49\u0E19\u0E15\u0E2D\u0E19";
+                    case InformationSourceType.ProductManual: return "คู่มือ";
+                    case InformationSourceType.TextTroubleshootingGuide: return "แก้ไขปัญหา";
+                    case InformationSourceType.InstructionalVideo: return "วิดีโอ";
+                    default: return "คู่มือภาพ";
                 }
             }
             if (language == ResearchLanguage.Japanese)
             {
-                switch (definition.sourceType)
+                switch (type)
                 {
-                    case InformationSourceType.ProductManual: return "\u88FD\u54C1\u30DE\u30CB\u30E5\u30A2\u30EB";
-                    case InformationSourceType.TextTroubleshootingGuide: return "\u30C8\u30E9\u30D6\u30EB\u30B7\u30E5\u30FC\u30C6\u30A3\u30F3\u30B0\u30AC\u30A4\u30C9";
-                    case InformationSourceType.InstructionalVideo: return "\u624B\u9806\u30D3\u30C7\u30AA";
-                    default: return "\u624B\u9806\u30D3\u30B8\u30E5\u30A2\u30EB\u30AC\u30A4\u30C9";
+                    case InformationSourceType.ProductManual: return "マニュアル";
+                    case InformationSourceType.TextTroubleshootingGuide: return "トラブル対応";
+                    case InformationSourceType.InstructionalVideo: return "ビデオ";
+                    default: return "ビジュアルガイド";
                 }
             }
-            switch (definition.sourceType)
+            switch (type)
             {
-                case InformationSourceType.ProductManual: return "Product Manual";
-                case InformationSourceType.TextTroubleshootingGuide: return "Text Troubleshooting Guide";
-                case InformationSourceType.InstructionalVideo: return "Instructional Video";
-                default: return "Visual Step-by-Step Guide";
+                case InformationSourceType.ProductManual: return "Manual";
+                case InformationSourceType.TextTroubleshootingGuide: return "Troubleshooting";
+                case InformationSourceType.InstructionalVideo: return "Video";
+                default: return "Visual Guide";
             }
         }
 

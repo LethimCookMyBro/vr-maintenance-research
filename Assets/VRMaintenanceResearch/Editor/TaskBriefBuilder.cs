@@ -24,34 +24,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         // Raised and pulled left once the panel was enlarged for legibility — at the
         // old anchor its right edge finished level with the device and the two read
         // as one crowded mass.
-        static readonly Vector3 k_Anchor = new Vector3(-0.68f, 1.58f, 1.30f);
+        static readonly Vector3 k_Anchor = new Vector3(-0.68f, 1.68f, 1.30f);
         const float k_Yaw = -12f;
-
-        const string k_Sources =
-            "Manuals, a troubleshooting guide, a video and a visual guide are on the dock to your left. " +
-            "Use any of them, or none, in any order.";
-
-        const string k_Bench =
-            "Tools and spare parts are in the marked trays on this bench.";
-
-        const string k_Inspect =
-            "Press INSPECT on the pedestal whenever you want the unit checked.";
 
         public static void BuildComputer() => Build(
             "COMPUTER  ·  WORK ORDER",
-            "Reported fault:  the computer does not power on.\n\n" +
-            "Find out why, and put it right.\n\n" +
-            k_Sources + "\n\n" + k_Bench + "\n\n" + k_Inspect);
+            "<b>REPORTED ISSUE</b>\nThe computer does not power on.\n\n" +
+            "<b>GOAL</b>\nIdentify the cause and complete the necessary repair.\n\n" +
+            "<b>INFORMATION SOURCES</b>\nAvailable on your left.\n\n" +
+            "Press <b>INSPECT</b> when you believe the unit is ready.");
 
         public static void BuildFan() => Build(
             "DESK FAN  ·  WORK ORDER",
-            "Reported fault:  the fan does not run.\n\n" +
-            "Find out why, and put it right.\n\n" +
-            k_Sources + "\n\n" + k_Bench + "\n\n" + k_Inspect);
+            "<b>REPORTED ISSUE</b>\nThe desk fan does not operate correctly.\n\n" +
+            "<b>GOAL</b>\nIdentify the cause and complete the necessary repair.\n\n" +
+            "<b>INFORMATION SOURCES</b>\nAvailable on your left.\n\n" +
+            "Press <b>INSPECT</b> when you believe the unit is ready.");
 
         static void Build(string heading, string body)
         {
             var root = Root("Task Brief", k_Anchor, new Vector3(0f, k_Yaw, 0f));
+            root.AddComponent<LocalizedTaskBrief>();
             var t = root.transform;
 
             // Stand: a clamp post off the bench's back edge, so the brief reads as
@@ -73,11 +66,11 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             title.fontStyle = TMPro.FontStyles.Bold;
             title.characterSpacing = 6f;
 
-            var text = Label("Body", t, new Vector3(0f, -0.038f, -0.016f), body, 0.215f, "#1E2A3A", Vector3.zero, 0.88f);
+            var text = Label("Body", t, new Vector3(0f, -0.038f, -0.016f), body, 0.32f, "#1E2A3A", Vector3.zero, 0.88f);
             text.alignment = TMPro.TextAlignmentOptions.TopLeft;
             text.enableWordWrapping = true;
             text.rectTransform.sizeDelta = new Vector2(0.870f, 0.430f);
-            text.lineSpacing = 6f;
+            text.lineSpacing = 10f;
         }
     }
 }

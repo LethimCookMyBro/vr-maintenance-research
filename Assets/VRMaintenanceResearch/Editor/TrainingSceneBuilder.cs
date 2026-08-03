@@ -45,17 +45,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 PartLabel(a, "PART A");
             }
 
-            // Practice part 2: same family, different colour, teaching "the right one".
+            // Practice part 2: same family, neutral reference for visual comparison.
             Move("Training Cube B", new Vector3(0f, k_BenchTop + 0.052f, 0.95f), new Vector3(0f, -8f, 0f));
             var b = ResetVisual("Training Cube B", out var bGo);
             if (b != null)
             {
                 Box("Body", b, Vector3.zero, new Vector3(0.110f, 0.090f, 0.110f), "Lab_Trim");
-                Box("Face", b, new Vector3(0f, 0f, -0.056f), new Vector3(0.086f, 0.066f, 0.004f), "Lab_Warning");
+                Box("Face", b, new Vector3(0f, 0f, -0.056f), new Vector3(0.086f, 0.066f, 0.004f), "Lab_Accent");
                 Box("Grip", b, new Vector3(0f, 0.055f, 0f), new Vector3(0.030f, 0.028f, 0.070f), "Lab_PlasticDark");
                 Box("Label", b, new Vector3(0f, 0.047f, 0.040f), new Vector3(0.060f, 0.002f, 0.026f), "Lab_LabelPlate");
                 SetCollider(bGo, new Vector3(0.14f, 0.14f, 0.14f));
-                PartLabel(b, "PART B");
+                PartLabel(b, "REFERENCE");
             }
 
             // Practice part 3: a knob, teaching "turn / activate".
@@ -103,7 +103,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Cyl($"Corner Stud {i + 1}", socket, new Vector3(x, 0.004f, z), new Vector3(0.020f, 0.008f, 0.020f), "Lab_MetalDark");
             }
 
-            var label = Label("Socket Label", socket, new Vector3(0f, 0.014f, 0.104f), "PLACE PART HERE", 0.30f, "#CFE0FF", new Vector3(90f, 0f, 0f), 0.30f);
+            var label = Label("Socket Label", socket, new Vector3(0f, 0.014f, 0.104f), "PLACE TO COMPARE", 0.27f, "#CFE0FF", new Vector3(90f, 0f, 0f), 0.30f);
             label.fontStyle = TMPro.FontStyles.Bold;
             label.characterSpacing = 6f;
 
@@ -138,7 +138,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void PartLabel(Transform parent, string text)
         {
-            var label = Label("Part Label", parent, new Vector3(0f, 0.049f, 0.040f), text, 0.16f, "#1E2A3A", new Vector3(90f, 0f, 0f), 0.09f);
+            var label = Label("Part Label", parent, new Vector3(0f, 0.049f, 0.040f), text, 0.14f, "#1E2A3A", new Vector3(90f, 0f, 0f), 0.12f);
             label.fontStyle = TMPro.FontStyles.Bold;
         }
 

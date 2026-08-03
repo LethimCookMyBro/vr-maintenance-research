@@ -1,0 +1,16 @@
+ITEM_3D PRE-IMPORT CHECKPOINT
+Date: 2026-08-03 Asia/Bangkok
+Branch: visual-polish-claude
+Parent commit before checkpoint: 4f4e45298e03bee21ec5709f72d3d369c0d07b52
+Scope: Quest-readability, Training reset, UI/localization, source builders, scene rebuilds, screenshots, and validation records.
+Related working-tree entries before checkpoint: 95
+Unrelated working-tree entries before checkpoint: 0
+Unity: 6000.3.20f1; editor idle; Play Mode off; compile/update off.
+Unity Console errors: 0
+m_DisallowAutoRefresh >= 0 assertions: 0
+Script validation: VisualAuditCapture.cs diagnostics 0; TrainingResetController.cs diagnostics 0.
+Latest completed clean source result: CLEAN_FINAL_SOURCE_PASS_A_COMPLETE
+Preserved baseline archive: C:\Users\User\.codex\visualizations\2026\08\03\019fc7b2-e25f-7482-b38f-a4fb4366fd70\quest-readability-baseline\accepted-4f4e452-source.zip
+Baseline archive SHA256: D101A46EAEE0C91C7F93DDCE188E5679F00E0C06475EAB3896645E2A9376175E
+Device boundary: no Meta Quest device result is claimed; P1-P3 remain blank.
+Exact checkpoint commit: recorded immediately after commit in the external pre-import manifest and in ITEM_3D_MODEL_AUDIT.md.

@@ -22,18 +22,18 @@ namespace TMUVR.MaintenanceResearch.EditorTools
     public static class InformationDockBuilder
     {
         /// <summary>Dock origin, placed to clear every task object's sight line from the participant pose.</summary>
-        public static readonly Vector3 Dock = new Vector3(-1.72f, 0f, 0.42f);
-        public const float DockYaw = -42f;
+        public static readonly Vector3 Dock = new Vector3(-1.78f, 0f, 0.58f);
+        public const float DockYaw = -38f;
         public const float PanelTilt = 8f;
 
         const float k_GridY = 1.30f;        // centre of both the selector row and the reader
-        const float k_CardW = 0.25f;        // rendered card width
-        const float k_CardH = 0.122f;
-        const float k_GapX = 0.022f;
+        const float k_CardW = 0.27f;        // rendered card width
+        const float k_CardH = 0.140f;
+        const float k_GapX = 0.024f;
 
         // Authored base scales: card (0.58, 0.28, 0.07), reader (0.90, 0.53, 0.05).
         // The reader's scale is measured at build time by FitReaderWidth.
-        static readonly Vector3 k_CardScale = new Vector3(0.250f, 0.121f, 0.030f);
+        static readonly Vector3 k_CardScale = new Vector3(0.270f, 0.140f, 0.032f);
 
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Rebuild Information Docks")]
         public static void BuildAll()
@@ -78,6 +78,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 card.SetPositionAndRotation(
                     Dock + rotation * new Vector3(slot.x, slot.y, -0.012f),
                     Quaternion.Euler(PanelTilt, DockYaw, 0f));
+                TidyCard(sources[i]);
 
                 var panel = FindContentPanel(sources[i]);
                 if (panel == null)
@@ -154,8 +155,26 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             header.fontStyle = TMPro.FontStyles.Bold;
             header.characterSpacing = 10f;
 
-            Label("Hint", t, new Vector3(0f, k_GridY - panelH * 0.5f - 0.05f, 0.012f),
-                "Select a source to open  ·  Close to return", 0.17f, "#9FB0C4", new Vector3(PanelTilt, 0f, 0f), panelW);
+        }
+
+        static void TidyCard(InformationSourceController source)
+        {
+            foreach (var label in source.GetComponentsInChildren<TMPro.TMP_Text>(true))
+            {
+                if (label.name == "GEN Caption")
+                {
+                    var definition = source.Definition;
+                    if (definition != null)
+                        label.text = InformationSourceController.CompactSourceLabel(definition.sourceType, ResearchLanguage.English);
+                    label.fontSize = 0.68f;
+                    EditorUtility.SetDirty(label);
+                }
+                else if (label.name == "GEN Slot")
+                {
+                    label.gameObject.SetActive(false);
+                    EditorUtility.SetDirty(label.gameObject);
+                }
+            }
         }
 
         static float RowWidth(int count) => count * k_CardW + (count - 1) * k_GapX;
@@ -238,7 +257,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 if (t.name.EndsWith(".control.Close"))
                 {
                     t.localPosition = new Vector3(-0.408f, 0.400f, 0.800f);
-                    t.localScale = new Vector3(0.150f, 0.075f, 0.028f);
+                    t.localScale = new Vector3(0.170f, 0.090f, 0.028f);
                     foreach (var label in t.GetComponentsInChildren<TMPro.TMP_Text>(true))
                     {
                         label.text = "Close";

@@ -17,7 +17,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// device sits. Set <paramref name="withTools"/> false for training, whose
         /// right-hand tray is the placement target rather than a tool tray.
         /// </summary>
-        public static void Build(float serviceCentreX, float matWidth = 0.90f, float matDepth = 0.66f, bool withTools = true)
+        public static void Build(float serviceCentreX, float matWidth = 0.90f, float matDepth = 0.66f, bool withTools = true,
+            string serviceLabel = "SERVICE AREA")
         {
             var root = Root("Workstation Dressing", Vector3.zero);
             var t = root.transform;
@@ -34,7 +35,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             Zone(t, new Vector3(-1.10f, BenchTop + 0.004f, 0.66f), withTools ? "SPARE PARTS" : "PARTS BIN");
             Zone(t, new Vector3(1.10f, BenchTop + 0.004f, 0.66f), withTools ? "TOOLS" : "PLACE PART HERE");
-            Zone(t, new Vector3(serviceCentreX, BenchTop + 0.010f, 0.95f - matDepth * 0.5f + 0.035f), "SERVICE AREA");
+            Zone(t, new Vector3(serviceCentreX, BenchTop + 0.010f, 0.95f - matDepth * 0.5f + 0.035f), serviceLabel);
             Zone(t, new Vector3(LabLayoutBuilder.TestStationX, BenchTop + 0.004f, 0.86f), "INSPECT");
         }
 

@@ -38,6 +38,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 issues.AddRange(CheckSightLines());
                 issues.AddRange(CheckTaskBrief());
                 issues.AddRange(CheckInspectControl());
+                issues.AddRange(CheckRayTargets());
+                issues.AddRange(CheckNoticeBoard());
                 issues.AddRange(CheckFaultNotAdvertised());
                 issues.AddRange(CheckDecorationIsInert());
 
@@ -133,6 +135,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             foreach (var leak in new[] { "fuse", "24-pin", "atx", "connector is", "plug it", "step 1", "first," })
                 if (body.Contains(leak))
                     yield return $"Task Brief names the answer or the procedure ('{leak}')";
+
+            var bodyLabel = copy.FirstOrDefault(t => t.name == "Body");
+            if (bodyLabel == null || bodyLabel.fontSize < 0.30f)
+                yield return "Task Brief body text is below the participant readability floor";
+            if (brief.GetComponent<LocalizedTaskBrief>() == null)
+                yield return "Task Brief has no Thai/Japanese runtime localization";
         }
 
         /// <summary>
@@ -156,6 +164,41 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             if (GameObject.Find("Inspect Station Sign") == null)
                 yield return "device-test control is unlabelled: no Inspect Station Sign in the scene";
+
+            var sphere = test.GetComponent<SphereCollider>();
+            if (sphere != null && sphere.radius * Mathf.Max(scale.x, scale.z) < 0.045f)
+                yield return "device-test controller-ray target is under 45 mm";
+        }
+
+        static IEnumerable<string> CheckRayTargets()
+        {
+            foreach (var box in Object.FindObjectsByType<BoxCollider>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var name = box.name;
+                if (!name.Contains(".control.") || !(name.EndsWith("Prev") || name.EndsWith("Next") ||
+                    name.EndsWith("Close") || name.EndsWith("Restart") || name.EndsWith("Play")))
+                    continue;
+                var scale = box.transform.lossyScale;
+                var width = Mathf.Abs(box.size.x * scale.x);
+                var height = Mathf.Abs(box.size.y * scale.y);
+                if (width < 0.045f || height < 0.045f)
+                    yield return $"ray target '{name}' is {width:0.000} x {height:0.000} m; minimum is 0.045 m";
+            }
+        }
+
+        static IEnumerable<string> CheckNoticeBoard()
+        {
+            var board = GameObject.Find("Lab Notice Board");
+            if (board == null)
+                yield break;
+            var renderers = board.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToList();
+            if (renderers.Count == 0)
+                yield break;
+            var bounds = renderers[0].bounds;
+            foreach (var renderer in renderers)
+                bounds.Encapsulate(renderer.bounds);
+            if (bounds.size.x > 1.90f || bounds.size.y > 0.90f)
+                yield return $"notice board remains visually dominant at {bounds.size:F2}";
         }
 
         /// <summary>
@@ -223,7 +266,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static IEnumerable<string> CheckDecorationIsInert()
         {
-            foreach (var rootName in new[] { "Workstation Dressing", "Task Brief", "Inspect Station Sign", "Lab Notice Board" })
+            foreach (var rootName in new[] { "Workstation Dressing", "Task Brief", "Inspect Station Sign", "Lab Notice Board", "Fan Removed Parts Rack" })
             {
                 var root = GameObject.Find(rootName);
                 if (root == null)
@@ -330,6 +373,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         {
             foreach (var source in Object.FindObjectsByType<InformationSourceController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
+                var cardLabels = source.GetComponentsInChildren<TMPro.TMP_Text>(true);
+                if (cardLabels.Any(l => l.name == "GEN Slot" && l.gameObject.activeSelf))
+                    yield return $"selector '{source.name}' still shows unreadable secondary slot text";
                 var prop = new SerializedObject(source).FindProperty("contentPanel");
                 var panel = prop != null ? prop.objectReferenceValue as GameObject : null;
                 if (panel == null)

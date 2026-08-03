@@ -1,0 +1,54 @@
+Quest readability desktop runtime verification
+Date: 2026-08-03 (Asia/Bangkok)
+Accepted baseline: 4f4e45298e03bee21ec5709f72d3d369c0d07b52
+Unity: 6000.3.20f1
+
+DEVICE BOUNDARY
+- Executed in Unity Editor Play Mode with the XRI simulator.
+- No Meta Quest headset or first-time human participant was used.
+
+SOURCE REBUILD AND VALIDATION
+Command A/B: ResearchVisualPipeline.RebuildAll(); ResearchVisualValidator.ValidateAll();
+Literal output A: QUEST_READABILITY_PASS_A_COMPLETE
+Literal output B: QUEST_READABILITY_FINAL_PASS_B_COMPLETE
+Semantic comparison: PASS_A_B_SEMANTIC_IDENTICAL=True
+Validator output: ALL SCENES PASS
+Known warnings: the three pre-existing TrainingDevelopment task-part IDs do not match the scene StableObjectIds; neither side was changed.
+Editor.log m_DisallowAutoRefresh >= 0 assertion count after final rebuild/capture: 0
+
+COMPUTER PLAY MODE
+RUNTIME Computer|initial=Active|briefFont=0.32|briefEnglish=True|thai=True|japanese=True|localizedFonts=2|manualOpen=True|manualClose=True|preRepairFail=True|repairId=computer.main-power-connector|postRepairPass=True|reset=True|attempt=1->2|parts=13|rootColliders=13|xr=32|eventSystems=1|xrUi=1|rayTargetMin=0.05966624|captions=Video/Visual Guide/Manual/Troubleshooting|caseZ=0.78
+Telemetry: C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260803T152930Z_88800e78\Computer\events.csv
+Telemetry check: rows=44|uniqueSequence=True|strictlyIncreasing=True|attempts=1,2|TaskCompleted=1|DeviceTestFailed=1|DeviceTestPassed=1|ComponentInstalled=1
+
+FAN PLAY MODE
+RUNTIME Fan|initial=Active|briefFont=0.32|english=True|thai=True|japanese=True|manualOpen=True|manualClose=True|preRepairFail=True|repairId=fan.working-fuse|postRepairPass=True|reset=True|attempt=1->2|parts=15|rootColliders=15|xr=34|eventSystems=1|xrUi=1|rayTargetMin=0.05966624|fuseGlassRenderers=3|fuseGlassEnabled=True|paddles=5|serviceBay=True|guardRack=True|guardY=0.56|motorParts=True
+Telemetry: C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260803T153130Z_f53f6b09\Fan\events.csv
+Telemetry check: rows=16|uniqueSequence=True|strictlyIncreasing=True|attempts=1,2|TaskCompleted=1|DeviceTestFailed=1|DeviceTestPassed=1|ComponentInstalled=1
+
+TRAINING PLAY MODE
+Setup constraint: the simulator-only ClimbTeleportInteractor was temporarily disabled without saving the scene so it could not consume the scripted grab input. The scene was reopened afterward with dirty=False.
+TRAINING_PICKUP interactor=Near-Far Interactor|selected=True|selectors=1
+TRAINING_SKILLS cubeSocket=True|knobSelected=True|infoOpen=True
+TRAINING_READY checks=4|continueActive=True|continueInteractable=True
+TRAINING_BEFORE_RESET cubePos=(1.10, 0.94, 0.95)|knobPos=(0.10, 1.31, -1.30)|cubeSocket=True|knobSelected=True
+RUNTIME Training|checks=0|continueHidden=True|cubePos=(-0.42, 0.99, 0.95)|knobPos=(0.42, 0.99, 0.95)|cubeSelected=False|knobSelected=False|socketSelected=False|readerClosed=True|eventSystems=1|xrUi=1
+Telemetry: C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260803T154611Z_01562c9f\Training\events.csv
+Telemetry check: rows=21|uniqueSequence=True|strictlyIncreasing=True|attempts=1|ObjectGrabbed=3|InformationSourceOpened=1|InformationSourceClosed=1
+
+CONSOLE CLASSIFICATION
+- Zero runtime errors after the corrected Training reset API compiled.
+- Expected desktop environment warnings: OpenXR audio output fallback.
+- Expected simulator warnings: XRSimulatedController haptic-capability fallback.
+- Existing scene warnings observed in Computer/Fan: nested interactable collider registration.
+- Unity MCP relay signature/process-collection warnings were emitted by the editor connector, not the application.
+- No m_DisallowAutoRefresh >= 0 assertion recurred.
+
+FRESH SCREENSHOTS
+- QuestFinal_Computer_*.png and QuestFinal_Fan_*.png
+- QuestFinal_Training_*.png
+- current Approach_Computer_*.png, Approach_Fan_*.png, Approach_Training_WorkstationDetail.png
+- Quest_Training_PickupComplete.png, CompareComplete.png, TurnComplete.png, InformationComplete.png, ContinueUnlocked.png
+
+STATUS
+Desktop and internal participant-comprehension refinement completed. Meta Quest hardware confirmation and real first-time human pilot P1-P3 remain required before participant data collection.

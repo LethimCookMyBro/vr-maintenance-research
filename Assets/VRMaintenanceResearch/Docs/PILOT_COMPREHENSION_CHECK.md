@@ -125,6 +125,7 @@ The application is **not** ready for participant testing until all three
 participants pass all five checks, and every row in the misunderstandings log has
 either a change made or a written reason for accepting it.
 
-Current status: **Internal participant-comprehension redesign and validation
-completed; real first-time human pilot P1–P3 still required before participant
-testing readiness.** P1–P3 remain blank because no human pilot has been run.
+Current status: **Desktop and internal participant-comprehension refinement
+completed. Meta Quest hardware confirmation and real first-time human pilot
+P1–P3 remain required before participant data collection.** P1–P3 remain blank
+because no human pilot has been run.

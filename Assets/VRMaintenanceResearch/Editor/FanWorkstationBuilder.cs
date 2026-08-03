@@ -11,7 +11,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
     /// The previous head was four full-diameter bars crossing at the hub, which
     /// renders as a white plus sign on a stick — pilot readers called it a signpost,
     /// a lamp and a weather vane before they called it a fan. Three things carry the
-    /// identity now: a six-paddle propeller whose paddles are offset from the hub so
+    /// identity now: a five-paddle propeller whose paddles are offset from the hub so
     /// the disc reads solid, a rear guard cage that gives the circular silhouette
     /// even with the front guard removed, and a weighted base with a control pod.
     ///
@@ -41,7 +41,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             BuildFanDevice();
             PlaceFanParts();
             BenchDressing.PlaceScrewdriver(new Vector3(1.02f, k_BenchTop + 0.035f, 0.95f));
-            BenchDressing.Build(0f, 0.86f, 0.62f);
+            BenchDressing.Build(0f, 0.86f, 0.62f, serviceLabel: "INSTALLED COMPONENT");
+            BuildRemovedPartsRack();
             BenchDressing.PlaceInspectControl("Fan Speed Selector");
             TaskBriefBuilder.BuildFan();
 
@@ -311,7 +312,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             //     cage that came off this fan rather than a white dinner plate ---
             // Out from behind the bench leg and turned to face the participant: tucked
             // in the corner it read as a leftover asset rather than this fan's cage.
-            Move("Fan Front Cover", new Vector3(-0.72f, 0.522f, 0.98f), new Vector3(-10f, 24f, 0f));
+            Move("Fan Front Cover", new Vector3(-0.72f, 0.560f, 0.98f), new Vector3(0f, 24f, 0f));
             var cover = ResetVisual("Fan Front Cover", out var coverGo);
             if (cover != null)
             {
@@ -320,7 +321,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             }
 
             // --- motor module in the spares zone ---
-            Move("Fan Motor Module", new Vector3(0.60f, k_BenchTop + 0.062f, 1.02f), new Vector3(0f, -16f, 0f));
+            Move("Fan Motor Module", new Vector3(-1.01f, k_BenchTop + 0.062f, 1.15f), new Vector3(0f, -16f, 0f));
             var motor = ResetVisual("Fan Motor Module", out var motorGo);
             if (motor != null)
             {
@@ -420,6 +421,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Cyl("Lamp Lens", status, new Vector3(0f, 0.038f, 0f), new Vector3(0.056f, 0.010f, 0.056f), "Lab_StatusRed");
                 SetCollider(statusGo, new Vector3(0.10f, 0.20f, 0.10f));
             }
+        }
+
+        /// <summary>Inert lower-shelf rack that makes the removed guard look deliberately stored.</summary>
+        static void BuildRemovedPartsRack()
+        {
+            var rack = Root("Fan Removed Parts Rack", new Vector3(-0.72f, 0.365f, 0.98f));
+            var t = rack.transform;
+            Box("Shelf Pad", t, Vector3.zero, new Vector3(0.48f, 0.018f, 0.30f), "Lab_Rubber");
+            Box("Rear Rail", t, new Vector3(0f, 0.105f, 0.110f), new Vector3(0.44f, 0.20f, 0.018f), "Lab_MetalDark");
+            Box("Left Cradle", t, new Vector3(-0.19f, 0.055f, 0f), new Vector3(0.025f, 0.11f, 0.22f), "Lab_MetalDark");
+            Box("Right Cradle", t, new Vector3(0.19f, 0.055f, 0f), new Vector3(0.025f, 0.11f, 0.22f), "Lab_MetalDark");
+            var label = Label("Removed Parts Label", t, new Vector3(0f, 0.045f, -0.158f), "REMOVED PARTS", 0.24f,
+                "#DFE6EE", Vector3.zero, 0.44f);
+            label.fontStyle = TMPro.FontStyles.Bold;
+            label.characterSpacing = 6f;
         }
 
         /// <summary>The removed front cage: a wire guard, built as a ring rather than a disc.</summary>

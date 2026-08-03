@@ -22,7 +22,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         // The case is angled so the open side faces the participant while the
         // front bezel stays partly visible — a 3/4 view reads as "computer"
         // faster than either a flat front or a bare open frame.
-        static readonly Vector3 k_CasePos = new Vector3(-0.15f, k_BenchTop + 0.225f, 0.96f);
+        // Pulled 0.18 m toward the participant instead of scaling the task hierarchy:
+        // component recognition improves while every collider and XR reference keeps
+        // its authored dimensions.
+        static readonly Vector3 k_CasePos = new Vector3(-0.15f, k_BenchTop + 0.225f, 0.78f);
         const float k_CaseYaw = -70f;
         const float k_W = 0.105f;   // half width  (local x, side panels)
         const float k_H = 0.225f;   // half height (local y)

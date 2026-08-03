@@ -234,8 +234,10 @@ Current result: **ALL SCENES PASS**.
 The audit above answered "does the scene look finished". It did not answer "does a
 stranger know what to do", and on that question both benches failed. This pass is
 scoped to participant comprehension. Everything in it is visual, textual or
-affordance work — **no StableObjectId, event name, task rule, socket, collider
-role or reset path was changed.**
+affordance work — **no StableObjectId, event name, task rule, socket or collider
+role was changed.** Training reset still restores the same source-built poses;
+it now releases active XRI selections first so reset cannot leave a socket or
+hand holding an object while the progress board has returned to zero.
 
 ### What was actually wrong
 
@@ -309,11 +311,19 @@ selection-tint enter/exit, Inspect Fail before repair, the existing correct repa
 action, Inspect Pass after repair, and development reset for both Computer and
 Fan. Each telemetry file contained exactly one `TaskCompleted`, one
 `DeviceTestFailed`, and one `DeviceTestPassed` event with unique, monotonic event
-sequence numbers. The final clean Unity Console contained zero errors and zero
-warnings.
+sequence numbers. The final runtime checks contained zero application errors.
+The remaining warnings were classified desktop/simulator or pre-existing scene
+warnings: OpenXR audio-output fallback, simulated-controller haptic fallback,
+and nested interactable collider registration. The repeated
+`m_DisallowAutoRefresh >= 0` assertion did not recur.
 
-Fresh screenshots are the `Final_*` and current `Approach_*` files in
+Fresh screenshots are the `QuestFinal_*`, `Quest_Training_*`, and current
+`Approach_*` files in
 `Docs/Screenshots/Audit/`. These were reviewed internally by AI only. They are not
 human pilot observations. The remaining acceptance boundary is the blank P1–P3
 record in `PILOT_COMPREHENSION_CHECK.md`, plus real-device Quest checks where
 applicable.
+
+**Desktop and internal participant-comprehension refinement completed. Meta
+Quest hardware confirmation and real first-time human pilot P1–P3 remain
+required before participant data collection.**

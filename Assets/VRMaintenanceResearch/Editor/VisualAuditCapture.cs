@@ -64,9 +64,11 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ("Assets/VRMaintenanceResearch/Scenes/ComputerRepairTask.unity", "Computer", new[]
             {
                 new Pose { Name = "OpenSide", Position = new Vector3(-0.40f, 1.28f, 0.32f), Euler = new Vector3(10f, 20f, 0f), Fov = 52f },
-                new Pose { Name = "BoardDetail", Position = new Vector3(-0.30f, 1.20f, 0.62f), Euler = new Vector3(4f, 26f, 0f), Fov = 34f },
-                LookAt("AtxConnector", new Vector3(-0.34f, 1.21f, 0.63f), new Vector3(-0.01f, 1.19f, 0.98f), 28f),
-                LookAt("TaskBrief", new Vector3(-0.68f, 1.54f, 0.25f), new Vector3(-0.68f, 1.54f, 1.30f), 42f),
+                LookAt("ComponentClose", new Vector3(-0.38f, 1.26f, 0.16f), new Vector3(-0.15f, 1.18f, 0.78f), 38f),
+                LookAt("GpuRamSsdPsu", new Vector3(-0.42f, 1.18f, 0.20f), new Vector3(-0.13f, 1.12f, 0.80f), 32f),
+                LookAt("AtxConnector", new Vector3(-0.12f, 1.20f, 0.40f), new Vector3(-0.01f, 1.17f, 0.79f), 20f),
+                LookAt("TaskBrief", new Vector3(-0.68f, 1.60f, 0.25f), new Vector3(-0.68f, 1.62f, 1.30f), 42f),
+                LookAt("DockCompact", new Vector3(-0.75f, 1.42f, -0.35f), InformationDockBuilder.Dock + new Vector3(0f, 1.30f, 0f), 44f),
                 new Pose { Name = "SparesTray", Position = new Vector3(-1.02f, 1.30f, 0.42f), Euler = new Vector3(34f, -14f, 0f), Fov = 46f },
                 new Pose { Name = "InspectControl", Position = new Vector3(1.34f, 1.34f, -0.62f), Euler = new Vector3(26f, 12f, 0f), Fov = 44f },
             }),
@@ -75,8 +77,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 new Pose { Name = "Front", Position = new Vector3(0.36f, 1.30f, 0.30f), Euler = new Vector3(8f, -28f, 0f), Fov = 52f },
                 new Pose { Name = "ServiceBay", Position = new Vector3(-0.46f, 1.34f, 0.72f), Euler = new Vector3(12f, 62f, 0f), Fov = 40f },
                 LookAt("FuseDetail", new Vector3(-0.41f, 1.34f, 0.84f), new Vector3(-0.13f, 1.33f, 1.01f), 25f),
-                LookAt("TaskBrief", new Vector3(-0.68f, 1.54f, 0.25f), new Vector3(-0.68f, 1.54f, 1.30f), 42f),
+                LookAt("TaskBrief", new Vector3(-0.68f, 1.60f, 0.25f), new Vector3(-0.68f, 1.62f, 1.30f), 42f),
+                LookAt("DockCompact", new Vector3(-0.75f, 1.42f, -0.35f), InformationDockBuilder.Dock + new Vector3(0f, 1.30f, 0f), 44f),
                 new Pose { Name = "SparesTray", Position = new Vector3(-1.02f, 1.30f, 0.42f), Euler = new Vector3(34f, -14f, 0f), Fov = 46f },
+                LookAt("GuardStorage", new Vector3(-0.25f, 0.78f, -0.15f), new Vector3(-0.72f, 0.52f, 0.98f), 38f),
                 new Pose { Name = "InspectControl", Position = new Vector3(1.34f, 1.34f, -0.62f), Euler = new Vector3(26f, 12f, 0f), Fov = 44f },
             }),
             ("Assets/VRMaintenanceResearch/Scenes/VRTraining.unity", "Training", new[]
@@ -102,7 +106,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                     count++;
                 }
             }
-            count += CaptureTrainingFeedback();
+            count += CaptureTrainingProgress();
             AssetDatabase.Refresh();
             Debug.Log($"[VisualAudit] wrote {count} approach captures to {OutputFolder}");
         }
@@ -221,29 +225,42 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             return path;
         }
 
-        /// <summary>Uses the real focus branch for one non-persistent visual proof.</summary>
-        static int CaptureTrainingFeedback()
+        /// <summary>Renders the real Training board at each cumulative completion state.</summary>
+        static int CaptureTrainingProgress()
         {
             EditorSceneManager.OpenScene(ResearchSceneSet.Training, OpenSceneMode.Single);
-            var target = GameObject.Find("Training Cube A")?.GetComponent<ResearchInteractable>();
-            var focus = typeof(ResearchInteractable).GetMethod("Focus", BindingFlags.Instance | BindingFlags.NonPublic);
-            var cache = typeof(ResearchInteractable).GetMethod("CacheTintTargets", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (target == null || focus == null || cache == null)
+            var board = Object.FindFirstObjectByType<TrainingInstructions>();
+            var start = typeof(TrainingInstructions).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            var refresh = typeof(TrainingInstructions).GetMethod("Refresh", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (board == null || start == null || refresh == null)
                 return 0;
 
-            cache.Invoke(target, null);
-            focus.Invoke(target, new object[] { 1 });
+            start.Invoke(board, null);
+            var pose = LookAt("TrainingProgress", new Vector3(-0.30f, 1.50f, 0.12f), new Vector3(-0.70f, 1.54f, 1.35f), 38f);
+            var states = new[]
+            {
+                ("grabSatisfied", "Quest_Training_PickupComplete"),
+                ("socketSatisfied", "Quest_Training_CompareComplete"),
+                ("knobSatisfied", "Quest_Training_TurnComplete"),
+                ("informationSatisfied", "Quest_Training_InformationComplete"),
+            };
             try
             {
-                Render(
-                    LookAt("Feedback", new Vector3(-0.18f, 1.16f, 0.32f), new Vector3(-0.10f, 0.98f, 0.95f), 45f),
-                    "Approach_Training_Feedback");
+                foreach (var (fieldName, fileName) in states)
+                {
+                    typeof(TrainingInstructions).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(board, true);
+                    refresh.Invoke(board, null);
+                    Render(pose, fileName);
+                }
+                Render(pose, "Quest_Training_ContinueUnlocked");
             }
             finally
             {
-                focus.Invoke(target, new object[] { -1 });
+                var generated = board.transform.Find("Training Board");
+                if (generated != null)
+                    Object.DestroyImmediate(generated.gameObject);
             }
-            return 1;
+            return 5;
         }
     }
 }

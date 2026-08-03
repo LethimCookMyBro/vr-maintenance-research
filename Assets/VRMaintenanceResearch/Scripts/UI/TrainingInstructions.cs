@@ -17,22 +17,26 @@ namespace TMUVR.MaintenanceResearch
     /// </summary>
     public sealed class TrainingInstructions : MonoBehaviour
     {
-        [SerializeField] Vector3 boardPosition = new Vector3(-1.55f, 1.36f, 1.35f);
-        [SerializeField] Vector2 boardSize = new Vector2(1.05f, 0.52f);
+        [SerializeField] Vector3 boardPosition = new Vector3(-0.70f, 1.58f, 1.35f);
+        [SerializeField] Vector2 boardSize = new Vector2(1.10f, 0.62f);
         [SerializeField] Sprite satisfiedIcon;
         [SerializeField] Sprite outstandingIcon;
 
         readonly List<XRGrabInteractable> grabbables = new List<XRGrabInteractable>();
         XRSocketInteractor socket;
+        XRGrabInteractable knob;
         InformationSourceController informationSource;
         TrainingResetController resetControl;
 
         bool grabSatisfied;
         bool socketSatisfied;
+        bool knobSatisfied;
         bool informationSatisfied;
+        Quaternion knobStartRotation;
 
         Requirement grabRequirement;
         Requirement socketRequirement;
+        Requirement knobRequirement;
         Requirement informationRequirement;
         Button continueButton;
         TextMeshProUGUI continueLabel;
@@ -42,17 +46,31 @@ namespace TMUVR.MaintenanceResearch
         struct Requirement
         {
             public Image Marker;
+            public TextMeshProUGUI Check;
             public TextMeshProUGUI Text;
         }
 
         void Start()
         {
             grabbables.AddRange(FindObjectsByType<XRGrabInteractable>(FindObjectsSortMode.None));
+            for (var i = 0; i < grabbables.Count; i++)
+                if (grabbables[i] != null && grabbables[i].name == "Training Cylinder")
+                    knob = grabbables[i];
+            if (knob != null)
+                knobStartRotation = knob.transform.localRotation;
             socket = FindFirstObjectByType<XRSocketInteractor>();
             informationSource = FindFirstObjectByType<InformationSourceController>();
             resetControl = FindFirstObjectByType<TrainingResetController>();
+            if (resetControl != null)
+                resetControl.ResetPerformed += OnTrainingReset;
             Build();
             Refresh();
+        }
+
+        void OnDestroy()
+        {
+            if (resetControl != null)
+                resetControl.ResetPerformed -= OnTrainingReset;
         }
 
         void Update()
@@ -71,6 +89,10 @@ namespace TMUVR.MaintenanceResearch
 
             if (!socketSatisfied && socket != null && socket.hasSelection)
                 socketSatisfied = true;
+
+            if (!knobSatisfied && knob != null && knob.isSelected &&
+                Quaternion.Angle(knobStartRotation, knob.transform.localRotation) >= 25f)
+                knobSatisfied = true;
 
             if (!informationSatisfied && informationSource != null && informationSource.IsOpen)
                 informationSatisfied = true;
@@ -118,49 +140,56 @@ namespace TMUVR.MaintenanceResearch
             ResearchUiKit.Place(subtitle.rectTransform, 44f, 94f, 1000f, 28f);
 
             var column = ResearchUiKit.Rect("Requirements", background.transform);
-            ResearchUiKit.Place(column, 44f, 132f, 880f, 120f);
+            ResearchUiKit.Place(column, 44f, 132f, 880f, 156f);
 
             grabRequirement = RequirementRow(column, 0f, "Pick up a training object");
-            socketRequirement = RequirementRow(column, 36f, "Place an object into the socket tray");
-            informationRequirement = RequirementRow(column, 72f, "Open the neutral information panel");
+            socketRequirement = RequirementRow(column, 36f, "Place an object in the comparison tray");
+            knobRequirement = RequirementRow(column, 72f, "Turn the training dial");
+            informationRequirement = RequirementRow(column, 108f, "Open the neutral information panel");
 
             hintLabel = ResearchUiKit.Label("Reset Hint", background.transform,
-                "Press the blue <b>Reset</b> control on the left to return the training objects to their starting position.",
+                "Complete all four skills. <b>RESET</b> returns the training objects.",
                 21f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
-            ResearchUiKit.Place(hintLabel.rectTransform, 44f, 244f, 880f, 28f);
+            ResearchUiKit.Place(hintLabel.rectTransform, 44f, 292f, 880f, 28f);
 
             continueButton = ResearchUiKit.TextButton("Continue", background.transform, "Continue", 28f, ResearchUiKit.SlateSoft, ResearchUiKit.OnDarkMuted, out continueLabel);
             continueBody = continueButton.image;
-            ResearchUiKit.Place(continueBody.rectTransform, 960f, 196f, 276f, 62f);
+            ResearchUiKit.Place(continueBody.rectTransform, 960f, 266f, 276f, 62f);
             continueButton.onClick.AddListener(Continue);
         }
 
         Requirement RequirementRow(RectTransform parent, float y, string caption)
         {
             var marker = ResearchUiKit.Panel("Marker", parent, ResearchUiKit.SlateSoft);
-            ResearchUiKit.Place(marker.rectTransform, 0f, y + 3f, 20f, 20f);
+            ResearchUiKit.Place(marker.rectTransform, 0f, y, 28f, 28f);
             marker.preserveAspect = true;
+
+            var check = ResearchUiKit.Label("Check", marker.transform, string.Empty, 24f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
+            ResearchUiKit.Stretch(check.rectTransform);
 
             var text = ResearchUiKit.Label("Caption", parent, caption, 24f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
             ResearchUiKit.Place(text.rectTransform, 34f, y, 820f, 28f);
 
-            return new Requirement { Marker = marker, Text = text };
+            return new Requirement { Marker = marker, Check = check, Text = text };
         }
 
         void Refresh()
         {
             Apply(grabRequirement, grabSatisfied);
             Apply(socketRequirement, socketSatisfied);
+            Apply(knobRequirement, knobSatisfied);
             Apply(informationRequirement, informationSatisfied);
 
-            var ready = grabSatisfied && socketSatisfied && informationSatisfied;
+            var ready = grabSatisfied && socketSatisfied && knobSatisfied && informationSatisfied;
             if (continueButton == null)
                 return;
 
             continueButton.interactable = ready;
+            continueButton.gameObject.SetActive(ready);
             continueBody.color = ready ? ResearchUiKit.Accent : ResearchUiKit.SlateSoft;
             continueLabel.color = ready ? Color.white : ResearchUiKit.OnDarkMuted;
-            continueLabel.text = ready ? "Continue" : "Continue (locked)";
+            continueLabel.text = "Continue";
+            hintLabel.text = ready ? "All four skills complete." : "Complete all four skills. <b>RESET</b> returns the training objects.";
         }
 
         void Apply(Requirement requirement, bool satisfied)
@@ -171,7 +200,22 @@ namespace TMUVR.MaintenanceResearch
             var sprite = satisfied ? satisfiedIcon : outstandingIcon;
             requirement.Marker.sprite = sprite;
             requirement.Marker.color = satisfied ? ResearchUiKit.Accent : ResearchUiKit.SlateSoft;
+            if (requirement.Check != null)
+                requirement.Check.text = satisfied ? "✓" : string.Empty;
             requirement.Text.color = satisfied ? ResearchUiKit.OnDark : ResearchUiKit.OnDarkMuted;
+        }
+
+        void OnTrainingReset()
+        {
+            if (informationSource != null && informationSource.IsOpen)
+                informationSource.Close();
+            grabSatisfied = false;
+            socketSatisfied = false;
+            knobSatisfied = false;
+            informationSatisfied = false;
+            if (knob != null)
+                knobStartRotation = knob.transform.localRotation;
+            Refresh();
         }
 
         void Continue()
