@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: FanProductManual
+  m_EditorClassIdentifier: Assembly-CSharp:TMUVR.MaintenanceResearch:InformationSourceDefinition
+  sourceId: fan.source.manual
+  sourceType: 0
+  sourceSlot: A
+  englishTitle: Fan Product Manual (Development)
+  englishContent: 'Essential facts: inspect the power path; identify the replaceable
+    fuse; install the working fuse before testing; use the speed control for a neutral
+    device test.'
+  thaiTitle: 
+  japaneseTitle: 
+  developmentPlaceholder: 1
