@@ -1,0 +1,5 @@
+Participant-comprehension pre-rebuild baseline
+ComputerRepairTask|task=Computer|interactables=13|ids=computer.case,computer.cooling-fan,computer.external-power-cable,computer.internal-cable,computer.main-power-connector,computer.motherboard,computer.non-target-module,computer.power-button,computer.psu,computer.psu-switch,computer.ram,computer.side-panel,computer.tool.screwdriver|colliders=13|xr=32|sources=4|eventSystems=1|xrUiModules=1|legacyUiModules=0
+FanRepairTask|task=Fan|interactables=15|ids=fan.blade,fan.body,fan.fastener,fan.faulty-fuse,fan.front-cover,fan.fuse-holder,fan.internal-wire,fan.motor-module,fan.non-target-module,fan.power-cord,fan.power-plug,fan.power-switch,fan.speed-selector,fan.tool.screwdriver,fan.working-fuse|colliders=15|xr=34|sources=4|eventSystems=1|xrUiModules=1|legacyUiModules=0
+VRTraining|task=Training|interactables=3|ids=training.training-cube-a,training.training-cube-b,training.training-cylinder|colliders=3|xr=5|sources=1|eventSystems=1|xrUiModules=1|legacyUiModules=0
+ResearcherSetup|task=none|interactables=0|ids=|colliders=0|xr=0|sources=0|eventSystems=0|xrUiModules=0|legacyUiModules=0

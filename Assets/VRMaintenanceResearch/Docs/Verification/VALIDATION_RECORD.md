@@ -250,3 +250,18 @@ isExecutionSuccessful=true
 [Log] Rollback script refreshed: [48acac8dd5de9284f97e6d3e7bd33258]
 [Log] Patch refreshed: [ede6e17c0f3bb3c45973a79006165b90]
 ```
+
+
+## Participant-comprehension final verification - 2026-08-03
+
+Full literal record: `ParticipantComprehension_Runtime.txt`.
+
+- Controlled Unity restart removed the repeated `m_DisallowAutoRefresh >= 0` assertions; the restarted session recorded zero occurrences.
+- Two source rebuild/validation passes produced identical scene invariants and `ALL SCENES PASS`.
+- Computer and Fan Play Mode checks covered reader open/close, XRI selection tint, Inspect Fail, correct repair action, Inspect Pass, and development reset.
+- Each task telemetry file contained exactly one completion, one failed test, and one passed test with unique, monotonic event sequence numbers.
+- Desktop input check confirmed idle cursor visibility, right-mouse look input/delta/release, cursor return, left-mouse UI input, one EventSystem, and one XR UI module.
+- Final clean Unity Console: zero errors and zero warnings.
+- P1–P3 remain blank; no human pilot claim is made.
+
+Status: **Internal participant-comprehension redesign and validation completed; real first-time human pilot P1–P3 still required before participant testing readiness.**

@@ -1,0 +1,93 @@
+Participant comprehension runtime and source verification
+Date: 2026-08-03 Asia/Bangkok
+Unity: 6000.3.20f1 (c9ba695d4f07)
+Branch: visual-polish-claude
+Baseline HEAD: 501bc0170cc00c9cb1fd524fe241b22be1b75ed6
+
+ASSERTION RECOVERY
+Command: close main Unity window for the exact project process, then reopen the same project.
+Input: PID 7744, project D:\TMU_VR\XR-Interaction-Toolkit-Examples
+Literal output: CLOSE_MAIN_WINDOW=True
+Modified input: PID 40508, start 2026-08-03T20:09:08.9743078+07:00
+Command: Select-String $env:LOCALAPPDATA\Unity\Editor\Editor.log -Pattern 'm_DisallowAutoRefresh >= 0'
+Literal output: CURRENT_SESSION_AUTOREFRESH_ASSERTIONS=0
+Exit status: 0
+
+SOURCE REBUILD PASS A
+Command: Unity_RunCommand -> ResearchVisualPipeline.RebuildAll(); ResearchVisualValidator.ValidateAll();
+Literal output: FINAL_PASS_A_REBUILD_BEGIN; FINAL_PASS_A_REBUILD_END; FINAL_PASS_A_VALIDATE_END
+Exit status: compilation=true, execution=true
+Invariant output: ParticipantComprehension_PassA.txt
+
+SOURCE REBUILD PASS B
+Command: Unity_RunCommand -> TMUVR.MaintenanceResearch.EditorTools.ResearchVisualPipeline.RebuildAll(); TMUVR.MaintenanceResearch.EditorTools.ResearchVisualValidator.ValidateAll();
+Literal output:
+FINAL_PASS_B_REBUILD_BEGIN
+FINAL_PASS_B_REBUILD_END
+FINAL_PASS_B_VALIDATE_END
+Exit status: compilation=true, execution=true
+Invariant output: ParticipantComprehension_PassB.txt
+Comparison command: compare PassA and PassB after skipping the title line
+Literal output: PASS_A_B_IDENTICAL=True
+Exit status: 0
+
+SCENE VALIDATION
+Command: ResearchVisualValidator.ValidateAll()
+Input: ComputerRepairTask, FanRepairTask, VRTraining, ResearcherSetup
+Literal output: ALL SCENES PASS
+Known warnings: training.cube-a, training.cube-b, training.cylinder task-definition IDs do not match the pre-existing scene IDs training.training-cube-a, training.training-cube-b, training.training-cylinder. IDs were preserved.
+Final clean Console command: Unity_ReadConsole(Error,Warning)
+Literal output: Retrieved 0 log entries.
+Exit status: success=true
+
+COMPUTER PLAY MODE
+Input scene: Assets/VRMaintenanceResearch/Scenes/ComputerRepairTask.unity
+Command path: manual.Open(); manual.Close(); XR selectEntered/selectExited; RunDeviceTest(); RecordInteraction(correct RepairAction); RunDeviceTest(); ResetDevelopmentTask().
+Literal output: RUNTIME ComputerPost|state=Active|attempt=2|selectionId=computer.external-power-cable|selectionTintChangedRestored=True
+Transition results captured before telemetry file read: initial=Active; manualOpen=True; manualClose=True; preRepair=Active; repairId=computer.main-power-connector; postRepair=Completed; reset=Active; attempt=1->2; parts=13; rootColliders=13; xrRoots=13.
+Telemetry: C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260803T133027Z_988dadd6\Computer\events.csv
+Literal telemetry output: rows=17; TaskCompleted=1; DeviceTestFailed=1; DeviceTestPassed=1; DeviceTestStarted=2; TaskLoaded=2; TaskStarted=2; event_sequence_unique=True; event_sequence_monotonic=True; attempts=1,2; completion_attempt=1.
+Exit status: Play Mode entered=true; lifecycle executed=true; Play Mode exited=true; telemetry read exit=0.
+Note: the first in-Play CSV read hit the expected sharing lock while the logger owned the file. Play Mode was stopped and the same emitted file was read successfully; the lifecycle was not replayed.
+
+FAN PLAY MODE
+Input scene: Assets/VRMaintenanceResearch/Scenes/FanRepairTask.unity
+Command path: manual.Open(); manual.Close(); XR selectEntered/selectExited; RunDeviceTest(); RecordInteraction(correct RepairAction); RunDeviceTest(); ResetDevelopmentTask().
+Literal output: RUNTIME Fan|initial=Active|manualOpen=True|manualClose=True|preRepair=Active|repairId=fan.working-fuse|postRepair=Completed|reset=Active|attempt=1->2|parts=15|rootColliders=15|xrRoots=15|grabRoots=0
+Literal corrected selection sample: RUNTIME FanPost|state=Active|attempt=2|eligibleSelectionTargets=15|selectionId=fan.power-switch|selectionTintChangedRestored=True
+Telemetry: C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260803T133253Z_44e710a3\Fan\events.csv
+Literal telemetry output: rows=94; TaskCompleted=1; DeviceTestFailed=1; DeviceTestPassed=1; DeviceTestStarted=2; TaskLoaded=2; TaskStarted=2; event_sequence_unique=True; event_sequence_monotonic=True; attempts=1,2; completion_object=task.fan.
+Exit status: Play Mode entered=true; lifecycle executed=true; Play Mode exited=true; telemetry read exit=0.
+Note: grabRoots=0 is expected because these task parts use XRSimpleInteractable roots rather than XRGrabInteractable. All 15 retain root colliders and XRBaseInteractable components. The initially sampled nested renderer was deliberately excluded by the existing parent-tint guard; the corrected eligible-renderer sample passed without a source change.
+
+XR INTERACTABLE SUBTYPE PRESERVATION
+Command: read XRGrabInteractable and XRSimpleInteractable script GUIDs from the installed XRI package, then count GUID occurrences in HEAD and final scene YAML.
+Literal output:
+ComputerRepairTask|headGrab=0|currentGrab=0|headSimple=32|currentSimple=32
+FanRepairTask|headGrab=0|currentGrab=0|headSimple=34|currentSimple=34
+VRTraining|headGrab=3|currentGrab=3|headSimple=2|currentSimple=2
+Exit status: 0. No grab or simple-interactable subtype loss.
+
+DESKTOP MOUSE PLAY MODE
+Input scene: Assets/VRMaintenanceResearch/Scenes/VRTraining.unity
+Command: queue right mouse press, mouse delta (12,-6), right release, left mouse press through InputSystem; read existing XRInteractionSimulator and XRUIInputModule inputs.
+Literal output: DESKTOP_RUNTIME|cursorVisibleIdle=True|lockIdle=None|rightMouseHeld=True|mouseDeltaRead=(12.00, -6.00)|rightMouseReleased=True|cursorReturned=True|leftMouseUiInput=True|eventSystems=1|xrUiModules=1
+Exit status: compilation=true, execution=true, Play Mode exited=true
+
+FRESH SCREENSHOTS
+Command: VisualAuditCapture.CaptureAll("Final"); VisualAuditCapture.CaptureComprehension();
+Literal output: FINAL_PASS_B_SCREENSHOTS_CAPTURED
+Exit status: compilation=true, execution=true
+Folder: D:\TMU_VR\XR-Interaction-Toolkit-Examples\Assets\VRMaintenanceResearch\Docs\Screenshots\Audit
+Representative files: Final_Computer_ParticipantEye.png, Approach_Computer_AtxConnector.png, Final_Computer_ReaderOpen.png, Final_Fan_ParticipantEye.png, Approach_Fan_FuseDetail.png, Final_Fan_ReaderOpen.png, Final_Training_ParticipantEye.png, Approach_Training_Feedback.png.
+
+COMPLETE BINARY PATCH VERIFICATION
+Artifact: C:\Users\User\.codex\visualizations\2026\08\03\019fc7b2-e25f-7482-b38f-a4fb4366fd70\participant-comprehension-final\participant-comprehension-full.patch
+Baseline: 501bc0170cc00c9cb1fd524fe241b22be1b75ed6
+Command: git diff --cached --binary -- Assets/VRMaintenanceResearch
+Command in isolated D:\pc-test worktree: git apply --check --binary; git apply --binary; git apply --reverse --check --binary; git apply --reverse --binary.
+Literal output: FORWARD_CHECK_EXIT=0; FORWARD_APPLY_EXIT=0; FORWARD_CHANGED_PATHS=132; REVERSE_CHECK_EXIT=0; REVERSE_APPLY_EXIT=0; POST_REVERSE_STATUS_COUNT=0; POST_REVERSE_HEAD=501bc0170cc00c9cb1fd524fe241b22be1b75ed6.
+The complete patch contains all staged text and binary payloads. Unity-generated YAML/meta whitespace warnings were reported by git apply but did not affect either direction.
+
+HUMAN EVIDENCE BOUNDARY
+No human pilot was performed. PILOT_COMPREHENSION_CHECK.md rows P1–P3 are intentionally blank. Internal AI visual review is not participant data. Quest hardware interaction remains a separate manual boundary.

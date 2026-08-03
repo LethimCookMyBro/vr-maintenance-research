@@ -97,6 +97,37 @@ Icons retained and their mapped roles:
 All 105 icons in the pack are CC0; only the 16 above were copied into the project
 to keep the imported asset set small.
 
+### UI Pack 2.0
+
+Imported 2026-08-03 for the interface restyle. This is the pack that supplies the
+project's UI visual language; the Game Icons above are now supporting glyphs only.
+
+| Field | Value |
+|---|---|
+| Asset name | UI Pack (2.0) |
+| Creator | Kenney Vleugels (kenney.nl) |
+| Source page | <https://kenney.nl/assets/ui-pack> |
+| Direct download | `https://kenney.nl/media/pages/assets/ui-pack/f651646eab-1718203990/kenney_ui-pack.zip` (1.17 MB) |
+| License | CC0 1.0 Universal — verified in the pack's own `License.txt`, creation date 12-06-2024 |
+| Attribution required | No (credited voluntarily) |
+| Local copy of licence | `ThirdParty/Kenney/UIPack/LICENSE.txt` |
+| Modifications | None to the source files. Imported as Unity sprites and one TMP font asset. |
+| Style check | Flat/soft-shadow modern UI with rounded rectangles and a raised "depth" edge. Not fantasy or stone — matches the navy/slate XR-lab theme. |
+
+Files copied into the project (13 of 1343 in the pack):
+
+| File | Source in pack | Role |
+|---|---|---|
+| `panel_surface.png` | `PNG/Grey/Default/button_rectangle_depth_flat.png` | Reader panel body, notice-board cards |
+| `panel_flat.png` | `PNG/Grey/Default/button_rectangle_flat.png` | Selector card face |
+| `panel_border.png` | `PNG/Grey/Default/button_rectangle_border.png` | Panel outline / recessed slots |
+| `button_accent.png` | `PNG/Blue/Default/button_rectangle_depth_flat.png` | Primary controls (Next, Play) |
+| `button_accent_flat.png` | `PNG/Blue/Default/button_rectangle_flat.png` | Pressed / flat accent state |
+| `button_neutral.png` | `PNG/Grey/Default/button_rectangle_depth_border.png` | Secondary controls (Prev, Close) |
+| `divider.png` | `PNG/Extra/Default/divider.png` | Header rules |
+| `icon_play.png`, `icon_repeat.png`, `icon_arrow_up.png`, `icon_arrow_down.png` | `PNG/Extra/Default/` | Video and paging controls |
+| `KenneyFutureNarrow.ttf` | `Font/Kenney Future Narrow.ttf` | UI typeface, replacing the default LiberationSans |
+
 ---
 
 ## Noto Sans Thai and Noto Sans JP — SIL Open Font License 1.1
