@@ -30,6 +30,37 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         const float k_W = 0.105f;   // half width  (local x, side panels)
         const float k_H = 0.225f;   // half height (local y)
         const float k_D = 0.225f;   // half depth  (local z, front bezel at -z)
+        const string k_Item3D = "Assets/VRMaintenanceResearch/ThirdParty/ITEM_3D/";
+
+        // --- board frame ---------------------------------------------------
+        // The licensed B450 board is 0.244 x 0.022 x 0.305 m in its own axes, and its
+        // rear-panel edge — the one carrying both the I/O cluster and the PCIe bracket
+        // ends — is its -X edge, running the full 0.305 m. In a tower that edge stands
+        // vertical against the rear panel, so the board is 305 mm tall and 244 mm deep,
+        // not the other way round. This rotation is what puts it that way:
+        //   model +X -> case -Z,  model +Y -> case +X,  model +Z -> case -Y
+        // which also turns the component side (model -Y) toward the open panel.
+        static readonly Vector3 k_BoardEuler = new Vector3(90f, 90f, 0f);
+
+        // Sits high enough to clear the PSU basement and far enough back that the I/O
+        // cluster meets the rear panel.
+        static readonly Vector3 k_BoardCentre = new Vector3(0.081f, 0.050f, 0.083f);
+
+        /// <summary>
+        /// Places a part on the board, from coordinates read off the orthographic board
+        /// map (Docs/Screenshots/Staging/Probe_Board_Ortho.png): <paramref name="dx"/>
+        /// and <paramref name="dz"/> are that map's axes measured from the board centre,
+        /// and <paramref name="lift"/> is how far the part stands off the board face.
+        ///
+        /// Returns a position local to Motherboard Assembly, which sits at the board
+        /// centre — so socket, DIMM and slot positions are measured from the real model
+        /// rather than guessed, which is how the first integration put a cooler in mid
+        /// air and a card through the drive cage.
+        /// </summary>
+        static Vector3 OnBoard(float dx, float dz, float lift)
+        {
+            return new Vector3(-0.011f - lift, dz, -dx);
+        }
 
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Rebuild Computer Workstation")]
         public static void Build()
@@ -140,9 +171,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         {
             var rear = Group("Rear IO", root, new Vector3(0f, 0f, k_D - 0.012f));
 
-            Box("IO Shield", rear, new Vector3(0.028f, 0.145f, 0f), new Vector3(0.11f, 0.05f, 0.006f), "Lab_Metal");
-            for (var i = 0; i < 4; i++)
-                Box($"IO Port {i + 1}", rear, new Vector3(0.0f + (i % 2) * 0.03f, 0.155f - (i / 2) * 0.022f, -0.004f), new Vector3(0.022f, 0.014f, 0.004f), "Lab_PlasticDark");
+            // No handmade I/O shield or ports here: the board model carries its own
+            // cluster and it now meets this panel, so building a second set would put
+            // two stacks of ports a few millimetres apart.
 
             // Expansion slot covers
             for (var i = 0; i < 5; i++)
@@ -166,106 +197,80 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// so a socket-and-cooler stack looks like a cooler and a card looks like a
         /// card.
         /// </summary>
+        /// <summary>
+        /// Populates the board.
+        ///
+        /// The board is the licensed MSI B450 model, which already carries its own VRM
+        /// and chipset heatsinks, capacitors, SATA ports, DIMM slots, front-panel header
+        /// and rear I/O cluster. The handmade versions of all of those are gone rather
+        /// than layered underneath: the first integration kept both and the interior
+        /// filled up with two of everything, which is most of what read as clutter.
+        ///
+        /// The model measures 0.248 x 0.022 x 0.305 m on import — already true ATX size
+        /// — so it is fitted at its native scale and only rotated into the board frame
+        /// (-X out toward the open side, +Y up, +Z toward the case rear) and pushed back
+        /// until its I/O cluster meets the rear panel.
+        ///
+        /// The ATX header stays handmade. It is the fault site, and the participant has
+        /// to be able to read it as the mate of the plug hanging in the case.
+        /// </summary>
         static void BuildMotherboard(Transform root)
         {
-            var board = Group("Motherboard Assembly", root, new Vector3(k_W - 0.020f, 0.015f, 0.02f));
+            var board = Group("Motherboard Assembly", root, k_BoardCentre);
 
-            Box("Standoff Tray", board, new Vector3(0.010f, 0f, 0f), new Vector3(0.006f, 0.278f, 0.298f), "Lab_CaseInterior");
-            Box("PCB", board, Vector3.zero, new Vector3(0.004f, 0.255f, 0.275f), "Lab_Pcb");
+            Box("Standoff Tray", board, new Vector3(0.015f, 0f, 0f), new Vector3(0.006f, 0.320f, 0.262f), "Lab_CaseInterior");
 
-            // Silkscreen: stops the board reading as one flat green card.
-            for (var i = 0; i < 6; i++)
-                Box($"Trace {i + 1}", board, new Vector3(-0.0026f, 0.100f - i * 0.038f, 0f), new Vector3(0.001f, 0.002f, 0.255f), "Lab_PcbDark");
-            for (var i = 0; i < 4; i++)
-                Box($"Standoff {i + 1}", board, new Vector3(-0.004f, (i < 2 ? 0.118f : -0.118f), (i % 2 == 0 ? -0.126f : 0.126f)), new Vector3(0.006f, 0.008f, 0.008f), "Lab_ToolSteel");
-
+            // The board mesh itself hangs off the Motherboard Placeholder interactable
+            // in PlaceInteriorParts, not here: that object is what the task calls the
+            // motherboard, and giving it the real board means the scene has one board
+            // instead of a model here and a green stand-in plate 2 mm away.
             BuildCpuCooler(board);
             BuildMemory(board);
             BuildAtxHeader(board);
-            BuildGraphicsCard(board);
-
-            // --- VRM heatsink along the top edge, chipset heatsink low and rearward ---
-            Box("VRM Heatsink", board, new Vector3(-0.014f, 0.106f, -0.060f), new Vector3(0.024f, 0.026f, 0.090f), "Lab_HeatsinkAlu");
-            for (var i = 0; i < 7; i++)
-                Box($"VRM Fin {i + 1}", board, new Vector3(-0.026f, 0.106f, -0.098f + i * 0.013f), new Vector3(0.006f, 0.022f, 0.004f), "Lab_HeatsinkAlu");
-            Box("Chipset Heatsink", board, new Vector3(-0.012f, -0.090f, 0.070f), new Vector3(0.020f, 0.052f, 0.052f), "Lab_HeatsinkAlu");
-
-            // --- capacitors: upright cans, the giveaway that this is a live board ---
-            for (var i = 0; i < 6; i++)
-                Cyl($"Capacitor {i + 1}", board, new Vector3(-0.010f, 0.010f + (i % 2) * 0.016f, -0.086f + (i / 2) * 0.014f), new Vector3(0.011f, 0.008f, 0.011f), "Lab_Silicon", new Vector3(0f, 0f, 90f));
-
-            // --- SATA ports: right-angle sockets on the board's front-lower edge ---
-            for (var i = 0; i < 4; i++)
-                Box($"SATA Port {i + 1}", board, new Vector3(-0.009f, -0.062f - (i % 2) * 0.016f, -0.110f + (i / 2) * 0.018f), new Vector3(0.014f, 0.012f, 0.014f), "Lab_Accent");
-
-            // --- front-panel header and its ribbon back to the bezel ---
-            Box("Front Panel Header", board, new Vector3(-0.008f, -0.110f, -0.070f), new Vector3(0.012f, 0.010f, 0.030f), "Lab_ConnectorWhite");
         }
 
         /// <summary>
-        /// Tower cooler: base block, heatpipes, a stacked fin block and a fan clipped
-        /// to its front face.
+        /// Processor and its stock cooler, seated on the socket the board model actually
+        /// draws — socket centre measured at dx +0.012, dz +0.069 on the board map.
         ///
-        /// The first attempt was a top-down cooler whose fins radiated in the board's
-        /// plane. Seen through the open side it drew a black disc with a hub — several
-        /// readers called it a record player. A tower has an unmistakable silhouette
-        /// from exactly this angle, and being 90 mm tall it also gives the cavity the
-        /// depth it was missing: the interior read flat because nothing stood up off
-        /// the board.
+        /// The cooler is the licensed AMD Wraith Stealth, a top-down design, so it is
+        /// laid with its height along the case's X axis: it stands off the board toward
+        /// the open panel and covers the processor, instead of standing beside it.
         /// </summary>
         static void BuildCpuCooler(Transform board)
         {
-            var cpu = Group("CPU Block", board, new Vector3(0f, 0.040f, -0.030f));
+            const float socketX = 0.0117f;
+            const float socketZ = 0.0692f;
 
-            Box("Socket Frame", cpu, new Vector3(-0.004f, 0f, 0f), new Vector3(0.006f, 0.082f, 0.082f), "Lab_Silicon");
-            Box("Socket Lever", cpu, new Vector3(-0.008f, -0.048f, 0.010f), new Vector3(0.004f, 0.010f, 0.060f), "Lab_ToolSteel");
-            Box("Cold Plate", cpu, new Vector3(-0.014f, 0f, 0f), new Vector3(0.018f, 0.070f, 0.070f), "Lab_HeatsinkAlu");
-            Box("Mount Bracket", cpu, new Vector3(-0.016f, 0f, 0f), new Vector3(0.010f, 0.100f, 0.014f), "Lab_MetalDark");
+            // 40 x 40 x 7 mm, flat on the socket: model Z is its thin axis.
+            ImportedVisual("CPU Package", board, k_Item3D + "CPU/ryzen_5_5600.glb",
+                OnBoard(socketX, socketZ, 0.0035f), new Vector3(0.008f, 0.042f, 0.042f), new Vector3(0f, 90f, 0f));
 
-            // Heatpipes rising out of the cold plate into the fin block.
-            for (var i = 0; i < 4; i++)
-                Cyl($"Heatpipe {i + 1}", cpu, new Vector3(-0.028f, 0.034f, -0.024f + i * 0.016f), new Vector3(0.010f, 0.038f, 0.010f), "Lab_Copper");
+            // Sits on top of the processor: 7 mm of CPU plus half the cooler's height.
+            ImportedVisual("CPU Cooler", board, k_Item3D + "Cooler/source/amdwraithstealthnocable.glb",
+                OnBoard(socketX, socketZ, 0.0315f), new Vector3(0.052f, 0.098f, 0.092f), new Vector3(0f, 0f, 90f));
 
-            // Fin block: horizontal plates stacked up the tower.
-            for (var i = 0; i < 18; i++)
-                Box($"Fin {i + 1}", cpu, new Vector3(-0.030f, 0.042f + i * 0.005f, 0f), new Vector3(0.052f, 0.0018f, 0.078f), "Lab_HeatsinkAlu");
-            Box("Fin Cap", cpu, new Vector3(-0.030f, 0.135f, 0f), new Vector3(0.054f, 0.004f, 0.080f), "Lab_HeatsinkAlu");
-
-            // 92 mm fan clipped to the tower's front face.
-            var fan = Group("Cooler Fan", cpu, new Vector3(-0.030f, 0.088f, -0.048f));
-            Box("Fan Frame", fan, Vector3.zero, new Vector3(0.088f, 0.088f, 0.016f), "Lab_PlasticDark");
-            Cyl("Fan Hub", fan, new Vector3(0f, 0f, -0.006f), new Vector3(0.030f, 0.004f, 0.030f), "Lab_MetalDark", new Vector3(90f, 0f, 0f));
-            for (var i = 0; i < 9; i++)
-            {
-                var vane = Group($"Vane {i + 1}", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0f, 0f, i * 40f));
-                Box("Blade", vane, new Vector3(0.026f, 0f, 0f), new Vector3(0.034f, 0.028f, 0.004f), "Lab_PlasticDark", new Vector3(22f, 0f, 0f));
-            }
-
-            // Fan lead into its board header: a cooler with no wire looks glued on.
-            Box("Fan Lead", cpu, new Vector3(-0.020f, 0.096f, 0.044f), new Vector3(0.006f, 0.006f, 0.056f), "Lab_CableBlack", new Vector3(-30f, 0f, 0f));
-            Box("Fan Header", board, new Vector3(-0.006f, 0.086f, 0.020f), new Vector3(0.008f, 0.008f, 0.012f), "Lab_PlasticDark");
+            // No handmade fan, heatpipes or fan header here. The Wraith model carries
+            // its own fan, and the board model draws its own headers.
         }
 
-        /// <summary>Four DIMM slots, two populated. Modules stand out of the board, not flat on it.</summary>
+        /// <summary>
+        /// Two DIMMs in the second and fourth slots — the dual-channel pair a technician
+        /// would actually populate on this board.
+        ///
+        /// Slot centres were measured off the board map at dx +0.071 and +0.086, so the
+        /// modules land in the slots the board draws rather than beside them. They stand
+        /// vertically, which is how DIMMs sit in a tower.
+        /// </summary>
         static void BuildMemory(Transform board)
         {
-            for (var i = 0; i < 4; i++)
-            {
-                var z = 0.066f + i * 0.017f;
-                Box($"DIMM Slot {i + 1}", board, new Vector3(-0.004f, 0.048f, z), new Vector3(0.008f, 0.126f, 0.010f), "Lab_PlasticDark");
-                Box($"DIMM Latch {i + 1}", board, new Vector3(-0.010f, 0.115f, z), new Vector3(0.008f, 0.012f, 0.009f), "Lab_PlasticLight");
+            const string path = k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb";
+            var euler = new Vector3(0f, 0f, 90f);
 
-                if (i >= 2)
-                    continue;
-
-                Box($"RAM Module {i + 1}", board, new Vector3(-0.022f, 0.052f, z), new Vector3(0.034f, 0.124f, 0.002f), "Lab_PcbDark");
-                Box($"RAM Heatspreader {i + 1}", board, new Vector3(-0.023f, 0.054f, z), new Vector3(0.030f, 0.116f, 0.005f), "Lab_HeatsinkAlu");
-                Box($"RAM Label {i + 1}", board, new Vector3(-0.023f, 0.054f, z - 0.004f), new Vector3(0.014f, 0.060f, 0.001f), "Lab_LabelPlate");
-                // Comb along the module's top edge: the detail that separates a stick
-                // of RAM from a plain metal strip at a glance.
-                for (var f = 0; f < 5; f++)
-                    Box($"RAM Fin {i + 1}-{f + 1}", board, new Vector3(-0.030f + f * 0.005f, 0.116f, z), new Vector3(0.002f, 0.014f, 0.006f), "Lab_HeatsinkAlu");
-            }
+            ImportedVisual("RAM Module 1", board, path, OnBoard(0.0711f, 0.0726f, 0.018f),
+                new Vector3(0.031f, 0.135f, 0.006f), euler);
+            ImportedVisual("RAM Module 2", board, path, OnBoard(0.0862f, 0.0726f, 0.018f),
+                new Vector3(0.031f, 0.135f, 0.006f), euler);
         }
 
         /// <summary>
@@ -275,7 +280,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static void BuildAtxHeader(Transform board)
         {
-            var header = Group("ATX Header", board, new Vector3(-0.010f, 0.040f, -0.122f));
+            // Front-right edge of the board, where a real 24-pin sits, standing vertical
+            // as it does in a tower.
+            var header = Group("ATX Header", board, OnBoard(0.110f, -0.030f, 0.009f));
 
             Box("Shroud", header, Vector3.zero, new Vector3(0.018f, 0.062f, 0.014f), "Lab_ConnectorWhite");
             Box("Shroud Wall", header, new Vector3(-0.008f, 0f, 0f), new Vector3(0.003f, 0.062f, 0.014f), "Lab_ConnectorWhite");
@@ -374,13 +381,19 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             if (case_ == null)
                 return;
 
-            // Motherboard target: an outline plate over the board, not a second board.
-            Move("Motherboard Placeholder", case_.transform, new Vector3(k_W - 0.028f, 0.015f, 0.02f), Vector3.one);
+            // The motherboard interactable carries the real board. It used to carry a
+            // flat green "target plate" standing in for one, which sat 2 mm off the
+            // board mesh and hid it almost completely.
+            //
+            // Sat at the board's own centre so the mesh needs no offset of its own, and
+            // so the grab collider wraps the thing the participant is looking at.
+            Move("Motherboard Placeholder", case_.transform, k_BoardCentre, Vector3.one);
             var mb = ResetVisual("Motherboard Placeholder", out var mbGo);
             if (mb != null)
             {
-                Box("Target Plate", mb, Vector3.zero, new Vector3(0.002f, 0.258f, 0.278f), "Lab_Pcb");
-                SetCollider(mbGo, new Vector3(0.02f, 0.26f, 0.28f));
+                ImportedVisual("Motherboard Model", mb, k_Item3D + "Optimized/Motherboard/anakart_quest.glb",
+                    Vector3.zero, new Vector3(0.024f, 0.312f, 0.250f), k_BoardEuler);
+                SetCollider(mbGo, new Vector3(0.024f, 0.312f, 0.250f));
             }
 
             // PSU in the basement, fan facing up into the case, cables leaving the

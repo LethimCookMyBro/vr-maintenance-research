@@ -96,3 +96,7 @@ crashlytics-build.properties
 *.preformat.bak
 *.preformat.bak.meta
 
+
+# Staging renders from the model-integration rebuild; not deliverables.
+Assets/VRMaintenanceResearch/Docs/Screenshots/Staging/
+Assets/VRMaintenanceResearch/Docs/Screenshots/Staging.meta

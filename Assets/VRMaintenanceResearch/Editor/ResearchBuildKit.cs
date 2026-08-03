@@ -116,6 +116,113 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
+        /// Drops an imported model into a project-owned visual wrapper, scaled to sit
+        /// inside <paramref name="fitBox"/>.
+        ///
+        /// The scale is deliberately uniform. The first integration fitted each axis
+        /// independently, which let a 0.248 x 0.022 x 0.305 m motherboard be asked for
+        /// at 0.085 x 0.255 x 0.265 — scale factors of 0.28, 11.6 and 1.07 on one mesh.
+        /// Every part came out sheared, which is what read on screen as parts floating,
+        /// clipping and disagreeing about scale. Fitting inside the box on the tightest
+        /// axis can distort nothing; a part that ends up smaller than its slot is a
+        /// placement number to fix, not silent shear.
+        ///
+        /// The wrapper is Wrapper > Scale > Orientation > model, so the caller's
+        /// position, the fit and the model's own axes never fight for one transform.
+        /// </summary>
+        public static Transform ImportedVisual(string name, Transform parent, string assetPath, Vector3 localCenter, Vector3 fitBox, Vector3 euler = default)
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (source == null)
+            {
+                Debug.LogError($"[ResearchBuildKit] imported visual missing: {assetPath}");
+                return null;
+            }
+
+            var wrapper = Group(name, parent, localCenter);
+            var scaleRoot = Group("Scale", wrapper);
+            var orientation = Group("Orientation", scaleRoot, default, euler);
+            var instance = PrefabUtility.InstantiatePrefab(source, orientation) as GameObject;
+            if (instance == null)
+            {
+                Object.DestroyImmediate(wrapper.gameObject);
+                Debug.LogError($"[ResearchBuildKit] could not instantiate: {assetPath}");
+                return null;
+            }
+
+            instance.name = source.name;
+            instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+            StripImportedExtras(instance);
+
+            if (!TryBounds(orientation, scaleRoot, out var bounds))
+            {
+                Object.DestroyImmediate(wrapper.gameObject);
+                Debug.LogError($"[ResearchBuildKit] imported visual has no renderers: {assetPath}");
+                return null;
+            }
+
+            var fit = Mathf.Min(fitBox.x / bounds.size.x, fitBox.y / bounds.size.y, fitBox.z / bounds.size.z);
+            orientation.localPosition = -bounds.center;
+            scaleRoot.localScale = Vector3.one * fit;
+            return wrapper;
+        }
+
+        /// <summary>
+        /// Everything an imported file brings that the scene must not inherit: its own
+        /// cameras and lights would fight the research lighting rig, its scripts and
+        /// animation would run at play time, and its colliders would intercept XR rays
+        /// meant for the task interactable that owns this visual.
+        /// </summary>
+        static void StripImportedExtras(GameObject instance)
+        {
+            foreach (var component in instance.GetComponentsInChildren<MonoBehaviour>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Collider>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Rigidbody>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Joint>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Animator>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Animation>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Light>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Camera>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<AudioSource>(true))
+                Object.DestroyImmediate(component);
+        }
+
+        /// <summary>Renderer bounds of <paramref name="root"/> expressed in <paramref name="basis"/>' local space.</summary>
+        static bool TryBounds(Transform root, Transform basis, out Bounds bounds)
+        {
+            bounds = default;
+            var found = false;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var local = renderer.localBounds;
+                for (var x = -1; x <= 1; x += 2)
+                for (var y = -1; y <= 1; y += 2)
+                for (var z = -1; z <= 1; z += 2)
+                {
+                    var corner = local.center + Vector3.Scale(local.extents, new Vector3(x, y, z));
+                    var point = basis.InverseTransformPoint(renderer.transform.TransformPoint(corner));
+                    if (found)
+                        bounds.Encapsulate(point);
+                    else
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        found = true;
+                    }
+                }
+            }
+            return found && bounds.size.x > 0f && bounds.size.y > 0f && bounds.size.z > 0f;
+        }
+
+        /// <summary>
         /// Replaces the "Visual X" child of a task interactable without touching the
         /// interactable itself.
         ///
