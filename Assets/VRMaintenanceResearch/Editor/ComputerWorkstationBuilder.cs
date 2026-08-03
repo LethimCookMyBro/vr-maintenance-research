@@ -30,7 +30,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         const float k_W = 0.105f;   // half width  (local x, side panels)
         const float k_H = 0.225f;   // half height (local y)
         const float k_D = 0.225f;   // half depth  (local z, front bezel at -z)
-        const string k_Item3D = "Assets/VRMaintenanceResearch/ThirdParty/ITEM_3D/";
 
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Rebuild Computer Workstation")]
         public static void Build()
@@ -172,13 +171,35 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var board = Group("Motherboard Assembly", root, new Vector3(k_W - 0.020f, 0.015f, 0.02f));
 
             Box("Standoff Tray", board, new Vector3(0.010f, 0f, 0f), new Vector3(0.006f, 0.278f, 0.298f), "Lab_CaseInterior");
-            ImportedVisual("Motherboard Model", board, k_Item3D + "Optimized/Motherboard/anakart_quest.glb",
-                new Vector3(-0.040f, 0f, 0f), new Vector3(0.085f, 0.255f, 0.265f), new Vector3(0f, 90f, 0f));
+            Box("PCB", board, Vector3.zero, new Vector3(0.004f, 0.255f, 0.275f), "Lab_Pcb");
+
+            // Silkscreen: stops the board reading as one flat green card.
+            for (var i = 0; i < 6; i++)
+                Box($"Trace {i + 1}", board, new Vector3(-0.0026f, 0.100f - i * 0.038f, 0f), new Vector3(0.001f, 0.002f, 0.255f), "Lab_PcbDark");
+            for (var i = 0; i < 4; i++)
+                Box($"Standoff {i + 1}", board, new Vector3(-0.004f, (i < 2 ? 0.118f : -0.118f), (i % 2 == 0 ? -0.126f : 0.126f)), new Vector3(0.006f, 0.008f, 0.008f), "Lab_ToolSteel");
 
             BuildCpuCooler(board);
             BuildMemory(board);
             BuildAtxHeader(board);
             BuildGraphicsCard(board);
+
+            // --- VRM heatsink along the top edge, chipset heatsink low and rearward ---
+            Box("VRM Heatsink", board, new Vector3(-0.014f, 0.106f, -0.060f), new Vector3(0.024f, 0.026f, 0.090f), "Lab_HeatsinkAlu");
+            for (var i = 0; i < 7; i++)
+                Box($"VRM Fin {i + 1}", board, new Vector3(-0.026f, 0.106f, -0.098f + i * 0.013f), new Vector3(0.006f, 0.022f, 0.004f), "Lab_HeatsinkAlu");
+            Box("Chipset Heatsink", board, new Vector3(-0.012f, -0.090f, 0.070f), new Vector3(0.020f, 0.052f, 0.052f), "Lab_HeatsinkAlu");
+
+            // --- capacitors: upright cans, the giveaway that this is a live board ---
+            for (var i = 0; i < 6; i++)
+                Cyl($"Capacitor {i + 1}", board, new Vector3(-0.010f, 0.010f + (i % 2) * 0.016f, -0.086f + (i / 2) * 0.014f), new Vector3(0.011f, 0.008f, 0.011f), "Lab_Silicon", new Vector3(0f, 0f, 90f));
+
+            // --- SATA ports: right-angle sockets on the board's front-lower edge ---
+            for (var i = 0; i < 4; i++)
+                Box($"SATA Port {i + 1}", board, new Vector3(-0.009f, -0.062f - (i % 2) * 0.016f, -0.110f + (i / 2) * 0.018f), new Vector3(0.014f, 0.012f, 0.014f), "Lab_Accent");
+
+            // --- front-panel header and its ribbon back to the bezel ---
+            Box("Front Panel Header", board, new Vector3(-0.008f, -0.110f, -0.070f), new Vector3(0.012f, 0.010f, 0.030f), "Lab_ConnectorWhite");
         }
 
         /// <summary>
@@ -194,20 +215,57 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static void BuildCpuCooler(Transform board)
         {
-            var euler = new Vector3(-90f, -90f, 0f);
-            ImportedVisual("CPU Package", board, k_Item3D + "CPU/ryzen_5_5600.glb",
-                new Vector3(-0.088f, 0.040f, -0.030f), new Vector3(0.008f, 0.042f, 0.042f), euler);
-            ImportedVisual("CPU Cooler", board, k_Item3D + "Cooler/source/amdwraithstealthnocable.glb",
-                new Vector3(-0.128f, 0.040f, -0.030f), new Vector3(0.070f, 0.095f, 0.095f), euler);
+            var cpu = Group("CPU Block", board, new Vector3(0f, 0.040f, -0.030f));
+
+            Box("Socket Frame", cpu, new Vector3(-0.004f, 0f, 0f), new Vector3(0.006f, 0.082f, 0.082f), "Lab_Silicon");
+            Box("Socket Lever", cpu, new Vector3(-0.008f, -0.048f, 0.010f), new Vector3(0.004f, 0.010f, 0.060f), "Lab_ToolSteel");
+            Box("Cold Plate", cpu, new Vector3(-0.014f, 0f, 0f), new Vector3(0.018f, 0.070f, 0.070f), "Lab_HeatsinkAlu");
+            Box("Mount Bracket", cpu, new Vector3(-0.016f, 0f, 0f), new Vector3(0.010f, 0.100f, 0.014f), "Lab_MetalDark");
+
+            // Heatpipes rising out of the cold plate into the fin block.
+            for (var i = 0; i < 4; i++)
+                Cyl($"Heatpipe {i + 1}", cpu, new Vector3(-0.028f, 0.034f, -0.024f + i * 0.016f), new Vector3(0.010f, 0.038f, 0.010f), "Lab_Copper");
+
+            // Fin block: horizontal plates stacked up the tower.
+            for (var i = 0; i < 18; i++)
+                Box($"Fin {i + 1}", cpu, new Vector3(-0.030f, 0.042f + i * 0.005f, 0f), new Vector3(0.052f, 0.0018f, 0.078f), "Lab_HeatsinkAlu");
+            Box("Fin Cap", cpu, new Vector3(-0.030f, 0.135f, 0f), new Vector3(0.054f, 0.004f, 0.080f), "Lab_HeatsinkAlu");
+
+            // 92 mm fan clipped to the tower's front face.
+            var fan = Group("Cooler Fan", cpu, new Vector3(-0.030f, 0.088f, -0.048f));
+            Box("Fan Frame", fan, Vector3.zero, new Vector3(0.088f, 0.088f, 0.016f), "Lab_PlasticDark");
+            Cyl("Fan Hub", fan, new Vector3(0f, 0f, -0.006f), new Vector3(0.030f, 0.004f, 0.030f), "Lab_MetalDark", new Vector3(90f, 0f, 0f));
+            for (var i = 0; i < 9; i++)
+            {
+                var vane = Group($"Vane {i + 1}", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0f, 0f, i * 40f));
+                Box("Blade", vane, new Vector3(0.026f, 0f, 0f), new Vector3(0.034f, 0.028f, 0.004f), "Lab_PlasticDark", new Vector3(22f, 0f, 0f));
+            }
+
+            // Fan lead into its board header: a cooler with no wire looks glued on.
+            Box("Fan Lead", cpu, new Vector3(-0.020f, 0.096f, 0.044f), new Vector3(0.006f, 0.006f, 0.056f), "Lab_CableBlack", new Vector3(-30f, 0f, 0f));
+            Box("Fan Header", board, new Vector3(-0.006f, 0.086f, 0.020f), new Vector3(0.008f, 0.008f, 0.012f), "Lab_PlasticDark");
         }
 
         /// <summary>Four DIMM slots, two populated. Modules stand out of the board, not flat on it.</summary>
         static void BuildMemory(Transform board)
         {
-            var path = k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb";
-            var euler = new Vector3(0f, 90f, 90f);
-            ImportedVisual("RAM Module 1", board, path, new Vector3(-0.105f, 0.050f, 0.070f), new Vector3(0.035f, 0.124f, 0.006f), euler);
-            ImportedVisual("RAM Module 2", board, path, new Vector3(-0.105f, 0.050f, 0.087f), new Vector3(0.035f, 0.124f, 0.006f), euler);
+            for (var i = 0; i < 4; i++)
+            {
+                var z = 0.066f + i * 0.017f;
+                Box($"DIMM Slot {i + 1}", board, new Vector3(-0.004f, 0.048f, z), new Vector3(0.008f, 0.126f, 0.010f), "Lab_PlasticDark");
+                Box($"DIMM Latch {i + 1}", board, new Vector3(-0.010f, 0.115f, z), new Vector3(0.008f, 0.012f, 0.009f), "Lab_PlasticLight");
+
+                if (i >= 2)
+                    continue;
+
+                Box($"RAM Module {i + 1}", board, new Vector3(-0.022f, 0.052f, z), new Vector3(0.034f, 0.124f, 0.002f), "Lab_PcbDark");
+                Box($"RAM Heatspreader {i + 1}", board, new Vector3(-0.023f, 0.054f, z), new Vector3(0.030f, 0.116f, 0.005f), "Lab_HeatsinkAlu");
+                Box($"RAM Label {i + 1}", board, new Vector3(-0.023f, 0.054f, z - 0.004f), new Vector3(0.014f, 0.060f, 0.001f), "Lab_LabelPlate");
+                // Comb along the module's top edge: the detail that separates a stick
+                // of RAM from a plain metal strip at a glance.
+                for (var f = 0; f < 5; f++)
+                    Box($"RAM Fin {i + 1}-{f + 1}", board, new Vector3(-0.030f + f * 0.005f, 0.116f, z), new Vector3(0.002f, 0.014f, 0.006f), "Lab_HeatsinkAlu");
+            }
         }
 
         /// <summary>
@@ -217,7 +275,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static void BuildAtxHeader(Transform board)
         {
-            var header = Group("ATX Header", board, new Vector3(-0.095f, 0.040f, -0.122f));
+            var header = Group("ATX Header", board, new Vector3(-0.010f, 0.040f, -0.122f));
 
             Box("Shroud", header, Vector3.zero, new Vector3(0.018f, 0.062f, 0.014f), "Lab_ConnectorWhite");
             Box("Shroud Wall", header, new Vector3(-0.008f, 0f, 0f), new Vector3(0.003f, 0.062f, 0.014f), "Lab_ConnectorWhite");
@@ -235,9 +293,41 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static void BuildGraphicsCard(Transform board)
         {
+            var gpu = Group("Graphics Card", board, new Vector3(-0.054f, -0.040f, 0.004f));
+
             Box("PCIe Slot", board, new Vector3(-0.005f, -0.036f, 0.004f), new Vector3(0.010f, 0.008f, 0.190f), "Lab_PlasticDark");
-            ImportedVisual("Graphics Card", board, k_Item3D + "Optimized/GPU/gpu_quest.glb",
-                new Vector3(-0.105f, -0.045f, 0.004f), new Vector3(0.095f, 0.060f, 0.225f), new Vector3(-90f, -90f, 0f));
+
+            Box("PCB", gpu, Vector3.zero, new Vector3(0.100f, 0.003f, 0.226f), "Lab_PcbDark");
+            Box("Backplate", gpu, new Vector3(0f, 0.006f, 0f), new Vector3(0.096f, 0.003f, 0.220f), "Lab_CasePanel");
+            Box("Backplate Label", gpu, new Vector3(-0.010f, 0.008f, -0.070f), new Vector3(0.052f, 0.001f, 0.048f), "Lab_LabelPlate");
+            Box("Shroud", gpu, new Vector3(0f, -0.020f, 0f), new Vector3(0.098f, 0.038f, 0.222f), "Lab_PlasticDark");
+            Box("Shroud Edge", gpu, new Vector3(-0.048f, -0.020f, 0f), new Vector3(0.004f, 0.038f, 0.222f), "Lab_MetalDark");
+
+            // Fan bays cut into the shroud's outer edge: from the side panel this is
+            // the only part of the cooler you see, and without it the card is a slab.
+            foreach (var z in new[] { -0.058f, 0.058f })
+            {
+                Box($"Bay Mouth {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.046f, -0.026f, z), new Vector3(0.010f, 0.024f, 0.074f), "Lab_CasePanel");
+                Box($"Bay Rim {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.044f, -0.010f, z), new Vector3(0.012f, 0.006f, 0.078f), "Lab_MetalDark");
+            }
+            Box("Shroud Spine", gpu, new Vector3(-0.020f, -0.002f, 0f), new Vector3(0.030f, 0.012f, 0.216f), "Lab_MetalDark");
+
+            // Fans on the underside, the face a bystander actually sees in an open case.
+            foreach (var z in new[] { -0.058f, 0.058f })
+            {
+                Cyl($"Fan {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.004f, -0.038f, z), new Vector3(0.076f, 0.003f, 0.076f), "Lab_CasePanel");
+                Cyl($"Fan Hub {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.004f, -0.040f, z), new Vector3(0.026f, 0.003f, 0.026f), "Lab_MetalDark");
+                for (var i = 0; i < 6; i++)
+                    Box($"Fan Blade {(z < 0 ? "A" : "B")}{i + 1}", gpu, new Vector3(-0.004f, -0.039f, z), new Vector3(0.070f, 0.002f, 0.016f), "Lab_PlasticDark", new Vector3(0f, i * 30f, 0f));
+            }
+
+            // 8-pin PCIe power sockets on the top edge, wired back to the PSU loom.
+            Box("Power Socket", gpu, new Vector3(-0.030f, 0.012f, 0.070f), new Vector3(0.030f, 0.014f, 0.020f), "Lab_ConnectorWhite");
+            Box("Power Lead", gpu, new Vector3(-0.030f, 0.026f, 0.050f), new Vector3(0.014f, 0.014f, 0.060f), "Lab_CableBlack", new Vector3(28f, 0f, 0f));
+
+            // Rear bracket in the expansion slot.
+            Box("Bracket", gpu, new Vector3(0.006f, -0.016f, 0.118f), new Vector3(0.088f, 0.062f, 0.005f), "Lab_MetalDark");
+            Box("Display Port", gpu, new Vector3(-0.012f, -0.020f, 0.122f), new Vector3(0.030f, 0.012f, 0.006f), "Lab_PlasticDark");
         }
 
         /// <summary>
@@ -259,8 +349,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("SATA Data", hdd, new Vector3(-0.004f, -0.020f, 0.052f), new Vector3(0.014f, 0.008f, 0.010f), "Lab_Accent");
             Box("SATA Power", hdd, new Vector3(-0.004f, -0.020f, 0.036f), new Vector3(0.014f, 0.008f, 0.020f), "Lab_ConnectorWhite");
 
-            ImportedVisual("Solid State Drive", cage, k_Item3D + "Storage/source/ssd-kit.glb",
-                new Vector3(-0.064f, -0.030f, 0f), new Vector3(0.014f, 0.075f, 0.045f), new Vector3(90f, 90f, 0f));
+            // 2.5" SSD in a caddy below it.
+            var ssd = Group("Solid State Drive", cage, new Vector3(-0.064f, -0.030f, 0f));
+            Box("Caddy", ssd, new Vector3(0.004f, 0f, 0f), new Vector3(0.020f, 0.038f, 0.076f), "Lab_CaseSteel");
+            Box("Body", ssd, new Vector3(-0.008f, 0f, 0f), new Vector3(0.008f, 0.034f, 0.070f), "Lab_Navy");
+            Box("Label", ssd, new Vector3(-0.013f, 0f, 0f), new Vector3(0.002f, 0.024f, 0.052f), "Lab_LabelPlate");
+            Box("SATA Data", ssd, new Vector3(-0.004f, -0.012f, 0.038f), new Vector3(0.012f, 0.007f, 0.009f), "Lab_Accent");
 
             // Data leads running forward to the board's SATA ports.
             Box("Data Lead A", cage, new Vector3(-0.058f, 0.010f, 0.070f), new Vector3(0.010f, 0.004f, 0.060f), "Lab_Accent", new Vector3(-26f, 0f, 0f));
@@ -285,9 +379,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var mb = ResetVisual("Motherboard Placeholder", out var mbGo);
             if (mb != null)
             {
-                // The project-owned logical wrapper supplies inspection and identity;
-                // the source-backed board under Desktop Case/Visual supplies the mesh.
-                FitBoxCollider(mbGo, new Vector3(0.02f, 0.26f, 0.28f));
+                Box("Target Plate", mb, Vector3.zero, new Vector3(0.002f, 0.258f, 0.278f), "Lab_Pcb");
+                SetCollider(mbGo, new Vector3(0.02f, 0.26f, 0.28f));
             }
 
             // PSU in the basement, fan facing up into the case, cables leaving the
@@ -296,9 +389,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var psu = ResetVisual("Power Supply Placeholder", out var psuGo);
             if (psu != null)
             {
-                ImportedVisual("PSU Model", psu, k_Item3D + "PSU/psu_power_supply_unit.glb",
-                    Vector3.zero, new Vector3(0.150f, 0.086f, 0.140f));
-                FitBoxCollider(psuGo, new Vector3(0.15f, 0.09f, 0.14f));
+                Box("Body", psu, Vector3.zero, new Vector3(0.150f, 0.086f, 0.140f), "Lab_CaseSteel");
+                Box("Label", psu, new Vector3(-0.076f, 0f, 0f), new Vector3(0.003f, 0.050f, 0.090f), "Lab_LabelPlate");
+                Cyl("Fan Guard", psu, new Vector3(0f, 0.044f, -0.010f), new Vector3(0.072f, 0.002f, 0.072f), "Lab_MetalDark");
+                for (var i = 0; i < 5; i++)
+                    Box($"Fan Blade {i + 1}", psu, new Vector3(0f, 0.042f, -0.010f), new Vector3(0.060f, 0.003f, 0.018f), "Lab_PlasticDark", new Vector3(0f, i * 36f, 0f));
+
+                // Cable gland on the front face: the loom has to start somewhere.
+                Box("Cable Gland", psu, new Vector3(0f, 0.010f, -0.072f), new Vector3(0.058f, 0.030f, 0.008f), "Lab_PlasticDark");
+                SetCollider(psuGo, new Vector3(0.15f, 0.09f, 0.14f));
             }
 
             BuildCableLoom(case_.transform);
@@ -308,9 +407,13 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var fan = ResetVisual("Cooling Fan Placeholder", out var fanGo);
             if (fan != null)
             {
-                ImportedVisual("Case Fan Model", fan, k_Item3D + "Fans/120mm_computer_fans.glb",
-                    Vector3.zero, new Vector3(0.118f, 0.118f, 0.025f));
-                FitBoxCollider(fanGo, new Vector3(0.12f, 0.12f, 0.03f));
+                Box("Frame", fan, Vector3.zero, new Vector3(0.118f, 0.118f, 0.024f), "Lab_PlasticDark");
+                Cyl("Hub", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0.030f, 0.010f, 0.030f), "Lab_MetalDark", new Vector3(90f, 0f, 0f));
+                for (var i = 0; i < 7; i++)
+                    Box($"Blade {i + 1}", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0.100f, 0.020f, 0.006f), "Lab_CasePanel", new Vector3(0f, 0f, i * 25.7f));
+                for (var i = 0; i < 4; i++)
+                    Box($"Grill {i + 1}", fan, new Vector3(0f, 0f, -0.014f), new Vector3(0.116f, 0.004f, 0.003f), "Lab_MetalDark", new Vector3(0f, 0f, i * 45f));
+                SetCollider(fanGo, new Vector3(0.12f, 0.12f, 0.03f));
             }
 
             // PSU rocker switch on the rear face.
@@ -320,7 +423,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             {
                 Box("Bezel", sw, Vector3.zero, new Vector3(0.030f, 0.020f, 0.008f), "Lab_PlasticDark");
                 Box("Rocker", sw, new Vector3(0f, 0f, 0.004f), new Vector3(0.022f, 0.013f, 0.005f), "Lab_PlasticLight", new Vector3(8f, 0f, 0f));
-                FitBoxCollider(swGo, new Vector3(0.04f, 0.03f, 0.02f));
+                SetCollider(swGo, new Vector3(0.04f, 0.03f, 0.02f));
             }
 
             // THE FAULT: the 24-pin plug hanging free, a hand's width below the header
@@ -343,7 +446,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
                 // Short tail: the rest of the run is the fixed loom.
                 Box("Tail", cable, new Vector3(0.020f, -0.030f, 0.004f), new Vector3(0.026f, 0.044f, 0.022f), "Lab_CableBlack", new Vector3(0f, 0f, 34f));
-                FitBoxCollider(cableGo, new Vector3(0.06f, 0.09f, 0.05f));
+                SetCollider(cableGo, new Vector3(0.06f, 0.09f, 0.05f));
             }
         }
 
@@ -391,16 +494,19 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                     Box($"Pin {i + 1}", mpc, new Vector3(-0.031f + (i / 2) * 0.0055f, 0.010f, (i % 2 == 0 ? -0.005f : 0.005f)), new Vector3(0.0026f, 0.005f, 0.0026f), "Lab_Gold");
                 Box("Tail A", mpc, new Vector3(0f, 0.006f, 0.032f), new Vector3(0.058f, 0.020f, 0.044f), "Lab_CableBlack");
                 Box("Tail B", mpc, new Vector3(0.020f, 0.006f, 0.070f), new Vector3(0.048f, 0.018f, 0.046f), "Lab_CableBlack", new Vector3(0f, 26f, 0f));
-                FitBoxCollider(mpcGo, new Vector3(0.10f, 0.05f, 0.13f));
+                SetCollider(mpcGo, new Vector3(0.10f, 0.05f, 0.13f));
             }
 
             Move("RAM Placeholder", null, new Vector3(-0.86f, k_BenchTop + 0.044f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
             var ram = ResetVisual("RAM Placeholder", out var ramGo);
             if (ram != null)
             {
-                ImportedVisual("RAM Model", ram, k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb",
-                    Vector3.zero, new Vector3(0.145f, 0.045f, 0.012f));
-                FitBoxCollider(ramGo, new Vector3(0.15f, 0.06f, 0.04f));
+                Box("PCB", ram, Vector3.zero, new Vector3(0.135f, 0.032f, 0.005f), "Lab_PcbDark");
+                Box("Heatspreader", ram, new Vector3(0f, 0.004f, 0.004f), new Vector3(0.128f, 0.026f, 0.003f), "Lab_HeatsinkAlu");
+                Box("Label", ram, new Vector3(0f, 0.006f, 0.007f), new Vector3(0.060f, 0.010f, 0.001f), "Lab_LabelPlate");
+                for (var i = 0; i < 16; i++)
+                    Box($"Contact {i + 1}", ram, new Vector3(-0.062f + i * 0.0083f, -0.015f, -0.003f), new Vector3(0.005f, 0.006f, 0.002f), "Lab_Gold");
+                SetCollider(ramGo, new Vector3(0.15f, 0.06f, 0.04f));
             }
 
             // --- removed side panel, stowed on the bench's lower shelf: keeps the
@@ -415,7 +521,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Box("Window", side, new Vector3(0.02f, 0.008f, 0f), new Vector3(0.300f, 0.003f, 0.320f), "Lab_GlassPanel");
                 Box("Thumb Screw A", side, new Vector3(0.200f, 0.012f, -0.170f), new Vector3(0.018f, 0.012f, 0.018f), "Lab_ToolSteel");
                 Box("Thumb Screw B", side, new Vector3(0.200f, 0.012f, 0.170f), new Vector3(0.018f, 0.012f, 0.018f), "Lab_ToolSteel");
-                FitBoxCollider(sideGo, new Vector3(0.45f, 0.05f, 0.47f));
+                SetCollider(sideGo, new Vector3(0.45f, 0.05f, 0.47f));
             }
 
             // --- tool tray (right) ---
@@ -429,7 +535,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Box("Body", nonTarget, Vector3.zero, new Vector3(0.150f, 0.090f, 0.110f), "Lab_MetalDark");
                 Box("Label", nonTarget, new Vector3(0f, 0.046f, 0f), new Vector3(0.110f, 0.002f, 0.070f), "Lab_LabelPlate");
                 Box("Seal", nonTarget, new Vector3(0f, 0.047f, 0.030f), new Vector3(0.060f, 0.002f, 0.016f), "Lab_Warning");
-                FitBoxCollider(nonTargetGo, new Vector3(0.16f, 0.10f, 0.12f));
+                SetCollider(nonTargetGo, new Vector3(0.16f, 0.10f, 0.12f));
             }
 
             // --- external mains lead, coiled at the back of the bench ---
@@ -442,7 +548,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                     Box($"Prong {i + 1}", ext, new Vector3(-0.014f + i * 0.014f, 0.002f, -0.024f), new Vector3(0.005f, 0.014f, 0.018f), "Lab_ToolSteel");
                 Cyl("Coil Outer", ext, new Vector3(0.10f, -0.014f, 0.02f), new Vector3(0.170f, 0.008f, 0.170f), "Lab_CableBlack");
                 Cyl("Coil Inner", ext, new Vector3(0.10f, -0.004f, 0.02f), new Vector3(0.120f, 0.008f, 0.120f), "Lab_CableBlack");
-                FitBoxCollider(extGo, new Vector3(0.08f, 0.06f, 0.06f));
+                SetCollider(extGo, new Vector3(0.08f, 0.06f, 0.06f));
             }
 
             // --- status lamp at the test end of the bench ---
@@ -454,7 +560,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Cyl("Stem", status, new Vector3(0f, -0.045f, 0f), new Vector3(0.018f, 0.038f, 0.018f), "Lab_MetalDark");
                 Cyl("Lamp Housing", status, new Vector3(0f, 0f, 0f), new Vector3(0.070f, 0.045f, 0.070f), "Lab_PlasticDark");
                 Cyl("Lamp Lens", status, new Vector3(0f, 0.038f, 0f), new Vector3(0.056f, 0.010f, 0.056f), "Lab_StatusRed");
-                FitBoxCollider(statusGo, new Vector3(0.10f, 0.20f, 0.10f));
+                SetCollider(statusGo, new Vector3(0.10f, 0.20f, 0.10f));
             }
         }
 
@@ -482,5 +588,16 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.transform.localScale = scale;
         }
 
+        /// <summary>Grab colliders must be resized once the root scale is normalised to 1.</summary>
+        static void SetCollider(GameObject go, Vector3 size)
+        {
+            if (go == null)
+                return;
+            var box = go.GetComponent<BoxCollider>();
+            if (box == null)
+                return;
+            box.center = Vector3.zero;
+            box.size = size;
+        }
     }
 }

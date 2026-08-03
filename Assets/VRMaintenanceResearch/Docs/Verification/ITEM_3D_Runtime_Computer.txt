@@ -1,2 +1,0 @@
-RUNTIME ComputerITEM3D|playing=True|initial=Active|manualOpen=True|manualClose=True|preRepair=Active|repairId=computer.main-power-connector|postRepair=Completed|reset=Active|attempt=1->2|parts=13|rootColliders=13|visuals=11/11|visualMeshes=102|importedColliders=0
-Exit status: 0
