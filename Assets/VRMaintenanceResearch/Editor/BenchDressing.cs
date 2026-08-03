@@ -13,6 +13,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         public const float BenchTop = 0.92f;
 
         /// <summary>
+        /// Top of the inside floor of the lab's own Parts and Tool trays, which stand on
+        /// the bench at x = -1.10 and x = +1.10. Anything stored in a tray rests here.
+        /// </summary>
+        public const float TrayFloor = 0.940f;
+
+        /// <summary>
         /// Mat + zone labels + tools. <paramref name="serviceCentreX"/> is where the
         /// device sits. Set <paramref name="withTools"/> false for training, whose
         /// right-hand tray is the placement target rather than a tool tray.
@@ -27,16 +33,24 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Service Mat", t, new Vector3(serviceCentreX, BenchTop + 0.003f, 0.95f), new Vector3(matWidth, 0.006f, matDepth), "Lab_AntiStatic");
             Box("Mat Edge", t, new Vector3(serviceCentreX, BenchTop + 0.005f, 0.95f), new Vector3(matWidth - 0.04f, 0.004f, matDepth - 0.04f), "Lab_Navy");
 
-            for (var i = 0; i < 2; i++)
-                Box($"Spares Divider {i + 1}", t, new Vector3(-1.01f - i * 0.26f, BenchTop + 0.028f, 0.95f), new Vector3(0.008f, 0.030f, 0.340f), "Lab_PlasticDark");
+            // The lab's own Parts Tray and Tool Tray already stand on the bench at
+            // x = -1.10 and x = +1.10. Building a second pair here put a tray under a
+            // tray and swallowed anything resting between the two floors, so the trays
+            // looked half empty. Parts go in the furniture's trays, at TrayFloor.
+
+            // Pale antistatic pad under the bare board part. A DIMM is a flat dark
+            // 2 mm stick; lying straight on the tray floor it was invisible from the
+            // bench, so the tray looked as though it held one spare instead of three.
+            Box("Parts Pad", t, new Vector3(-1.02f, TrayFloor + 0.003f, 0.95f), new Vector3(0.200f, 0.006f, 0.100f), "Lab_LabelPlate");
 
             if (withTools)
                 BuildToolSet(t);
 
-            Zone(t, new Vector3(-1.10f, BenchTop + 0.004f, 0.66f), withTools ? "SPARE PARTS" : "PARTS BIN");
-            Zone(t, new Vector3(1.10f, BenchTop + 0.004f, 0.66f), withTools ? "TOOLS" : "PLACE PART HERE");
-            Zone(t, new Vector3(serviceCentreX, BenchTop + 0.010f, 0.95f - matDepth * 0.5f + 0.035f), serviceLabel);
-            Zone(t, new Vector3(LabLayoutBuilder.TestStationX, BenchTop + 0.004f, 0.86f), "INSPECT");
+            Zone(t, new Vector3(-1.10f, TrayFloor + 0.046f, 0.762f), withTools ? "SPARE PARTS" : "PARTS BIN");
+            Zone(t, new Vector3(1.10f, TrayFloor + 0.046f, 0.762f), withTools ? "TOOLS" : "PLACE PART HERE");
+            Zone(t, new Vector3(serviceCentreX, BenchTop + 0.030f, 0.95f - matDepth * 0.5f - 0.014f), serviceLabel);
+            // No INSPECT caption here: PlaceInspectControl gives that station its own
+            // sign, and two labels for one button read as two controls.
         }
 
         /// <summary>
@@ -50,18 +64,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         static void BuildToolSet(Transform root)
         {
-            var tray = Group("Tool Set", root, new Vector3(1.22f, BenchTop + 0.020f, 0.95f));
+            // Sits on the tool tray's floor. The foam slab and its cut-out are gone:
+            // the tray is now the recess, and a dark foam sheet filling it only hid the
+            // one tool the participant is meant to find.
+            var tray = Group("Tool Set", root, new Vector3(1.10f, TrayFloor, 0.95f));
 
-            // Foam insert: the recess the interactable screwdriver lies in.
-            Box("Foam Insert", tray, new Vector3(-0.16f, 0.004f, 0.00f), new Vector3(0.320f, 0.014f, 0.300f), "Lab_Rubber");
-            Box("Driver Recess", tray, new Vector3(-0.20f, 0.012f, 0.00f), new Vector3(0.260f, 0.010f, 0.070f), "Lab_PlasticDark", new Vector3(0f, 8f, 0f));
-
-            Cyl("Screw Cup", tray, new Vector3(-0.13f, 0.014f, 0.11f), new Vector3(0.070f, 0.014f, 0.070f), "Lab_PlasticDark");
+            Cyl("Screw Cup", tray, new Vector3(0.16f, 0.008f, 0.09f), new Vector3(0.070f, 0.014f, 0.070f), "Lab_PlasticDark");
             for (var i = 0; i < 5; i++)
-                Cyl($"Screw {i + 1}", tray, new Vector3(-0.13f + Mathf.Cos(i * 1.3f) * 0.018f, 0.026f, 0.11f + Mathf.Sin(i * 1.3f) * 0.018f), new Vector3(0.008f, 0.003f, 0.008f), "Lab_ToolSteel");
+                Cyl($"Screw {i + 1}", tray, new Vector3(0.16f + Mathf.Cos(i * 1.3f) * 0.018f, 0.020f, 0.09f + Mathf.Sin(i * 1.3f) * 0.018f), new Vector3(0.008f, 0.003f, 0.008f), "Lab_ToolSteel");
 
-            Cyl("Wrist Strap Coil", tray, new Vector3(0.10f, 0.008f, -0.10f), new Vector3(0.080f, 0.006f, 0.080f), "Lab_CableBlack");
-            Box("Wrist Cuff", tray, new Vector3(0.10f, 0.016f, -0.10f), new Vector3(0.040f, 0.010f, 0.020f), "Lab_AntiStatic");
+            Cyl("Wrist Strap Coil", tray, new Vector3(0.17f, 0.004f, -0.09f), new Vector3(0.080f, 0.006f, 0.080f), "Lab_CableBlack");
+            Box("Wrist Cuff", tray, new Vector3(0.17f, 0.011f, -0.09f), new Vector3(0.040f, 0.010f, 0.020f), "Lab_AntiStatic");
         }
 
         /// <summary>
@@ -120,18 +133,23 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// Bench zone caption.
+        /// Names a bench zone with a small placard standing on the tray's near rim.
         ///
-        /// These were near-white on a near-white bench top at a size that vanished
-        /// past a metre. Fresh readers could see a tray but could not tell a tool
-        /// tray from a parts tray, which is the whole job of the caption. Dark ink,
-        /// half again as large.
+        /// This used to be text engraved flat into the bench top at 0.62 font across a
+        /// 1.1 m box — captions the size of the trays they named, reading as signage
+        /// painted on the furniture. A tray gets a placard on its edge, the way a real
+        /// bench does; it names the zone without competing with what is in it.
         /// </summary>
         public static void Zone(Transform parent, Vector3 pos, string text)
         {
-            var label = Label($"Label {text}", parent, pos, text, 0.62f, "#243141", new Vector3(90f, 0f, 0f), 1.1f);
+            var card = Group($"Placard {text}", parent, pos, new Vector3(22f, 0f, 0f));
+
+            Box("Plate", card, Vector3.zero, new Vector3(0.115f, 0.026f, 0.003f), "Lab_LabelPlate");
+            Box("Stand", card, new Vector3(0f, -0.014f, 0.004f), new Vector3(0.018f, 0.012f, 0.008f), "Lab_MetalDark");
+
+            var label = Label("Caption", card, new Vector3(0f, 0f, -0.003f), text, 0.10f, "#243141", Vector3.zero, 0.112f);
             label.fontStyle = TMPro.FontStyles.Bold;
-            label.characterSpacing = 14f;
+            label.characterSpacing = 6f;
         }
 
         /// <summary>

@@ -50,26 +50,30 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // Stand: a clamp post off the bench's back edge, so the brief reads as
             // bench equipment rather than floating signage.
             Box("Clamp", t, new Vector3(0.30f, -0.645f, 0.030f), new Vector3(0.070f, 0.050f, 0.090f), "Lab_MetalDark");
-            Cyl("Post", t, new Vector3(0.30f, -0.440f, 0.030f), new Vector3(0.024f, 0.185f, 0.024f), "Lab_MetalDark");
-            Box("Post Head", t, new Vector3(0.30f, -0.268f, 0.024f), new Vector3(0.048f, 0.038f, 0.048f), "Lab_MetalDark");
+            Cyl("Post", t, new Vector3(0.30f, -0.430f, 0.030f), new Vector3(0.024f, 0.200f, 0.024f), "Lab_MetalDark");
+            Box("Post Head", t, new Vector3(0.30f, -0.244f, 0.024f), new Vector3(0.048f, 0.038f, 0.048f), "Lab_MetalDark");
 
             // Sized for legibility from the start pose, 2.9 m back — not for the
             // screenshot. Fresh readers could see that a brief existed and could not
-            // read a word of it, which meant they could not say what the task was:
-            // the panel and its copy are both roughly 1.5x what they were.
-            Box("Backing", t, Vector3.zero, new Vector3(0.980f, 0.560f, 0.016f), "Lab_Navy");
-            Box("Face", t, new Vector3(0f, -0.038f, -0.010f), new Vector3(0.930f, 0.450f, 0.008f), "Lab_PanelSurface");
-            Box("Header Band", t, new Vector3(0f, 0.232f, -0.010f), new Vector3(0.980f, 0.096f, 0.010f), "Lab_Navy");
-            Box("Header Rule", t, new Vector3(0f, 0.178f, -0.014f), new Vector3(0.980f, 0.008f, 0.010f), "Lab_Accent");
+            // read a word of it, which meant they could not say what the task was.
+            //
+            // Then it went too far the other way: at 0.98 x 0.56 it was the largest
+            // object in the room and pulled the eye off the bench. Panel and copy are
+            // both back by about 17 per cent, keeping the copy's size relative to its
+            // column so nothing became harder to read.
+            Box("Backing", t, Vector3.zero, new Vector3(0.815f, 0.465f, 0.016f), "Lab_Navy");
+            Box("Face", t, new Vector3(0f, -0.032f, -0.010f), new Vector3(0.773f, 0.374f, 0.008f), "Lab_PanelSurface");
+            Box("Header Band", t, new Vector3(0f, 0.193f, -0.010f), new Vector3(0.815f, 0.080f, 0.010f), "Lab_Navy");
+            Box("Header Rule", t, new Vector3(0f, 0.148f, -0.014f), new Vector3(0.815f, 0.008f, 0.010f), "Lab_Accent");
 
-            var title = Label("Heading", t, new Vector3(0f, 0.232f, -0.018f), heading, 0.30f, "#F2F5F8", Vector3.zero, 0.94f);
+            var title = Label("Heading", t, new Vector3(0f, 0.193f, -0.018f), heading, 0.25f, "#F2F5F8", Vector3.zero, 0.78f);
             title.fontStyle = TMPro.FontStyles.Bold;
             title.characterSpacing = 6f;
 
-            var text = Label("Body", t, new Vector3(0f, -0.038f, -0.016f), body, 0.32f, "#1E2A3A", Vector3.zero, 0.88f);
+            var text = Label("Body", t, new Vector3(0f, -0.032f, -0.016f), body, 0.27f, "#1E2A3A", Vector3.zero, 0.73f);
             text.alignment = TMPro.TextAlignmentOptions.TopLeft;
             text.enableWordWrapping = true;
-            text.rectTransform.sizeDelta = new Vector2(0.870f, 0.430f);
+            text.rectTransform.sizeDelta = new Vector2(0.723f, 0.357f);
             text.lineSpacing = 10f;
         }
     }

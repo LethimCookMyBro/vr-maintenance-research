@@ -2,27 +2,30 @@
 Case shell bounds (case-local): size=(0.214,0.468,0.463) center=(0.000,-0.007,-0.002)
 
 -- parts --
-Motherboard Model: size=(0.023,0.307,0.250) expect~(0.020,0.244,0.305) worstAxisRatio=1.13
+Motherboard Model: size=(0.023,0.307,0.250) expect~(0.022,0.305,0.244) worstAxisRatio=1.03
    tris=18856 mats=12 depth=3 path=Motherboard Placeholder/Visual/Motherboard Model
 CPU Package: size=(0.007,0.042,0.042) expect~(0.008,0.040,0.040) worstAxisRatio=1.17
    tris=13426 mats=1 depth=3 path=Visual/Motherboard Assembly/CPU Package
-CPU Cooler: size=(0.049,0.098,0.091) expect~(0.075,0.075,0.075) worstAxisRatio=1.53
+CPU Cooler: size=(0.049,0.098,0.091) expect~(0.049,0.095,0.092) worstAxisRatio=1.03
    tris=37975 mats=7 depth=3 path=Visual/Motherboard Assembly/CPU Cooler
-RAM Module 1: size=(0.031,0.132,0.002) expect~(0.004,0.031,0.133) worstAxisRatio=2.15  <-- SCALE
+RAM Module 1: size=(0.031,0.132,0.002) expect~(0.031,0.133,0.003) worstAxisRatio=1.61  <-- SCALE
    tris=396 mats=1 depth=3 path=Visual/Motherboard Assembly/RAM Module 1
-RAM Module 2: size=(0.031,0.132,0.002) expect~(0.004,0.031,0.133) worstAxisRatio=2.15  <-- SCALE
+RAM Module 2: size=(0.031,0.132,0.002) expect~(0.031,0.133,0.003) worstAxisRatio=1.61  <-- SCALE
    tris=396 mats=1 depth=3 path=Visual/Motherboard Assembly/RAM Module 2
-MISSING Graphics Card
-MISSING PSU Model
-Solid State Drive: size=(0.028,0.038,0.081) expect~(0.007,0.070,0.100) worstAxisRatio=4.00  <-- SCALE
-   tris=48 mats=4 depth=3 path=Visual/Drive Cage/Solid State Drive
-MISSING Case Fan Model
+Graphics Card: size=(0.101,0.093,0.238) expect~(0.040,0.120,0.245) worstAxisRatio=2.33  <-- SCALE
+   tris=632 mats=7 depth=3 path=Visual/Motherboard Assembly/Graphics Card
+PSU Model: size=(0.126,0.065,0.140) expect~(0.150,0.086,0.140) worstAxisRatio=1.33
+   tris=12167 mats=23 depth=3 path=Power Supply Placeholder/Visual/PSU Model
+Solid State Drive: size=(0.022,0.002,0.079) expect~(0.007,0.070,0.100) worstAxisRatio=3.63  <-- SCALE
+   tris=236 mats=2 depth=3 path=Visual/Drive Cage/Solid State Drive
+Case Fan Model: size=(0.120,0.120,0.026) expect~(0.120,0.120,0.025) worstAxisRatio=1.03
+   tris=4755 mats=1 depth=3 path=Cooling Fan Placeholder/Visual/Case Fan Model
 
 -- intersections (unexpected volume sharing) --
 none
 
 -- budget --
-Desktop Case subtree: tris=72825 mats=37 renderers=173
+Desktop Case subtree: tris=90119 mats=63 renderers=228
 
 -- imported extras under Desktop Case --
 cameras=0 lights=0 animators=0 audio=0

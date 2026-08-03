@@ -130,7 +130,14 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// The wrapper is Wrapper > Scale > Orientation > model, so the caller's
         /// position, the fit and the model's own axes never fight for one transform.
         /// </summary>
-        public static Transform ImportedVisual(string name, Transform parent, string assetPath, Vector3 localCenter, Vector3 fitBox, Vector3 euler = default)
+        /// <param name="drop">
+        /// Child objects to delete before the model is measured. Some sources carry
+        /// parts that are not the thing being modelled: the power supply has a loose
+        /// screw sitting 16 units out from a body only 10 deep, which would both float
+        /// outside the case and shrink the unit by inflating the bounds it is fitted to,
+        /// and the storage kit is two drives when the bench needs one.
+        /// </param>
+        public static Transform ImportedVisual(string name, Transform parent, string assetPath, Vector3 localCenter, Vector3 fitBox, Vector3 euler = default, string[] drop = null)
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
             if (source == null)
@@ -154,6 +161,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             instance.transform.localScale = Vector3.one;
             StripImportedExtras(instance);
+
+            if (drop != null)
+            {
+                foreach (var child in instance.GetComponentsInChildren<Transform>(true))
+                {
+                    if (child == null || child == instance.transform)
+                        continue;
+                    if (System.Array.IndexOf(drop, child.name) >= 0)
+                        Object.DestroyImmediate(child.gameObject);
+                }
+            }
 
             if (!TryBounds(orientation, scaleRoot, out var bounds))
             {

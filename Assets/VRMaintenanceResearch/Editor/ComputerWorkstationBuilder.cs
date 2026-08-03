@@ -227,6 +227,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             BuildCpuCooler(board);
             BuildMemory(board);
             BuildAtxHeader(board);
+            BuildGraphicsCard(board);
         }
 
         /// <summary>
@@ -294,18 +295,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// Graphics card in the top PCIe slot. In a tower the card lies horizontally,
-        /// so it is a slab that grows in -X and runs front-to-back in Z — not the
-        /// upright plate the old build produced.
+        /// Graphics card in the primary PCIe slot, which the board map puts at dx -0.034,
+        /// dz -0.028. In a tower the card lies horizontally, so it is a slab that grows
+        /// out of the board in -X and runs front-to-back in Z.
+        ///
+        /// This one stays handmade. Both licensed cards were measured and neither can be
+        /// used: the black dual-fan card is correctly shaped but 113,728 triangles, and
+        /// the RTX 4060 Ti — the cheaper of the two — is modelled far too flat, its
+        /// backplate 26.5 x 2.49 where a real card is nearer 2.2:1. Fitted to a true
+        /// 245 mm length it would read as a 22 mm blade in the slot. The handmade card
+        /// is 632 triangles, correctly proportioned, and matches the case's style.
+        /// No PCIe slot is drawn here either: the board model has its own.
         /// </summary>
         static void BuildGraphicsCard(Transform board)
         {
-            var gpu = Group("Graphics Card", board, new Vector3(-0.054f, -0.040f, 0.004f));
-
-            Box("PCIe Slot", board, new Vector3(-0.005f, -0.036f, 0.004f), new Vector3(0.010f, 0.008f, 0.190f), "Lab_PlasticDark");
+            var gpu = Group("Graphics Card", board, new Vector3(-0.065f, -0.028f, 0.009f));
 
             Box("PCB", gpu, Vector3.zero, new Vector3(0.100f, 0.003f, 0.226f), "Lab_PcbDark");
-            Box("Backplate", gpu, new Vector3(0f, 0.006f, 0f), new Vector3(0.096f, 0.003f, 0.220f), "Lab_CasePanel");
+            // Dark backplate. In steel it caught the key light and read as a bright shelf
+            // spanning the case rather than as the top of a card — it was the first thing
+            // the eye landed on inside the machine.
+            Box("Backplate", gpu, new Vector3(0f, 0.006f, 0f), new Vector3(0.096f, 0.003f, 0.220f), "Lab_PlasticDark");
             Box("Backplate Label", gpu, new Vector3(-0.010f, 0.008f, -0.070f), new Vector3(0.052f, 0.001f, 0.048f), "Lab_LabelPlate");
             Box("Shroud", gpu, new Vector3(0f, -0.020f, 0f), new Vector3(0.098f, 0.038f, 0.222f), "Lab_PlasticDark");
             Box("Shroud Edge", gpu, new Vector3(-0.048f, -0.020f, 0f), new Vector3(0.004f, 0.038f, 0.222f), "Lab_MetalDark");
@@ -314,7 +324,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // the only part of the cooler you see, and without it the card is a slab.
             foreach (var z in new[] { -0.058f, 0.058f })
             {
-                Box($"Bay Mouth {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.046f, -0.026f, z), new Vector3(0.010f, 0.024f, 0.074f), "Lab_CasePanel");
+                Box($"Bay Mouth {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.046f, -0.026f, z), new Vector3(0.010f, 0.024f, 0.074f), "Lab_PlasticDark");
                 Box($"Bay Rim {(z < 0 ? "A" : "B")}", gpu, new Vector3(-0.044f, -0.010f, z), new Vector3(0.012f, 0.006f, 0.078f), "Lab_MetalDark");
             }
             Box("Shroud Spine", gpu, new Vector3(-0.020f, -0.002f, 0f), new Vector3(0.030f, 0.012f, 0.216f), "Lab_MetalDark");
@@ -329,7 +339,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             }
 
             // 8-pin PCIe power sockets on the top edge, wired back to the PSU loom.
-            Box("Power Socket", gpu, new Vector3(-0.030f, 0.012f, 0.070f), new Vector3(0.030f, 0.014f, 0.020f), "Lab_ConnectorWhite");
+            Box("Power Socket", gpu, new Vector3(-0.030f, 0.012f, 0.070f), new Vector3(0.030f, 0.014f, 0.020f), "Lab_PlasticDark");
             Box("Power Lead", gpu, new Vector3(-0.030f, 0.026f, 0.050f), new Vector3(0.014f, 0.014f, 0.060f), "Lab_CableBlack", new Vector3(28f, 0f, 0f));
 
             // Rear bracket in the expansion slot.
@@ -338,8 +348,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// Drive bay carrying a 3.5" hard disk and a 2.5" SSD in a caddy. Both face
-        /// the open side, because a drive seen edge-on is just a metal bar.
+        /// Drive tray carrying the one solid-state drive the bench is allowed.
+        ///
+        /// The 3.5" hard disk that used to share this cage is gone. It was never part of
+        /// the repair and the interior is meant to hold one drive, so it was two hundred
+        /// grams of clutter in front of the components that matter.
+        ///
+        /// The licensed drive is an M.2 stick — 80 x 22 x 2.4 mm, which is what the
+        /// kit's Samsung 990 artwork describes — so it lies flat on the tray rather than
+        /// standing in a 2.5" caddy it would rattle around in.
         /// </summary>
         static void BuildDriveCage(Transform root)
         {
@@ -349,23 +366,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Cage Rail Top", cage, new Vector3(-0.062f, 0.058f, 0f), new Vector3(0.010f, 0.010f, 0.108f), "Lab_CaseSteel");
             Box("Cage Rail Bottom", cage, new Vector3(-0.062f, -0.058f, 0f), new Vector3(0.010f, 0.010f, 0.108f), "Lab_CaseSteel");
 
-            // 3.5" disk, label out.
-            var hdd = Group("Hard Disk", cage, new Vector3(-0.064f, 0.030f, 0f));
-            Box("Body", hdd, Vector3.zero, new Vector3(0.026f, 0.048f, 0.101f), "Lab_MetalDark");
-            Box("Label", hdd, new Vector3(-0.014f, 0f, 0f), new Vector3(0.002f, 0.040f, 0.090f), "Lab_LabelPlate");
-            Box("SATA Data", hdd, new Vector3(-0.004f, -0.020f, 0.052f), new Vector3(0.014f, 0.008f, 0.010f), "Lab_Accent");
-            Box("SATA Power", hdd, new Vector3(-0.004f, -0.020f, 0.036f), new Vector3(0.014f, 0.008f, 0.020f), "Lab_ConnectorWhite");
+            // Tray shelf the drive actually rests on, so it is supported rather than
+            // hanging in the bay.
+            Box("Drive Tray", cage, new Vector3(-0.062f, 0.004f, 0f), new Vector3(0.028f, 0.004f, 0.092f), "Lab_CaseSteel");
 
-            // 2.5" SSD in a caddy below it.
-            var ssd = Group("Solid State Drive", cage, new Vector3(-0.064f, -0.030f, 0f));
-            Box("Caddy", ssd, new Vector3(0.004f, 0f, 0f), new Vector3(0.020f, 0.038f, 0.076f), "Lab_CaseSteel");
-            Box("Body", ssd, new Vector3(-0.008f, 0f, 0f), new Vector3(0.008f, 0.034f, 0.070f), "Lab_Navy");
-            Box("Label", ssd, new Vector3(-0.013f, 0f, 0f), new Vector3(0.002f, 0.024f, 0.052f), "Lab_LabelPlate");
-            Box("SATA Data", ssd, new Vector3(-0.004f, -0.012f, 0.038f), new Vector3(0.012f, 0.007f, 0.009f), "Lab_Accent");
-
-            // Data leads running forward to the board's SATA ports.
-            Box("Data Lead A", cage, new Vector3(-0.058f, 0.010f, 0.070f), new Vector3(0.010f, 0.004f, 0.060f), "Lab_Accent", new Vector3(-26f, 0f, 0f));
-            Box("Data Lead B", cage, new Vector3(-0.058f, -0.042f, 0.070f), new Vector3(0.010f, 0.004f, 0.060f), "Lab_Accent", new Vector3(22f, 0f, 0f));
+            // Circle.002 is the kit's second drive; the bench is allowed one.
+            // Model axes already read width / thickness / length, so it needs no turning.
+            ImportedVisual("Solid State Drive", cage, k_Item3D + "Storage/source/ssd-kit.glb",
+                new Vector3(-0.062f, 0.008f, 0f), new Vector3(0.022f, 0.004f, 0.080f), Vector3.zero,
+                new[] { "Circle.002" });
         }
 
         static void BuildFeet(Transform root)
@@ -402,11 +411,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var psu = ResetVisual("Power Supply Placeholder", out var psuGo);
             if (psu != null)
             {
-                Box("Body", psu, Vector3.zero, new Vector3(0.150f, 0.086f, 0.140f), "Lab_CaseSteel");
-                Box("Label", psu, new Vector3(-0.076f, 0f, 0f), new Vector3(0.003f, 0.050f, 0.090f), "Lab_LabelPlate");
-                Cyl("Fan Guard", psu, new Vector3(0f, 0.044f, -0.010f), new Vector3(0.072f, 0.002f, 0.072f), "Lab_MetalDark");
-                for (var i = 0; i < 5; i++)
-                    Box($"Fan Blade {i + 1}", psu, new Vector3(0f, 0.042f, -0.010f), new Vector3(0.060f, 0.003f, 0.018f), "Lab_PlasticDark", new Vector3(0f, i * 36f, 0f));
+                // Model axes are width / depth / height. This lays the unit in the
+                // basement with its switched rear panel at the case rear and its printed
+                // side the right way up — a straight 90 degrees put the label upside
+                // down. Object_78 is a loose screw floating 16 units out from a body
+                // only 10 deep, which would sit outside the case and shrink the unit by
+                // inflating the bounds it is fitted to.
+                ImportedVisual("PSU Model", psu, k_Item3D + "PSU/psu_power_supply_unit.glb",
+                    Vector3.zero, new Vector3(0.150f, 0.086f, 0.140f), new Vector3(-90f, 180f, 0f),
+                    new[] { "Object_78" });
 
                 // Cable gland on the front face: the loom has to start somewhere.
                 Box("Cable Gland", psu, new Vector3(0f, 0.010f, -0.072f), new Vector3(0.058f, 0.030f, 0.008f), "Lab_PlasticDark");
@@ -420,12 +433,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var fan = ResetVisual("Cooling Fan Placeholder", out var fanGo);
             if (fan != null)
             {
-                Box("Frame", fan, Vector3.zero, new Vector3(0.118f, 0.118f, 0.024f), "Lab_PlasticDark");
-                Cyl("Hub", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0.030f, 0.010f, 0.030f), "Lab_MetalDark", new Vector3(90f, 0f, 0f));
-                for (var i = 0; i < 7; i++)
-                    Box($"Blade {i + 1}", fan, new Vector3(0f, 0f, -0.004f), new Vector3(0.100f, 0.020f, 0.006f), "Lab_CasePanel", new Vector3(0f, 0f, i * 25.7f));
-                for (var i = 0; i < 4; i++)
-                    Box($"Grill {i + 1}", fan, new Vector3(0f, 0f, -0.014f), new Vector3(0.116f, 0.004f, 0.003f), "Lab_MetalDark", new Vector3(0f, 0f, i * 45f));
+                // The licensed 120 mm fan, laid flat against the rear panel: its thin
+                // axis is the model's Y, which this rotation turns into the case's Z.
+                ImportedVisual("Case Fan Model", fan, k_Item3D + "Fans/120mm_computer_fans.glb",
+                    Vector3.zero, new Vector3(0.120f, 0.120f, 0.026f), new Vector3(90f, 0f, 0f));
                 SetCollider(fanGo, new Vector3(0.12f, 0.12f, 0.03f));
             }
 
@@ -439,13 +450,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(swGo, new Vector3(0.04f, 0.03f, 0.02f));
             }
 
-            // THE FAULT: the 24-pin plug hanging free, a hand's width below the header
-            // it belongs in. The loom behind it is fixed geometry, so the plug reads
-            // as "this came out of there" rather than "a white brick fell in the case".
-            // Hung in the clear space between the board's front edge and the bezel, at
-            // the same height band as the header it belongs in, so the two are in one
-            // glance of each other without anything pointing at either.
-            Move("Internal Cable Connector", case_.transform, new Vector3(0.032f, 0.004f, -0.152f), Vector3.one, new Vector3(0f, 0f, -28f));
+            // THE FAULT: the 24-pin plug hanging free on the end of the loom, about a
+            // hand's width below the header it belongs in. Nothing marks it — no glow,
+            // no colour, no label, and no exaggerated gap. It is simply a connector that
+            // is not in its socket.
+            //
+            // The board's front edge faces away to the participant's right from the
+            // standing pose, so the plug is not the first thing seen; it is found by
+            // stepping in and looking along the board, which is the point of the task.
+            Move("Internal Cable Connector", case_.transform, new Vector3(0.048f, -0.048f, -0.034f), Vector3.one, new Vector3(0f, 0f, -18f));
             var cable = ResetVisual("Internal Cable Connector", out var cableGo);
             if (cable != null)
             {
@@ -464,39 +477,75 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// Fixed cabling: the 24-pin run climbing the case front from the PSU, plus
-        /// the drive and card leads. Without it the interior looked assembled by
-        /// magic, and the loose plug had nothing to be loose from.
+        /// The one cable run the bench is allowed: the 24-pin lead out of the power
+        /// supply's gland, along the floor and up the case front to the plug hanging
+        /// short of its header.
+        ///
+        /// Swept along a curve rather than assembled from four angled boxes, so it reads
+        /// as a cable that was routed rather than a row of blocks. The drive chain,
+        /// card lead and front-panel ribbon are gone: there is no longer a SATA drive to
+        /// feed, and they were three more dark sticks crossing the board.
         /// </summary>
         static void BuildCableLoom(Transform case_)
         {
-            var loom = Group("Cable Loom", case_, new Vector3(0.012f, -0.150f, 0.040f));
+            var loom = Group("Cable Loom", case_);
 
-            // Main 24-pin run: out of the PSU gland, along the floor, up the front
-            // corner and into the space beside the unplugged connector.
-            Box("Run Floor", loom, new Vector3(0.010f, 0.006f, -0.048f), new Vector3(0.026f, 0.022f, 0.090f), "Lab_CableBlack", new Vector3(10f, 0f, 0f));
-            Box("Run Bend", loom, new Vector3(0.014f, 0.038f, -0.098f), new Vector3(0.024f, 0.062f, 0.024f), "Lab_CableBlack", new Vector3(38f, 0f, -6f));
-            Box("Run Rise", loom, new Vector3(0.020f, 0.090f, -0.126f), new Vector3(0.024f, 0.060f, 0.022f), "Lab_CableBlack", new Vector3(6f, 0f, -12f));
-            Box("Loom Tie", loom, new Vector3(0.018f, 0.062f, -0.114f), new Vector3(0.030f, 0.008f, 0.028f), "Lab_ConnectorWhite", new Vector3(24f, 0f, -8f));
-
-            // Drive power chain along the cage, and the card's supply climbing behind it.
-            Box("Drive Lead", loom, new Vector3(-0.030f, 0.012f, -0.120f), new Vector3(0.014f, 0.014f, 0.110f), "Lab_CableBlack", new Vector3(-8f, 0f, 0f));
-            Box("Drive Lead Tail", loom, new Vector3(-0.036f, 0.048f, -0.166f), new Vector3(0.012f, 0.062f, 0.012f), "Lab_CableBlack", new Vector3(28f, 0f, 0f));
-            Box("Card Lead", loom, new Vector3(0.040f, 0.070f, 0.028f), new Vector3(0.016f, 0.120f, 0.016f), "Lab_CableBlack", new Vector3(-14f, 0f, -10f));
-
-            // Front-panel ribbon from the bezel back to its header. Yellow made it the
-            // brightest thing in the case, so a bystander's eye landed on a bundle of
-            // wire instead of on the components.
-            Box("Front Panel Ribbon", loom, new Vector3(-0.026f, 0.036f, -0.152f), new Vector3(0.014f, 0.072f, 0.003f), "Lab_CableBlack", new Vector3(-32f, 0f, 14f));
+            CableRun("ATX Run", loom, 0.014f, "Lab_CableBlack",
+                new Vector3(0.000f, -0.153f, 0.058f),   // out of the supply's gland
+                new Vector3(0.030f, -0.190f, -0.010f),  // down onto the floor
+                new Vector3(0.072f, -0.150f, -0.078f),  // forward along the front corner
+                new Vector3(0.048f, -0.062f, -0.040f)); // up to where the plug hangs
         }
 
+        /// <summary>
+        /// Lays a cable along a cubic Bezier as a chain of short segments. Segments
+        /// overlap slightly so the run has no gaps at the bends.
+        /// </summary>
+        static void CableRun(string name, Transform parent, float thickness, string material,
+            Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, int segments = 16)
+        {
+            var run = Group(name, parent);
+            var previous = p0;
+            for (var i = 1; i <= segments; i++)
+            {
+                var t = i / (float)segments;
+                var point = Bezier(p0, p1, p2, p3, t);
+                var delta = point - previous;
+                var length = delta.magnitude;
+                if (length > 0.0001f)
+                {
+                    var seg = Box($"Segment {i}", run, (previous + point) * 0.5f,
+                        new Vector3(thickness, thickness, length * 1.25f), material);
+                    seg.transform.localRotation = Quaternion.LookRotation(delta / length, Vector3.up);
+                }
+                previous = point;
+            }
+        }
+
+        static Vector3 Bezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            var u = 1f - t;
+            return u * u * u * p0 + 3f * u * u * t * p1 + 3f * u * t * t * p2 + t * t * t * p3;
+        }
+
+        /// <summary>
+        /// Bench contents.
+        ///
+        /// Everything loose now rests on a tray floor rather than hovering above the
+        /// bench: the tray's floor sits 8 mm proud of the top, so each part is placed at
+        /// that height plus its own half-depth. Nothing is arranged to hint at the
+        /// answer — the replacement lead sits among the other spares, unmarked.
+        /// </summary>
         static void PlaceBenchParts()
         {
+            // Inside floor of the lab bench's own parts and tool trays.
+            const float tray = BenchDressing.TrayFloor;
+
             // --- spares tray (left) ---
             // Replacement 24-pin lead: the same connector family as the plug hanging
             // in the case, so the two are recognisably a pair on inspection — but it
             // sits in the tray alongside the other spares, unmarked.
-            Move("Main Power Connector", null, new Vector3(-1.16f, k_BenchTop + 0.042f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
+            Move("Main Power Connector", null, new Vector3(-1.28f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
             var mpc = ResetVisual("Main Power Connector", out var mpcGo);
             if (mpc != null)
             {
@@ -510,16 +559,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(mpcGo, new Vector3(0.10f, 0.05f, 0.13f));
             }
 
-            Move("RAM Placeholder", null, new Vector3(-0.86f, k_BenchTop + 0.044f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
+            // Spare DIMM, lying flat in the tray. Rotated so its 3 mm thickness is the
+            // vertical axis: standing on edge it read as a blade rather than a part.
+            // Resting on the tray's antistatic pad, which is what makes a bare dark
+            // board part visible at all from the bench.
+            Move("RAM Placeholder", null, new Vector3(-1.02f, tray + 0.007f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
             var ram = ResetVisual("RAM Placeholder", out var ramGo);
             if (ram != null)
             {
-                Box("PCB", ram, Vector3.zero, new Vector3(0.135f, 0.032f, 0.005f), "Lab_PcbDark");
-                Box("Heatspreader", ram, new Vector3(0f, 0.004f, 0.004f), new Vector3(0.128f, 0.026f, 0.003f), "Lab_HeatsinkAlu");
-                Box("Label", ram, new Vector3(0f, 0.006f, 0.007f), new Vector3(0.060f, 0.010f, 0.001f), "Lab_LabelPlate");
-                for (var i = 0; i < 16; i++)
-                    Box($"Contact {i + 1}", ram, new Vector3(-0.062f + i * 0.0083f, -0.015f, -0.003f), new Vector3(0.005f, 0.006f, 0.002f), "Lab_Gold");
-                SetCollider(ramGo, new Vector3(0.15f, 0.06f, 0.04f));
+                ImportedVisual("RAM Model", ram, k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb",
+                    Vector3.zero, new Vector3(0.135f, 0.004f, 0.032f), new Vector3(-90f, 0f, 0f));
+                SetCollider(ramGo, new Vector3(0.15f, 0.03f, 0.05f));
             }
 
             // --- removed side panel, stowed on the bench's lower shelf: keeps the
@@ -537,11 +587,13 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(sideGo, new Vector3(0.45f, 0.05f, 0.47f));
             }
 
-            // --- tool tray (right) ---
-            BenchDressing.PlaceScrewdriver(new Vector3(1.02f, k_BenchTop + 0.035f, 0.95f));
+            // --- tool tray (right): the one tool the task needs ---
+            BenchDressing.PlaceScrewdriver(new Vector3(1.02f, tray + 0.025f, 0.95f));
 
-            // --- distractor: a sealed spare module, clearly not part of this repair ---
-            Move("Computer Non Target Module", null, new Vector3(1.58f, k_BenchTop + 0.052f, 0.98f), Vector3.one, new Vector3(0f, -12f, 0f));
+            // --- distractor: a sealed spare module, clearly not part of this repair.
+            //     Moved in among the spares, where a spare belongs; out on the bench's
+            //     right end it read as a second piece of equipment. ---
+            Move("Computer Non Target Module", null, new Vector3(-0.78f, tray + 0.045f, 0.95f), Vector3.one, new Vector3(0f, -12f, 0f));
             var nonTarget = ResetVisual("Computer Non Target Module", out var nonTargetGo);
             if (nonTarget != null)
             {
