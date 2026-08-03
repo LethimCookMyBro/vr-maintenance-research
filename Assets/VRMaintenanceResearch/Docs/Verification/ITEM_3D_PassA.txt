@@ -1,0 +1,17 @@
+ITEM_3D PASS A
+Started: 2026-08-03T23:58:49.8964536+07:00
+Command: ResearchVisualPipeline.RebuildAll(); ResearchVisualValidator.ValidateAll();
+Exit status: 0
+
+=== ComputerRepairTask ===
+  PASS
+=== FanRepairTask ===
+  PASS
+=== VRTraining ===
+  PASS
+  WARN task part 'training.cube-a' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
+  WARN task part 'training.cube-b' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
+  WARN task part 'training.cylinder' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
+=== ResearcherSetup ===
+  PASS
+ALL SCENES PASS

@@ -135,9 +135,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// The Poly Haven screwdriver mesh is ~2 mm long with a 5182x compensation
-        /// scale on its child, so any change to the root scale distorts it wildly.
-        /// This sets a uniform child scale that yields a ~0.20 m tool.
+        /// Fits the licensed ITEM_3D screwdriver to the existing logical tool wrapper.
+        /// The wrapper keeps its Stable ID and interaction components.
         /// </summary>
         public static void PlaceScrewdriver(Vector3 position, float yaw = 8f)
         {
@@ -148,21 +147,13 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             tool.transform.SetParent(null, false);
             tool.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
             tool.transform.localScale = Vector3.one;
+            FitBoxCollider(tool, new Vector3(0.24f, 0.07f, 0.07f));
 
-            var box = tool.GetComponent<BoxCollider>();
-            if (box != null)
-            {
-                box.center = Vector3.zero;
-                box.size = new Vector3(0.24f, 0.06f, 0.06f);
-            }
-
-            var model = tool.transform.Find("CC0 Screwdriver");
-            if (model != null)
-            {
-                model.localScale = Vector3.one * 95f;
-                model.localRotation = Quaternion.Euler(0f, 90f, 0f);
-                model.localPosition = new Vector3(0f, -0.012f, 0f);
-            }
+            var visual = ResetVisual("Neutral Tool", out _);
+            if (visual != null)
+                ImportedVisual("Screwdriver Model", visual,
+                    "Assets/VRMaintenanceResearch/ThirdParty/ITEM_3D/Optimized/Tools/cc0_-_screwdriver_quest.glb",
+                    Vector3.zero, new Vector3(0.22f, 0.06f, 0.06f), new Vector3(0f, 0f, -90f));
         }
     }
 }

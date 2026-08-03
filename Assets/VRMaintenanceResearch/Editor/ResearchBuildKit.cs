@@ -115,6 +115,102 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             return go.transform;
         }
 
+        /// <summary>Fits an imported model inside a project-owned visual wrapper.</summary>
+        public static Transform ImportedVisual(string name, Transform parent, string assetPath, Vector3 localCenter, Vector3 size, Vector3 euler = default)
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (source == null)
+            {
+                Debug.LogError($"[ResearchBuildKit] imported visual missing: {assetPath}");
+                return null;
+            }
+
+            var wrapper = Group(name, parent, localCenter);
+            var scaleRoot = Group("Scale", wrapper);
+            var orientation = Group("Orientation", scaleRoot, default, euler);
+            var instance = PrefabUtility.InstantiatePrefab(source, orientation) as GameObject;
+            if (instance == null)
+            {
+                Object.DestroyImmediate(wrapper.gameObject);
+                Debug.LogError($"[ResearchBuildKit] could not instantiate: {assetPath}");
+                return null;
+            }
+
+            instance.name = source.name;
+            instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+
+            foreach (var component in instance.GetComponentsInChildren<MonoBehaviour>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Collider>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Rigidbody>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Joint>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Animator>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Animation>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Light>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<Camera>(true))
+                Object.DestroyImmediate(component);
+            foreach (var component in instance.GetComponentsInChildren<AudioSource>(true))
+                Object.DestroyImmediate(component);
+
+            if (!TryBounds(orientation, scaleRoot, out var bounds))
+            {
+                Object.DestroyImmediate(wrapper.gameObject);
+                Debug.LogError($"[ResearchBuildKit] imported visual has no renderers: {assetPath}");
+                return null;
+            }
+
+            orientation.localPosition = -bounds.center;
+            scaleRoot.localScale = new Vector3(size.x / bounds.size.x, size.y / bounds.size.y, size.z / bounds.size.z);
+            return wrapper;
+        }
+
+        static bool TryBounds(Transform root, Transform basis, out Bounds bounds)
+        {
+            bounds = default;
+            var found = false;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var local = renderer.localBounds;
+                for (var x = -1; x <= 1; x += 2)
+                for (var y = -1; y <= 1; y += 2)
+                for (var z = -1; z <= 1; z += 2)
+                {
+                    var corner = local.center + Vector3.Scale(local.extents, new Vector3(x, y, z));
+                    var point = basis.InverseTransformPoint(renderer.transform.TransformPoint(corner));
+                    if (found)
+                        bounds.Encapsulate(point);
+                    else
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        found = true;
+                    }
+                }
+            }
+            return found && bounds.size.x > 0f && bounds.size.y > 0f && bounds.size.z > 0f;
+        }
+
+        /// <summary>Fits a simple XR collider to the visual while retaining the logical wrapper.</summary>
+        public static void FitBoxCollider(GameObject go, Vector3 size)
+        {
+            if (go == null)
+                return;
+            var box = go.GetComponent<BoxCollider>();
+            if (box == null)
+                box = go.AddComponent<BoxCollider>();
+            foreach (var collider in go.GetComponents<Collider>())
+                if (collider != box)
+                    Object.DestroyImmediate(collider);
+            box.center = Vector3.zero;
+            box.size = size;
+        }
+
         /// <summary>
         /// Replaces the "Visual X" child of a task interactable without touching the
         /// interactable itself.

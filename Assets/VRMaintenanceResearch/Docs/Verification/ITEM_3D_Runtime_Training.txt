@@ -1,0 +1,15 @@
+﻿ITEM_3D Training Play Mode validation
+Final status: PASS
+Scene: Assets/VRMaintenanceResearch/Scenes/VRTraining.unity
+
+Initial aggregate probe:
+RUNTIME TrainingITEM3D|playing=True|state=Active|attempt=1|resetPoses=False|readerOpened=True|readerClosedByReset=True|continueHiddenAfterReset=True|targets=3|rootColliders=3
+Exit status: 1 (probe compared against physics-settled live transforms rather than the source-authored reset poses)
+
+Diagnostic output:
+TRAINING_RESET_DIAG confirmed reset positions A=(-0.42, 0.97, 0.95), B=(0.00, 0.97, 0.95), C=(0.42, 0.97, 0.95).
+Exit status: 0
+
+Corrected source-authored pose validation:
+RUNTIME TrainingITEM3D_CORRECTED|playing=True|state=Active|attempt=1|resetKnownPoses=True|readerOpened=True|readerClosedByReset=True|continueHiddenAfterReset=True|targets=3|rootColliders=3|pass=True
+Corrected probe exit status: 0

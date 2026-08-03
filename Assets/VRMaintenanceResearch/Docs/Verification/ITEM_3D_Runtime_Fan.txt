@@ -1,0 +1,12 @@
+﻿ITEM_3D Fan Play Mode validation
+Final status: PASS
+Scene: Assets/VRMaintenanceResearch/Scenes/FanMaintenance.unity
+
+Lifecycle command output:
+RUNTIME FanITEM3D|playing=True|initial=Active|manualOpen=True|manualClose=True|preRepair=Active|repairId=fan.working-fuse|postRepair=Completed|reset=Active|attempt=1->2|parts=15|rootColliders=15|screwdriverImported=True|downloadedCaseFanAbsent=True|serviceBay=False|fuseHolder=True
+Exit status: 0
+
+Probe correction:
+The first query used the stale name "Fan Service Bay"; the scene object is "Service Bay". No scene or source change was required.
+RUNTIME FanITEM3D_CORRECTED|playing=True|state=Active|attempt=2|parts=15|rootColliders=15|screwdriverImported=True|downloadedCaseFanAbsent=True|serviceBay=True|fuseHolder=True
+Corrected probe exit status: 0
