@@ -13,7 +13,7 @@ RAM Module 1: size=(0.031,0.132,0.002) expect~(0.031,0.133,0.003) worstAxisRatio
 RAM Module 2: size=(0.031,0.132,0.002) expect~(0.031,0.133,0.003) worstAxisRatio=1.61  <-- SCALE
    tris=396 mats=1 depth=3 path=Visual/Motherboard Assembly/RAM Module 2
 Graphics Card: size=(0.101,0.093,0.238) expect~(0.040,0.120,0.245) worstAxisRatio=2.33  <-- SCALE
-   tris=632 mats=6 depth=3 path=Visual/Motherboard Assembly/Graphics Card
+   tris=632 mats=7 depth=3 path=Visual/Motherboard Assembly/Graphics Card
 PSU Model: size=(0.126,0.065,0.140) expect~(0.150,0.086,0.140) worstAxisRatio=1.33
    tris=12167 mats=23 depth=3 path=Power Supply Placeholder/Visual/PSU Model
 Solid State Drive: size=(0.022,0.002,0.079) expect~(0.007,0.070,0.100) worstAxisRatio=3.63  <-- SCALE
@@ -25,7 +25,7 @@ Case Fan Model: size=(0.120,0.120,0.026) expect~(0.120,0.120,0.025) worstAxisRat
 none
 
 -- budget --
-Desktop Case subtree: tris=90215 mats=63 renderers=236
+Desktop Case subtree: tris=90119 mats=63 renderers=228
 
 -- imported extras under Desktop Case --
 cameras=0 lights=0 animators=0 audio=0

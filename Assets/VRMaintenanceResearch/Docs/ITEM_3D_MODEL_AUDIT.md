@@ -1,5 +1,15 @@
 # ITEM_3D Model Audit
 
+> **Superseded in part.** The integration this audit closes on was rejected on
+> 2026-08-04 for overcrowding, overlapping and floating parts, inconsistent scale and
+> unclear tool/spare areas. Several selections below were revised once the models were
+> measured inside Unity rather than parsed from GLB JSON: the RTX 4060 Ti is rejected
+> (its backplate is 26.5 x 2.49, about 10.6:1, where a real card is nearer 2.2:1), the
+> storage kit is two M.2 drives rather than one 2.5" drive, and the power supply's axes
+> are width/depth/height. See `Verification/ITEM_3D_REBUILD_RECORD.md` for the corrected
+> decisions, and `ITEM_3D_REBUILD_COMPARISON.md` for before/after captures. The licence
+> findings in this document stand unchanged.
+
 **Audit date:** 2026-08-03 (Asia/Bangkok)  
 **Source library:** `D:\ITEM_3D`  
 **Pre-import checkpoint:** `22c71580d67760a1595f570f59747815474b0299` (`Checkpoint Quest readability before model integration`)  

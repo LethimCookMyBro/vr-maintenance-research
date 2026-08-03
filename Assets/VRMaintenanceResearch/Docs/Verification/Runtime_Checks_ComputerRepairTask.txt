@@ -1,0 +1,10 @@
+=== runtime checks ===
+play mode: yes
+
+scene: ComputerRepairTask
+required repair id: computer.main-power-connector
+state at start: Active
+after test #1 (no repair): state=Active PASS expected fail, task still active
+repair object found: Main Power Connector (kind=RepairAction)
+after test #2 (repaired): state=Completed PASS task completed
+after reset: state=Active PASS reset

@@ -1,0 +1,8 @@
+=== training runtime check ===
+play mode: yes
+grabSatisfied = true; continue unlocked = False
+socketSatisfied = true; continue unlocked = False
+knobSatisfied = true; continue unlocked = False
+informationSatisfied = true; continue unlocked = True
+PASS all four skills complete and Continue is unlocked
+after reset: continue unlocked = False PASS relocked

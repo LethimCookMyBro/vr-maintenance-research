@@ -545,7 +545,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // Replacement 24-pin lead: the same connector family as the plug hanging
             // in the case, so the two are recognisably a pair on inspection — but it
             // sits in the tray alongside the other spares, unmarked.
-            Move("Main Power Connector", null, new Vector3(-1.28f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
+            // Kept to the tray's right-hand two thirds. Pushed further left, the task
+            // volume these parts define reaches the information dock and the validator
+            // fails the scene for a reader that would open over the work area.
+            Move("Main Power Connector", null, new Vector3(-1.17f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
             var mpc = ResetVisual("Main Power Connector", out var mpcGo);
             if (mpc != null)
             {
@@ -563,7 +566,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // vertical axis: standing on edge it read as a blade rather than a part.
             // Resting on the tray's antistatic pad, which is what makes a bare dark
             // board part visible at all from the bench.
-            Move("RAM Placeholder", null, new Vector3(-1.02f, tray + 0.007f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
+            Move("RAM Placeholder", null, new Vector3(-0.97f, tray + 0.007f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
             var ram = ResetVisual("RAM Placeholder", out var ramGo);
             if (ram != null)
             {
@@ -593,7 +596,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // --- distractor: a sealed spare module, clearly not part of this repair.
             //     Moved in among the spares, where a spare belongs; out on the bench's
             //     right end it read as a second piece of equipment. ---
-            Move("Computer Non Target Module", null, new Vector3(-0.78f, tray + 0.045f, 0.95f), Vector3.one, new Vector3(0f, -12f, 0f));
+            Move("Computer Non Target Module", null, new Vector3(-0.79f, tray + 0.045f, 0.95f), Vector3.one, new Vector3(0f, -12f, 0f));
             var nonTarget = ResetVisual("Computer Non Target Module", out var nonTargetGo);
             if (nonTarget != null)
             {

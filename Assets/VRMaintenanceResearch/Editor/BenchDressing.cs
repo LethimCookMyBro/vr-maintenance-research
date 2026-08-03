@@ -41,7 +41,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // Pale antistatic pad under the bare board part. A DIMM is a flat dark
             // 2 mm stick; lying straight on the tray floor it was invisible from the
             // bench, so the tray looked as though it held one spare instead of three.
-            Box("Parts Pad", t, new Vector3(-1.02f, TrayFloor + 0.003f, 0.95f), new Vector3(0.200f, 0.006f, 0.100f), "Lab_LabelPlate");
+            Box("Parts Pad", t, new Vector3(-0.97f, TrayFloor + 0.003f, 0.95f), new Vector3(0.170f, 0.006f, 0.090f), "Lab_LabelPlate");
 
             if (withTools)
                 BuildToolSet(t);
@@ -144,10 +144,14 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         {
             var card = Group($"Placard {text}", parent, pos, new Vector3(22f, 0f, 0f));
 
-            Box("Plate", card, Vector3.zero, new Vector3(0.115f, 0.026f, 0.003f), "Lab_LabelPlate");
+            // Plate grows with the caption. A fixed plate fitted SPARE PARTS and let
+            // longer captions like RESEARCHER CONSOLE run off both ends of it.
+            var width = Mathf.Max(0.115f, text.Length * 0.0115f + 0.020f);
+
+            Box("Plate", card, Vector3.zero, new Vector3(width, 0.026f, 0.003f), "Lab_LabelPlate");
             Box("Stand", card, new Vector3(0f, -0.014f, 0.004f), new Vector3(0.018f, 0.012f, 0.008f), "Lab_MetalDark");
 
-            var label = Label("Caption", card, new Vector3(0f, 0f, -0.003f), text, 0.10f, "#243141", Vector3.zero, 0.112f);
+            var label = Label("Caption", card, new Vector3(0f, 0f, -0.003f), text, 0.10f, "#243141", Vector3.zero, width - 0.004f);
             label.fontStyle = TMPro.FontStyles.Bold;
             label.characterSpacing = 6f;
         }

@@ -58,23 +58,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // read a word of it, which meant they could not say what the task was.
             //
             // Then it went too far the other way: at 0.98 x 0.56 it was the largest
-            // object in the room and pulled the eye off the bench. Panel and copy are
-            // both back by about 17 per cent, keeping the copy's size relative to its
-            // column so nothing became harder to read.
-            Box("Backing", t, Vector3.zero, new Vector3(0.815f, 0.465f, 0.016f), "Lab_Navy");
-            Box("Face", t, new Vector3(0f, -0.032f, -0.010f), new Vector3(0.773f, 0.374f, 0.008f), "Lab_PanelSurface");
-            Box("Header Band", t, new Vector3(0f, 0.193f, -0.010f), new Vector3(0.815f, 0.080f, 0.010f), "Lab_Navy");
-            Box("Header Rule", t, new Vector3(0f, 0.148f, -0.014f), new Vector3(0.815f, 0.008f, 0.010f), "Lab_Accent");
+            // object in the room and pulled the eye off the bench. The panel is back by
+            // about 15 per cent.
+            //
+            // The body copy is not scaled down with it. The validator holds a 0.30
+            // readability floor for the brief — the whole point of the earlier
+            // enlargement was that readers could see a brief and not read it — so the
+            // copy stays at the floor and the panel gives back the margin instead.
+            Box("Backing", t, Vector3.zero, new Vector3(0.833f, 0.476f, 0.016f), "Lab_Navy");
+            Box("Face", t, new Vector3(0f, -0.032f, -0.010f), new Vector3(0.790f, 0.382f, 0.008f), "Lab_PanelSurface");
+            Box("Header Band", t, new Vector3(0f, 0.197f, -0.010f), new Vector3(0.833f, 0.082f, 0.010f), "Lab_Navy");
+            Box("Header Rule", t, new Vector3(0f, 0.151f, -0.014f), new Vector3(0.833f, 0.008f, 0.010f), "Lab_Accent");
 
-            var title = Label("Heading", t, new Vector3(0f, 0.193f, -0.018f), heading, 0.25f, "#F2F5F8", Vector3.zero, 0.78f);
+            var title = Label("Heading", t, new Vector3(0f, 0.197f, -0.018f), heading, 0.26f, "#F2F5F8", Vector3.zero, 0.80f);
             title.fontStyle = TMPro.FontStyles.Bold;
             title.characterSpacing = 6f;
 
-            var text = Label("Body", t, new Vector3(0f, -0.032f, -0.016f), body, 0.27f, "#1E2A3A", Vector3.zero, 0.73f);
+            var text = Label("Body", t, new Vector3(0f, -0.032f, -0.016f), body, 0.30f, "#1E2A3A", Vector3.zero, 0.75f);
             text.alignment = TMPro.TextAlignmentOptions.TopLeft;
             text.enableWordWrapping = true;
-            text.rectTransform.sizeDelta = new Vector2(0.723f, 0.357f);
-            text.lineSpacing = 10f;
+            text.rectTransform.sizeDelta = new Vector2(0.748f, 0.372f);
+            text.lineSpacing = 8f;
         }
     }
 }

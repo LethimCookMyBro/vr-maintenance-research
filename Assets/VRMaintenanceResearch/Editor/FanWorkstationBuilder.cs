@@ -432,10 +432,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Rear Rail", t, new Vector3(0f, 0.105f, 0.110f), new Vector3(0.44f, 0.20f, 0.018f), "Lab_MetalDark");
             Box("Left Cradle", t, new Vector3(-0.19f, 0.055f, 0f), new Vector3(0.025f, 0.11f, 0.22f), "Lab_MetalDark");
             Box("Right Cradle", t, new Vector3(0.19f, 0.055f, 0f), new Vector3(0.025f, 0.11f, 0.22f), "Lab_MetalDark");
-            var label = Label("Removed Parts Label", t, new Vector3(0f, 0.045f, -0.158f), "REMOVED PARTS", 0.24f,
-                "#DFE6EE", Vector3.zero, 0.44f);
-            label.fontStyle = TMPro.FontStyles.Bold;
-            label.characterSpacing = 6f;
+            // Small placard on the rack's front edge, the same as the bench trays. This
+            // was 0.24 font across a 0.44 box — signage painted on the shelf.
+            BenchDressing.Zone(t, new Vector3(0f, 0.020f, -0.152f), "REMOVED PARTS");
         }
 
         /// <summary>The removed front cage: a wire guard, built as a ring rather than a disc.</summary>
