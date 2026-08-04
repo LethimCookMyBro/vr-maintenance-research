@@ -116,6 +116,48 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.SetActive(false);
         }
 
+        /// <summary>
+        /// Pins every task interactable to its own collider.
+        ///
+        /// XRBaseInteractable auto-collects GetComponentsInChildren&lt;Collider&gt;() when its
+        /// collider list is empty. The builders deliberately reparent the in-machine
+        /// interactables under their device so local coordinates stay readable, which
+        /// meant the device's list swallowed all of them: Desktop Case claimed seven
+        /// colliders and Electric Fan Body six. The device registers first, so
+        /// XRInteractionManager.TryGetInteractableForCollider returned the *device* for a
+        /// ray aimed at the connector, the fuse holder, the board or the supply.
+        ///
+        /// Hover and grab telemetry for every part inside a machine was therefore being
+        /// recorded against computer.case and fan.body. The repair still completed —
+        /// both correct repair objects sit out on the bench, which is why the play-mode
+        /// loop passed — so this was invisible except as an XRI warning at OnEnable.
+        ///
+        /// Writing each list explicitly makes the nesting irrelevant.
+        /// </summary>
+        public static void BindOwnColliders()
+        {
+            var bound = 0;
+            foreach (var interactable in Object.FindObjectsByType<ResearchInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var xr = interactable.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable>();
+                if (xr == null)
+                    continue;
+
+                var own = xr.GetComponents<Collider>();
+                var serialized = new SerializedObject(xr);
+                var list = serialized.FindProperty("m_Colliders");
+                if (list == null)
+                    continue;
+
+                list.arraySize = own.Length;
+                for (var i = 0; i < own.Length; i++)
+                    list.GetArrayElementAtIndex(i).objectReferenceValue = own[i];
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                bound++;
+            }
+            Debug.Log($"[ResearchBuildKit] bound own colliders on {bound} interactables");
+        }
+
         /// <summary>Removes previously generated children so builders stay idempotent.</summary>
         public static void ClearGenerated(Transform parent, string prefix)
         {

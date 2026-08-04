@@ -80,6 +80,11 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Stow("Fan Motor Module");
             Stow("Fan Non Target Module");
 
+            // The blade, fuse holder, wiring, fastener and switch are children of
+            // Electric Fan Body, so the body's interactable was claiming their colliders
+            // and answering rays meant for the fault site.
+            BindOwnColliders();
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[FanWorkstation] rebuilt");

@@ -140,7 +140,36 @@ Nothing was deleted: reactivating the GameObject restores the part exactly, and
 the builders are idempotent across it — `ResearchBuildKit.FindAny` sees inactive
 objects, so a rebuild refreshes a stowed part before putting it back.
 
-## 5. Verification
+## 5. Collider shadowing — found while verifying, fixed
+
+Not part of the brief, but it defeated the telemetry the brief says to preserve,
+so it is fixed here.
+
+`XRBaseInteractable` auto-collects `GetComponentsInChildren<Collider>()` when its
+collider list is empty, and both builders deliberately reparent the in-machine
+interactables under their device so local coordinates stay readable. The device
+therefore claimed its children's colliders — `Desktop Case` held seven, `Electric
+Fan Body` six — and because the parent registers first,
+`XRInteractionManager.TryGetInteractableForCollider` returned the **device** for a
+ray aimed at any part inside the machine.
+
+Every hover and grab on the ATX connector, the fuse holder, the board, the supply
+or the case fan was being recorded against `computer.case` / `fan.body`.
+
+It was invisible: the correct repair object sits out on the bench in both scenes,
+so the loop completed and the play-mode check passed. The only symptom was an XRI
+warning at `OnEnable`.
+
+This predates this pass — the reparenting is long-standing — but seating
+`computer.ram` on the board added one more shadowed part to it, so it could not be
+left.
+
+**Fixed** — `ResearchBuildKit.BindOwnColliders()` writes each interactable's
+collider list explicitly to its own collider, which makes the nesting irrelevant.
+Both builders call it. Verified: 13/13 and 15/15 interactables bound, zero
+unbound, and no "already registered" warning in either scene at play-mode entry.
+
+## 6. Verification
 
 Editor-side only. No Quest hardware profiling and no human pilot data.
 
@@ -187,5 +216,12 @@ objects inactive and no others:
 - Computer: 13 interactables, `computer.non-target-module` inactive.
 - Fan: 15 interactables, `fan.faulty-fuse`, `fan.motor-module` and
   `fan.non-target-module` inactive.
+
+**Collider ownership** — 13/13 and 15/15 interactables carry an explicit collider
+list matching their own colliders; none auto-collect a child's.
+
+**Idempotency** — the builders were run twice end to end. Stowed parts stay
+stowed and are refreshed before being put back, because `FindAny` sees inactive
+objects. No duplicate geometry, no missing-object warnings.
 
 Zero console errors and zero builder warnings across the full rebuild.

@@ -97,6 +97,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // the object restores it exactly.
             Stow("Computer Non Target Module");
 
+            // The in-case parts are children of Desktop Case, so the case's interactable
+            // was claiming their colliders and answering rays meant for them.
+            BindOwnColliders();
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[ComputerWorkstation] rebuilt");
