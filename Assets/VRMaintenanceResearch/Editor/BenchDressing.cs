@@ -38,10 +38,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // tray and swallowed anything resting between the two floors, so the trays
             // looked half empty. Parts go in the furniture's trays, at TrayFloor.
 
-            // Pale antistatic pad under the bare board part. A DIMM is a flat dark
-            // 2 mm stick; lying straight on the tray floor it was invisible from the
-            // bench, so the tray looked as though it held one spare instead of three.
-            Box("Parts Pad", t, new Vector3(-0.97f, TrayFloor + 0.003f, 0.95f), new Vector3(0.170f, 0.006f, 0.090f), "Lab_LabelPlate");
+            // The pale antistatic pad that used to sit here existed to make a bare
+            // spare DIMM visible in the tray. Both maintenance benches are diagnostic
+            // and neither hands out loose board parts any more, so the pad was a lit
+            // white rectangle marking an empty spot.
 
             if (withTools)
                 BuildToolSet(t);

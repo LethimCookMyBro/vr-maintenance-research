@@ -76,6 +76,46 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             return label;
         }
 
+        /// <summary>
+        /// Scene lookup that also sees deactivated objects.
+        ///
+        /// Builders stow parts by deactivating them rather than deleting them, so the
+        /// StableObjectId, the ResearchInteractable and the collider all survive. Plain
+        /// GameObject.Find skips inactive objects, so a second run of a builder would
+        /// lose every part it had stowed on the first and start warning about missing
+        /// objects.
+        /// </summary>
+        public static GameObject FindAny(string name)
+        {
+            var active = GameObject.Find(name);
+            if (active != null)
+                return active;
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (t.name == name)
+                    return t.gameObject;
+            return null;
+        }
+
+        /// <summary>
+        /// Takes a part off the bench without taking it out of the scene.
+        ///
+        /// Both tasks are diagnostic: the machine is already assembled and the
+        /// participant has to find one fault. Spares that are not part of that repair
+        /// read as an assembly kit, so they are stowed. Deactivating rather than
+        /// deleting keeps the id in the scene for the task definition and leaves one
+        /// checkbox to put the part back.
+        /// </summary>
+        public static void Stow(string name)
+        {
+            var go = FindAny(name);
+            if (go == null)
+            {
+                Debug.LogWarning($"[ResearchBuildKit] cannot stow missing {name}");
+                return;
+            }
+            go.SetActive(false);
+        }
+
         /// <summary>Removes previously generated children so builders stay idempotent.</summary>
         public static void ClearGenerated(Transform parent, string prefix)
         {
@@ -250,9 +290,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// </summary>
         public static Transform ResetVisual(string interactableName, out GameObject interactable)
         {
-            interactable = GameObject.Find(interactableName);
+            // FindAny, not Find: a part stowed on the previous run is inactive, and it
+            // still has to be rebuilt so a later run can put it back unchanged.
+            interactable = FindAny(interactableName);
             if (interactable == null)
                 return null;
+
+            // Rebuild from the visible state every time; the builder decides at the end
+            // of the pass what gets stowed.
+            interactable.SetActive(true);
 
             for (var i = interactable.transform.childCount - 1; i >= 0; i--)
             {

@@ -41,10 +41,44 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             BuildFanDevice();
             PlaceFanParts();
             BenchDressing.PlaceScrewdriver(new Vector3(1.02f, k_BenchTop + 0.035f, 0.95f));
-            BenchDressing.Build(0f, 0.86f, 0.62f, serviceLabel: "INSTALLED COMPONENT");
+            // Same caption as the computer bench. "INSTALLED COMPONENT" sat on the mat
+            // under the whole fan and named the machine a component, which is exactly
+            // the wrong frame for a unit the participant is meant to diagnose.
+            BenchDressing.Build(0f, 0.86f, 0.62f, serviceLabel: "SERVICE AREA");
             BuildRemovedPartsRack();
             BenchDressing.PlaceInspectControl("Fan Speed Selector");
             TaskBriefBuilder.BuildFan();
+
+            // A cartridge fuse is 30 mm of clear glass. Alone on the floor of a 0.5 m
+            // tray it is invisible from the participant's start pose, and a tray
+            // captioned SPARE PARTS that looks empty says the wrong thing about the
+            // task. The pad is the marker; the part is still the part. Added after
+            // BenchDressing.Build, which rebuilds the root it hangs from.
+            var dressing = GameObject.Find("Workstation Dressing");
+            if (dressing != null)
+                Box("Fuse Pad", dressing.transform, new Vector3(-1.10f, BenchDressing.TrayFloor + 0.003f, 0.95f),
+                    new Vector3(0.140f, 0.006f, 0.076f), "Lab_LabelPlate");
+
+            // Stowed last, so a rebuild refreshes each part before putting it away and
+            // a second run finds them again through FindAny.
+            //
+            // The bench is now one assembled fan, one open service bay with one fuse
+            // fitted in it, one spare fuse, and one screwdriver. What is stowed:
+            //
+            //  - the second loose fuse. Two identical cartridges in the tray, one of
+            //    them blown, was a second diagnosis stacked on top of the first, and
+            //    from the bench it read as a box of fuses to fit rather than a fault to
+            //    find.
+            //  - the spare motor. It is the largest object on the bench, it is not the
+            //    fault, no information source mentions it, and a motor sitting beside a
+            //    part-stripped fan says "assemble this".
+            //  - the sealed module, for the same reason as the computer bench.
+            //
+            // All three keep their StableObjectId, their ResearchInteractable and their
+            // collider; reactivating the object restores it exactly.
+            Stow("Faulty Fuse");
+            Stow("Fan Motor Module");
+            Stow("Fan Non Target Module");
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -291,8 +325,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void PlaceFanParts()
         {
-            // --- spares tray: two fuses that look identical until inspected ---
-            Move("Working Replacement Fuse", new Vector3(-1.16f, k_BenchTop + 0.042f, 0.95f), new Vector3(0f, 10f, 0f));
+            // --- spares tray: the one replacement the repair needs ---
+            // Centred in the tray now that it is the only thing in it; it used to sit
+            // at the tray's left end with a twin beside it.
+            Move("Working Replacement Fuse", new Vector3(-1.10f, BenchDressing.TrayFloor + 0.019f, 0.95f), new Vector3(0f, 10f, 0f));
             var good = ResetVisual("Working Replacement Fuse", out var goodGo);
             if (good != null)
             {
@@ -374,9 +410,14 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(wireGo, new Vector3(0.06f, 0.10f, 0.05f));
             }
 
-            // --- mains lead: plug in the spares zone, cord coiled behind the fan and
-            //     running to the fan's own cord gland ---
-            Move("Fan Power Plug", new Vector3(0.62f, k_BenchTop + 0.030f, 1.24f), new Vector3(0f, 20f, 0f));
+            // --- mains lead: one object read as two.
+            //
+            //     The plug used to stand 0.32 m clear of its own coil, so the bench
+            //     showed a loose plug and a separate loop of wire — two more parts to
+            //     fit. It now sits at the coil's edge with a tail running into it, and
+            //     the coil's other end runs to the fan's cord gland, so the whole thing
+            //     reads as this fan's lead, unplugged. ---
+            Move("Fan Power Plug", new Vector3(0.404f, k_BenchTop + 0.026f, 1.236f), new Vector3(0f, 20f, 0f));
             var plug = ResetVisual("Fan Power Plug", out var plugGo);
             if (plug != null)
             {
@@ -384,6 +425,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Box("Grip", plug, new Vector3(0f, 0f, 0.022f), new Vector3(0.040f, 0.028f, 0.018f), "Lab_PlasticDark");
                 for (var i = 0; i < 3; i++)
                     Box($"Prong {i + 1}", plug, new Vector3(-0.014f + i * 0.014f, 0.002f, -0.026f), new Vector3(0.005f, 0.014f, 0.020f), "Lab_ToolSteel");
+                // Tail back into the coil, so the plug is the end of the lead.
+                Box("Tail", plug, new Vector3(-0.046f, -0.008f, 0.014f), new Vector3(0.052f, 0.010f, 0.010f), "Lab_CableBlack", new Vector3(0f, -14f, 0f));
                 SetCollider(plugGo, new Vector3(0.09f, 0.06f, 0.09f));
             }
 
@@ -490,7 +533,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void Reparent(string name, Transform parent, Vector3 localPosition, Vector3 euler)
         {
-            var go = GameObject.Find(name);
+            var go = FindAny(name);
             if (go == null)
             {
                 Debug.LogWarning($"[FanWorkstation] missing {name}");
@@ -504,7 +547,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void Move(string name, Vector3 position, Vector3 euler)
         {
-            var go = GameObject.Find(name);
+            var go = FindAny(name);
             if (go == null)
             {
                 Debug.LogWarning($"[FanWorkstation] missing {name}");

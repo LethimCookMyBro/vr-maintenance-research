@@ -81,6 +81,22 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             BenchDressing.PlaceInspectControl("Computer Power Button");
             TaskBriefBuilder.BuildComputer();
 
+            // Names the lower shelf, so the panel lying on it reads as a part taken off
+            // this machine rather than one more component waiting to go in. Has to come
+            // after BenchDressing.Build, which rebuilds the root this hangs from.
+            var dressing = GameObject.Find("Workstation Dressing");
+            if (dressing != null)
+                BenchDressing.Zone(dressing.transform, new Vector3(-1.25f, 0.372f, 0.664f), "REMOVED PARTS");
+
+            // Stowed last, so a rebuild still refreshes the part before putting it away.
+            //
+            // A sealed anonymous module in the spares tray is the wrong prompt for a
+            // diagnostic task: it is neither the fault, nor a tool, nor anything the
+            // work order asks about, and beside an open case it reads as one more thing
+            // to install. It keeps its StableObjectId and its collider — reactivating
+            // the object restores it exactly.
+            Stow("Computer Non Target Module");
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[ComputerWorkstation] rebuilt");
@@ -111,6 +127,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             return visual;
         }
 
+        /// <summary>
+        /// The chassis.
+        ///
+        /// The previous shell was a five-sided grey box with a 5.25"-bay bezel: a
+        /// beige-era tower drawn around a licensed motherboard, a Wraith cooler and a
+        /// modular supply. Between the pale steel and the two 5.25" bays it read as
+        /// the oldest object in the room, and it made the machine inside look like
+        /// parts in a carton rather than a built PC with one panel off.
+        ///
+        /// It is now the mid-tower those components come out of: matte graphite
+        /// interior, a full-height mesh intake, a glass panel on the closed side, a
+        /// vented roof and a basement divider. Nothing structural changed — the same
+        /// half-extents, the same open side, the same interior anchor points — so
+        /// every part placement below still lands where it did.
+        /// </summary>
         static void BuildCaseShell(Transform root)
         {
             if (root == null)
@@ -118,18 +149,28 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             const string steel = "Lab_CaseSteel";
             const string panel = "Lab_CasePanel";
+            const string inner = "Lab_CaseInterior";
 
             // --- shell: left side panel is absent, that is the service opening ---
-            Box("Shell Right", root, new Vector3(k_W - 0.004f, 0f, 0f), new Vector3(0.008f, k_H * 2f, k_D * 2f), steel);
+            // The closed side is a glass panel in a steel frame — the twin of the one
+            // stowed on the bench shelf, so the removed panel is recognisably this
+            // machine's.
+            Box("Shell Right Frame", root, new Vector3(k_W - 0.003f, 0f, 0f), new Vector3(0.006f, k_H * 2f, k_D * 2f), steel);
+            Box("Shell Right Glass", root, new Vector3(k_W - 0.008f, 0.010f, 0.008f), new Vector3(0.004f, k_H * 2f - 0.034f, k_D * 2f - 0.038f), "Lab_GlassPanel");
+
             Box("Shell Top", root, new Vector3(0f, k_H - 0.004f, 0f), new Vector3(k_W * 2f, 0.008f, k_D * 2f), panel);
             Box("Shell Bottom", root, new Vector3(0f, -k_H + 0.004f, 0f), new Vector3(k_W * 2f, 0.008f, k_D * 2f), panel);
             Box("Shell Rear", root, new Vector3(0f, 0f, k_D - 0.005f), new Vector3(k_W * 2f, k_H * 2f, 0.010f), steel);
 
-            // Light liners on the cavity's floor and ceiling. The interior used to be
-            // the same near-black as the shell, so nothing inside had anything to
-            // silhouette against.
-            Box("Liner Top", root, new Vector3(0f, k_H - 0.010f, 0f), new Vector3(k_W * 2f - 0.006f, 0.004f, k_D * 2f - 0.014f), "Lab_CaseInterior");
-            Box("Liner Bottom", root, new Vector3(0f, -k_H + 0.010f, 0f), new Vector3(k_W * 2f - 0.006f, 0.004f, k_D * 2f - 0.014f), "Lab_CaseInterior");
+            // Matte graphite liners. These used to be pale, which is what turned the
+            // cavity into a lit white box; the components now read against them.
+            Box("Liner Top", root, new Vector3(0f, k_H - 0.010f, 0f), new Vector3(k_W * 2f - 0.006f, 0.004f, k_D * 2f - 0.014f), inner);
+            Box("Liner Bottom", root, new Vector3(0f, -k_H + 0.010f, 0f), new Vector3(k_W * 2f - 0.006f, 0.004f, k_D * 2f - 0.014f), inner);
+            Box("Liner Rear", root, new Vector3(0f, 0f, k_D - 0.012f), new Vector3(k_W * 2f - 0.006f, k_H * 2f - 0.014f, 0.004f), inner);
+
+            // Roof vent: slots over the rear two thirds, where the exhaust is.
+            for (var i = 0; i < 9; i++)
+                Box($"Roof Slot {i + 1}", root, new Vector3(0f, k_H - 0.007f, -0.040f + i * 0.028f), new Vector3(k_W * 2f - 0.048f, 0.004f, 0.014f), "Lab_CaseMesh");
 
             // Open-edge lip: without it the missing panel looks like a modelling error.
             Box("Open Lip Front", root, new Vector3(-k_W + 0.006f, 0f, -k_D + 0.012f), new Vector3(0.012f, k_H * 2f, 0.014f), steel);
@@ -137,34 +178,50 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Open Lip Top", root, new Vector3(-k_W + 0.006f, k_H - 0.012f, 0f), new Vector3(0.012f, 0.014f, k_D * 2f), steel);
             Box("Open Lip Bottom", root, new Vector3(-k_W + 0.006f, -k_H + 0.012f, 0f), new Vector3(0.012f, 0.014f, k_D * 2f), steel);
 
+            // Thumb screws on the rear lip: they say the panel was unscrewed, not lost.
+            foreach (var y in new[] { 0.150f, -0.150f })
+                Cyl($"Panel Screw {(y > 0 ? "A" : "B")}", root, new Vector3(-k_W + 0.006f, y, k_D - 0.004f), new Vector3(0.016f, 0.004f, 0.016f), "Lab_ToolSteel", new Vector3(90f, 0f, 0f));
+
             BuildFrontBezel(root);
             BuildRearIO(root);
             BuildMotherboard(root);
-            BuildDriveCage(root);
             BuildFeet(root);
         }
 
+        /// <summary>
+        /// Front: a full-height mesh intake behind a chamfered graphite bezel, with the
+        /// I/O cluster a current case actually carries.
+        ///
+        /// The two 5.25" optical bays are gone. They were the single strongest "old
+        /// computer" cue on the machine and no participant is asked to do anything
+        /// with them.
+        /// </summary>
         static void BuildFrontBezel(Transform root)
         {
             var bezel = Group("Front Bezel", root, new Vector3(0f, 0f, -k_D + 0.006f));
 
-            Box("Face", bezel, Vector3.zero, new Vector3(k_W * 2f + 0.004f, k_H * 2f + 0.004f, 0.012f), "Lab_PlasticDark");
-            Box("Mesh Inset", bezel, new Vector3(0f, -0.06f, -0.007f), new Vector3(0.16f, 0.20f, 0.004f), "Lab_MetalDark");
+            Box("Face", bezel, Vector3.zero, new Vector3(k_W * 2f + 0.006f, k_H * 2f + 0.006f, 0.014f), "Lab_PlasticDark");
 
-            // 5.25" bays read instantly as "desktop computer".
+            // Recessed intake behind the bezel, so the slats read as a way in rather
+            // than as stripes painted on a slab.
+            Box("Intake Well", bezel, new Vector3(-0.008f, -0.020f, 0.002f), new Vector3(0.150f, 0.330f, 0.008f), "Lab_CaseMesh");
+            for (var i = 0; i < 16; i++)
+                Box($"Intake Slat {i + 1}", bezel, new Vector3(-0.008f, -0.176f + i * 0.0208f, -0.008f), new Vector3(0.150f, 0.011f, 0.006f), "Lab_PlasticDark");
+
+            // Brushed strip down the open-side edge, and a chamfer along the other.
+            Box("Edge Strip", bezel, new Vector3(0.074f, 0f, -0.008f), new Vector3(0.030f, k_H * 2f - 0.012f, 0.006f), "Lab_MetalDark");
+            Box("Chamfer", bezel, new Vector3(-k_W + 0.004f, 0f, -0.006f), new Vector3(0.014f, k_H * 2f - 0.006f, 0.010f), "Lab_CasePanel", new Vector3(0f, 0f, 0f));
+
+            // Top I/O cluster, on the brushed strip.
+            Cyl("Power Button", bezel, new Vector3(0.074f, 0.186f, -0.012f), new Vector3(0.020f, 0.004f, 0.020f), "Lab_PlasticLight", new Vector3(90f, 0f, 0f));
+            Cyl("Power Ring", bezel, new Vector3(0.074f, 0.186f, -0.014f), new Vector3(0.012f, 0.003f, 0.012f), "Lab_MetalDark", new Vector3(90f, 0f, 0f));
             for (var i = 0; i < 2; i++)
-                Box($"Bay {i + 1}", bezel, new Vector3(0f, 0.175f - i * 0.048f, -0.008f), new Vector3(0.17f, 0.040f, 0.006f), "Lab_CasePanel");
+                Box($"USB A {i + 1}", bezel, new Vector3(0.074f, 0.146f - i * 0.024f, -0.012f), new Vector3(0.017f, 0.007f, 0.005f), "Lab_Metal");
+            Box("USB C", bezel, new Vector3(0.074f, 0.098f, -0.012f), new Vector3(0.012f, 0.005f, 0.005f), "Lab_Metal");
+            Cyl("Audio Jack", bezel, new Vector3(0.074f, 0.072f, -0.012f), new Vector3(0.010f, 0.003f, 0.010f), "Lab_PlasticDark", new Vector3(90f, 0f, 0f));
 
-            Box("Power Button", bezel, new Vector3(0.055f, 0.072f, -0.010f), new Vector3(0.022f, 0.022f, 0.008f), "Lab_PlasticLight");
-            Box("Power Ring", bezel, new Vector3(0.055f, 0.072f, -0.013f), new Vector3(0.012f, 0.012f, 0.004f), "Lab_Accent");
-            Box("Reset Button", bezel, new Vector3(-0.048f, 0.072f, -0.010f), new Vector3(0.010f, 0.010f, 0.008f), "Lab_MetalDark");
-
-            for (var i = 0; i < 2; i++)
-                Box($"USB {i + 1}", bezel, new Vector3(-0.012f + i * 0.024f, 0.072f, -0.010f), new Vector3(0.016f, 0.008f, 0.008f), "Lab_Metal");
-
-            // Intake vent slots
-            for (var i = 0; i < 7; i++)
-                Box($"Vent Slot {i + 1}", bezel, new Vector3(0f, -0.14f + i * 0.026f, -0.010f), new Vector3(0.14f, 0.010f, 0.004f), "Lab_PlasticDark");
+            // Badge on the bezel's foot: a case with a name reads as a product.
+            Box("Badge", bezel, new Vector3(-0.008f, -0.202f, -0.010f), new Vector3(0.052f, 0.012f, 0.004f), "Lab_MetalDark");
         }
 
         static void BuildRearIO(Transform root)
@@ -175,12 +232,25 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // cluster and it now meets this panel, so building a second set would put
             // two stacks of ports a few millimetres apart.
 
-            // Expansion slot covers
-            for (var i = 0; i < 5; i++)
-                Box($"Slot Cover {i + 1}", rear, new Vector3(0.03f, 0.055f - i * 0.026f, 0f), new Vector3(0.11f, 0.020f, 0.005f), "Lab_MetalDark");
+            // Exhaust grille around the rear fan, which sits at y = +0.130.
+            for (var i = 0; i < 9; i++)
+                Box($"Fan Grille {i + 1}", rear, new Vector3(-0.006f, 0.074f + i * 0.014f, -0.004f), new Vector3(0.116f, 0.005f, 0.004f), "Lab_CaseMesh");
+
+            // Expansion slot covers, seven as a mid-tower has, each with its screw.
+            for (var i = 0; i < 7; i++)
+            {
+                Box($"Slot Cover {i + 1}", rear, new Vector3(0.030f, 0.036f - i * 0.021f, 0f), new Vector3(0.110f, 0.016f, 0.005f), "Lab_MetalDark");
+                Cyl($"Slot Screw {i + 1}", rear, new Vector3(0.078f, 0.036f - i * 0.021f, -0.004f), new Vector3(0.009f, 0.003f, 0.009f), "Lab_ToolSteel", new Vector3(90f, 0f, 0f));
+            }
 
             Box("PSU Cutout", rear, new Vector3(0f, -0.163f, 0f), new Vector3(0.16f, 0.086f, 0.008f), "Lab_CaseSteel");
         }
+
+        // No basement divider. One was built here to give the supply a bay and fill the
+        // empty lower cavity, and from the participant's approach — which looks straight
+        // into the open side — a full-width shelf at that height reads as a drawer
+        // pulled out of the machine. The cavity below the board is meant to look like
+        // an empty basement, because that is what it is.
 
         /// <summary>
         /// Populates the board.
@@ -226,8 +296,37 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // instead of a model here and a green stand-in plate 2 mm away.
             BuildCpuCooler(board);
             BuildMemory(board);
+            BuildStorage(board);
             BuildAtxHeader(board);
             BuildGraphicsCard(board);
+        }
+
+        /// <summary>
+        /// The solid-state drive, on the board.
+        ///
+        /// It used to sit in a handmade drive cage: a 120 mm box standing on the case
+        /// floor in the middle of the cavity, which from every angle read as a filing
+        /// cabinet someone had left inside the computer. The cage is gone.
+        ///
+        /// The licensed part is an M.2 stick and an M.2 stick mounts flat on the
+        /// board, so that is where it goes. It was also being fitted wrong: the fit is
+        /// uniform on the tightest axis, and the box it was given was not proportional
+        /// to the mesh, so the 80 mm drive came out 36 mm long and under a millimetre
+        /// thick. The box below is the mesh's own 1.190 x 0.104 x 4.289 ratio taken to
+        /// a true 80 x 22 x 2 mm.
+        /// </summary>
+        static void BuildStorage(Transform board)
+        {
+            // Rotated so the mesh's thin axis points out of the board: the drive lies
+            // on the board face rather than standing off it on edge. -90 rather than
+            // +90 because the kit's printed face is the mesh's -Y side: turned the
+            // other way the Samsung artwork was legible but mirrored, which is what a
+            // double-sided label quad looks like from behind.
+            ImportedVisual("Solid State Drive", board, k_Item3D + "Storage/source/ssd-kit.glb",
+                OnBoard(-0.010f, 0.012f, 0.0015f), new Vector3(0.0020f, 0.0222f, 0.0800f), new Vector3(0f, 0f, -90f),
+                new[] { "Circle.002" });   // the kit is two drives; the bench is allowed one
+
+            Box("M2 Standoff", board, OnBoard(0.028f, 0.012f, 0.0010f), new Vector3(0.003f, 0.008f, 0.008f), "Lab_MetalDark");
         }
 
         /// <summary>
@@ -255,23 +354,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // its own fan, and the board model draws its own headers.
         }
 
+        // Memory slot centres, measured off the board map. The second slot is built
+        // here as dressing; the fourth is where the computer.ram interactable is
+        // seated, so the pair a technician would populate is the pair on the board.
+        static readonly Vector3 k_MemorySlotA = new Vector3(0.0711f, 0.0726f, 0.018f);
+        static readonly Vector3 k_MemorySlotB = new Vector3(0.0862f, 0.0726f, 0.018f);
+        static readonly Vector3 k_MemoryFit = new Vector3(0.031f, 0.135f, 0.006f);
+        static readonly Vector3 k_MemoryEuler = new Vector3(0f, 0f, 90f);
+        const string k_MemoryModel = k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb";
+
         /// <summary>
-        /// Two DIMMs in the second and fourth slots — the dual-channel pair a technician
-        /// would actually populate on this board.
+        /// One dressing DIMM in the second slot. The fourth slot is filled by the
+        /// computer.ram interactable, which PlaceInteriorParts seats there.
         ///
-        /// Slot centres were measured off the board map at dx +0.071 and +0.086, so the
-        /// modules land in the slots the board draws rather than beside them. They stand
-        /// vertically, which is how DIMMs sit in a tower.
+        /// Slot centres were measured off the board map, so the modules land in the
+        /// slots the board draws rather than beside them. They stand vertically, which
+        /// is how DIMMs sit in a tower.
         /// </summary>
         static void BuildMemory(Transform board)
         {
-            const string path = k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb";
-            var euler = new Vector3(0f, 0f, 90f);
-
-            ImportedVisual("RAM Module 1", board, path, OnBoard(0.0711f, 0.0726f, 0.018f),
-                new Vector3(0.031f, 0.135f, 0.006f), euler);
-            ImportedVisual("RAM Module 2", board, path, OnBoard(0.0862f, 0.0726f, 0.018f),
-                new Vector3(0.031f, 0.135f, 0.006f), euler);
+            ImportedVisual("RAM Module 1", board, k_MemoryModel, OnBoard(k_MemorySlotA.x, k_MemorySlotA.y, k_MemorySlotA.z),
+                k_MemoryFit, k_MemoryEuler);
         }
 
         /// <summary>
@@ -316,9 +419,16 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // spanning the case rather than as the top of a card — it was the first thing
             // the eye landed on inside the machine.
             Box("Backplate", gpu, new Vector3(0f, 0.006f, 0f), new Vector3(0.096f, 0.003f, 0.220f), "Lab_PlasticDark");
-            Box("Backplate Label", gpu, new Vector3(-0.010f, 0.008f, -0.070f), new Vector3(0.052f, 0.001f, 0.048f), "Lab_LabelPlate");
+            // Etched, not printed. In Lab_LabelPlate this was a near-white 52 x 48 mm
+            // rectangle on the brightest face of the largest part in the cavity, and it
+            // was the first thing the eye landed on inside the machine.
+            Box("Backplate Label", gpu, new Vector3(-0.010f, 0.008f, -0.070f), new Vector3(0.044f, 0.001f, 0.026f), "Lab_CasePanel");
             Box("Shroud", gpu, new Vector3(0f, -0.020f, 0f), new Vector3(0.098f, 0.038f, 0.222f), "Lab_PlasticDark");
-            Box("Shroud Edge", gpu, new Vector3(-0.048f, -0.020f, 0f), new Vector3(0.004f, 0.038f, 0.222f), "Lab_MetalDark");
+            // The card's outer edge, the one face that is square-on to the open panel.
+            // In Lab_MetalDark this was a 222 mm strip of light metallic grey across the
+            // middle of the cavity, and it — not the backplate — was what made the card
+            // read as a bright shelf rather than as a component.
+            Box("Shroud Edge", gpu, new Vector3(-0.048f, -0.020f, 0f), new Vector3(0.004f, 0.038f, 0.222f), "Lab_PlasticDark");
 
             // Fan bays cut into the shroud's outer edge: from the side panel this is
             // the only part of the cooler you see, and without it the card is a slab.
@@ -348,39 +458,18 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// Drive tray carrying the one solid-state drive the bench is allowed.
-        ///
-        /// The 3.5" hard disk that used to share this cage is gone. It was never part of
-        /// the repair and the interior is meant to hold one drive, so it was two hundred
-        /// grams of clutter in front of the components that matter.
-        ///
-        /// The licensed drive is an M.2 stick — 80 x 22 x 2.4 mm, which is what the
-        /// kit's Samsung 990 artwork describes — so it lies flat on the tray rather than
-        /// standing in a 2.5" caddy it would rattle around in.
+        /// Feet, raised enough that the bottom intake filter under the supply reads as
+        /// an air path rather than a painted stripe.
         /// </summary>
-        static void BuildDriveCage(Transform root)
-        {
-            var cage = Group("Drive Cage", root, new Vector3(-0.026f, -0.108f, -0.130f));
-
-            Box("Cage Frame", cage, Vector3.zero, new Vector3(0.120f, 0.120f, 0.108f), "Lab_CaseInterior");
-            Box("Cage Rail Top", cage, new Vector3(-0.062f, 0.058f, 0f), new Vector3(0.010f, 0.010f, 0.108f), "Lab_CaseSteel");
-            Box("Cage Rail Bottom", cage, new Vector3(-0.062f, -0.058f, 0f), new Vector3(0.010f, 0.010f, 0.108f), "Lab_CaseSteel");
-
-            // Tray shelf the drive actually rests on, so it is supported rather than
-            // hanging in the bay.
-            Box("Drive Tray", cage, new Vector3(-0.062f, 0.004f, 0f), new Vector3(0.028f, 0.004f, 0.092f), "Lab_CaseSteel");
-
-            // Circle.002 is the kit's second drive; the bench is allowed one.
-            // Model axes already read width / thickness / length, so it needs no turning.
-            ImportedVisual("Solid State Drive", cage, k_Item3D + "Storage/source/ssd-kit.glb",
-                new Vector3(-0.062f, 0.008f, 0f), new Vector3(0.022f, 0.004f, 0.080f), Vector3.zero,
-                new[] { "Circle.002" });
-        }
-
         static void BuildFeet(Transform root)
         {
-            foreach (var (x, z) in new[] { (-0.08f, -0.19f), (0.08f, -0.19f), (-0.08f, 0.19f), (0.08f, 0.19f) })
-                Box($"Foot {x}_{z}", root, new Vector3(x, -k_H - 0.008f, z), new Vector3(0.030f, 0.016f, 0.030f), "Lab_Rubber");
+            foreach (var (x, z) in new[] { (-0.078f, -0.185f), (0.078f, -0.185f), (-0.078f, 0.185f), (0.078f, 0.185f) })
+            {
+                Box($"Foot {x}_{z}", root, new Vector3(x, -k_H - 0.011f, z), new Vector3(0.034f, 0.022f, 0.038f), "Lab_PlasticDark");
+                Box($"Foot Pad {x}_{z}", root, new Vector3(x, -k_H - 0.021f, z), new Vector3(0.030f, 0.004f, 0.034f), "Lab_Rubber");
+            }
+
+            Box("Intake Filter", root, new Vector3(0f, -k_H - 0.002f, 0.110f), new Vector3(k_W * 2f - 0.030f, 0.004f, 0.170f), "Lab_CaseMesh");
         }
 
         /// <summary>Reparents the in-case interactables so local coordinates stay readable.</summary>
@@ -424,6 +513,23 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 // Cable gland on the front face: the loom has to start somewhere.
                 Box("Cable Gland", psu, new Vector3(0f, 0.010f, -0.072f), new Vector3(0.058f, 0.030f, 0.008f), "Lab_PlasticDark");
                 SetCollider(psuGo, new Vector3(0.15f, 0.09f, 0.14f));
+            }
+
+            // Memory is an installed component, not a spare.
+            //
+            // computer.ram used to lie on an antistatic pad in the spares tray, which
+            // is the single clearest "build this computer" cue a bench can carry: a
+            // bare DIMM on a pad is what you see when a machine is being assembled, not
+            // when one is being diagnosed. The interactable is the same object with the
+            // same id and the same collider — it is now seated in the fourth slot, so
+            // the board is populated and the tray is not.
+            var memorySeat = k_BoardCentre + OnBoard(k_MemorySlotB.x, k_MemorySlotB.y, k_MemorySlotB.z);
+            Move("RAM Placeholder", case_.transform, memorySeat, Vector3.one);
+            var seatedRam = ResetVisual("RAM Placeholder", out var seatedRamGo);
+            if (seatedRam != null)
+            {
+                ImportedVisual("RAM Model", seatedRam, k_MemoryModel, Vector3.zero, k_MemoryFit, k_MemoryEuler);
+                SetCollider(seatedRamGo, new Vector3(0.030f, 0.140f, 0.014f));
             }
 
             BuildCableLoom(case_.transform);
@@ -531,10 +637,20 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// <summary>
         /// Bench contents.
         ///
-        /// Everything loose now rests on a tray floor rather than hovering above the
-        /// bench: the tray's floor sits 8 mm proud of the top, so each part is placed at
-        /// that height plus its own half-depth. Nothing is arranged to hint at the
-        /// answer — the replacement lead sits among the other spares, unmarked.
+        /// This is a diagnostic bench, so it carries what a technician brings to a
+        /// machine that will not power on and nothing else: one replacement lead in
+        /// the spares tray, one screwdriver in the tool tray, the mains lead, and the
+        /// side panel that came off the machine, stowed on the lower shelf.
+        ///
+        /// What used to be here as well — a bare DIMM on an antistatic pad and a
+        /// sealed module — described a different task. A tray of assorted components
+        /// beside an open case is an assembly kit, and a participant who reads the
+        /// bench that way starts looking for what to fit rather than for what is
+        /// wrong. The DIMM is now installed on the board; the sealed module is stowed
+        /// at the end of this method.
+        ///
+        /// Everything loose rests on a tray floor rather than hovering above the
+        /// bench. Nothing is arranged to hint at the answer.
         /// </summary>
         static void PlaceBenchParts()
         {
@@ -545,10 +661,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // Replacement 24-pin lead: the same connector family as the plug hanging
             // in the case, so the two are recognisably a pair on inspection — but it
             // sits in the tray alongside the other spares, unmarked.
-            // Kept to the tray's right-hand two thirds. Pushed further left, the task
-            // volume these parts define reaches the information dock and the validator
+            // Centred in the tray now that it is the only thing in it; at the tray's
+            // left end with two neighbours it was fine, alone it read as a part that
+            // had been pushed aside. Not moved further left than this: the task volume
+            // these parts define would reach the information dock and the validator
             // fails the scene for a reader that would open over the work area.
-            Move("Main Power Connector", null, new Vector3(-1.17f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
+            Move("Main Power Connector", null, new Vector3(-1.10f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
             var mpc = ResetVisual("Main Power Connector", out var mpcGo);
             if (mpc != null)
             {
@@ -560,19 +678,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Box("Tail A", mpc, new Vector3(0f, 0.006f, 0.032f), new Vector3(0.058f, 0.020f, 0.044f), "Lab_CableBlack");
                 Box("Tail B", mpc, new Vector3(0.020f, 0.006f, 0.070f), new Vector3(0.048f, 0.018f, 0.046f), "Lab_CableBlack", new Vector3(0f, 26f, 0f));
                 SetCollider(mpcGo, new Vector3(0.10f, 0.05f, 0.13f));
-            }
-
-            // Spare DIMM, lying flat in the tray. Rotated so its 3 mm thickness is the
-            // vertical axis: standing on edge it read as a blade rather than a part.
-            // Resting on the tray's antistatic pad, which is what makes a bare dark
-            // board part visible at all from the bench.
-            Move("RAM Placeholder", null, new Vector3(-0.97f, tray + 0.007f, 0.95f), Vector3.one, new Vector3(0f, -8f, 0f));
-            var ram = ResetVisual("RAM Placeholder", out var ramGo);
-            if (ram != null)
-            {
-                ImportedVisual("RAM Model", ram, k_Item3D + "Optimized/RAM/random_access_memory_ram_ddr4_quest.glb",
-                    Vector3.zero, new Vector3(0.135f, 0.004f, 0.032f), new Vector3(-90f, 0f, 0f));
-                SetCollider(ramGo, new Vector3(0.15f, 0.03f, 0.05f));
             }
 
             // --- removed side panel, stowed on the bench's lower shelf: keeps the
@@ -592,19 +697,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             // --- tool tray (right): the one tool the task needs ---
             BenchDressing.PlaceScrewdriver(new Vector3(1.02f, tray + 0.025f, 0.95f));
-
-            // --- distractor: a sealed spare module, clearly not part of this repair.
-            //     Moved in among the spares, where a spare belongs; out on the bench's
-            //     right end it read as a second piece of equipment. ---
-            Move("Computer Non Target Module", null, new Vector3(-0.79f, tray + 0.045f, 0.95f), Vector3.one, new Vector3(0f, -12f, 0f));
-            var nonTarget = ResetVisual("Computer Non Target Module", out var nonTargetGo);
-            if (nonTarget != null)
-            {
-                Box("Body", nonTarget, Vector3.zero, new Vector3(0.150f, 0.090f, 0.110f), "Lab_MetalDark");
-                Box("Label", nonTarget, new Vector3(0f, 0.046f, 0f), new Vector3(0.110f, 0.002f, 0.070f), "Lab_LabelPlate");
-                Box("Seal", nonTarget, new Vector3(0f, 0.047f, 0.030f), new Vector3(0.060f, 0.002f, 0.016f), "Lab_Warning");
-                SetCollider(nonTargetGo, new Vector3(0.16f, 0.10f, 0.12f));
-            }
 
             // --- external mains lead, coiled at the back of the bench ---
             Move("External Power Cable", null, new Vector3(0.52f, k_BenchTop + 0.030f, 1.24f), Vector3.one, new Vector3(0f, 0f, 0f));
@@ -634,7 +726,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void Move(string name, Transform parent, Vector3 position, Vector3 scale, Vector3 euler = default)
         {
-            var go = GameObject.Find(name);
+            var go = FindAny(name);
             if (go == null)
             {
                 Debug.LogWarning($"[ComputerWorkstation] missing {name}");

@@ -45,7 +45,13 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // these stay semi-metallic; bare steel lives in Lab_ToolSteel.
             ["Lab_Metal"] = new Surface { Color = "#98A0A8", Metallic = 0.45f, Smoothness = 0.55f },
             ["Lab_MetalDark"] = new Surface { Color = "#79808A", Metallic = 0.55f, Smoothness = 0.48f },
-            ["Lab_PlasticDark"] = new Surface { Color = "#23272C", Metallic = 0f, Smoothness = 0.52f },
+            // Smoothness was 0.52, which is a semi-gloss dielectric: under the ceiling
+            // panels every upward-facing surface returned a specular highlight strong
+            // enough to read as light grey. The graphics card's backplate is the whole
+            // top of the largest part in the case, so the card rendered as a bright
+            // shelf spanning the machine, and the case bezel washed out the same way.
+            // Matte black plastic is also just what these parts are.
+            ["Lab_PlasticDark"] = new Surface { Color = "#23272C", Metallic = 0f, Smoothness = 0.26f },
             ["Lab_PlasticLight"] = new Surface { Color = "#DDE1E5", Metallic = 0f, Smoothness = 0.56f },
             // Board green was so dark it merged with the case interior; lifted until
             // a populated board reads as a board rather than a black rectangle.
@@ -61,16 +67,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// <summary>Extra materials the redesign needs; created on demand.</summary>
         static readonly Dictionary<string, Surface> k_NewSurfaces = new Dictionary<string, Surface>
         {
-            // The case was near-black inside and out, so the interior rendered as a
-            // cave and none of the components silhouetted. Shell and tray are lifted
-            // to mid grey; the bezel keeps Lab_PlasticDark so the front still reads
-            // as the dark face of a tower.
-            ["Lab_CaseSteel"] = new Surface { Color = "#59616B", Metallic = 0.85f, Smoothness = 0.55f },
-            ["Lab_CasePanel"] = new Surface { Color = "#434B55", Metallic = 0.70f, Smoothness = 0.62f },
-            // Mid grey, not light grey: the tray, liners and drive cage are backdrop.
-            // Lifting them as far as the components washed the whole cavity out, and
-            // a bright heatsink against a bright tray reads as one grey mass.
-            ["Lab_CaseInterior"] = new Surface { Color = "#585F68", Metallic = 0.55f, Smoothness = 0.44f },
+            // The case was lifted to mid grey back when the interior was handmade dark
+            // parts that needed something to silhouette against. With the licensed
+            // board, cooler and supply in it that reversed: a 0.85-metallic mid grey
+            // under the lab's key light rendered as near-white, so the tower read as a
+            // pale carton and the machine inside it read as debris in a box. These are
+            // now painted steel at the value real chassis are.
+            ["Lab_CaseSteel"] = new Surface { Color = "#3C424A", Metallic = 0.55f, Smoothness = 0.46f },
+            ["Lab_CasePanel"] = new Surface { Color = "#2D323A", Metallic = 0.45f, Smoothness = 0.56f },
+            // Matte graphite, the way a powder-coated interior actually is. The silver
+            // supply, the aluminium cooler and the pale connectors now carry the light
+            // in the cavity instead of the walls doing it.
+            ["Lab_CaseInterior"] = new Surface { Color = "#31363D", Metallic = 0.20f, Smoothness = 0.30f },
+            // Front intake: darker still and nearly matte, so the mesh field reads as
+            // an opening rather than another panel.
+            ["Lab_CaseMesh"] = new Surface { Color = "#191C21", Metallic = 0.10f, Smoothness = 0.22f },
             ["Lab_HeatsinkAlu"] = new Surface { Color = "#BFC6CD", Metallic = 0.88f, Smoothness = 0.62f },
             ["Lab_PcbDark"] = new Surface { Color = "#15563A", Metallic = 0.05f, Smoothness = 0.38f },
             ["Lab_Copper"] = new Surface { Color = "#B87333", Metallic = 0.95f, Smoothness = 0.72f },

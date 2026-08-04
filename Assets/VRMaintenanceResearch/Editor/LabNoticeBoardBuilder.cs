@@ -58,21 +58,55 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             title.fontStyle = TMPro.FontStyles.Bold;
             title.characterSpacing = 8f;
 
-            BuildCard(t, new Vector3(-0.445f, 0.095f, 0f), "SAFETY");
-            BuildCard(t, new Vector3(0.445f, 0.095f, 0f), "BENCH LAYOUT");
-            BuildCard(t, new Vector3(-0.445f, -0.185f, 0f), "ESD CONTROL");
-            BuildCard(t, new Vector3(0.445f, -0.185f, 0f), "ERROR CODES");
+            BuildCard(t, new Vector3(-0.450f, 0.108f, 0f), "SAFETY",
+                "Isolate at the wall before opening any enclosure.\nWait for indicators to go dark.");
+            BuildCard(t, new Vector3(0.450f, 0.108f, 0f), "BENCH LAYOUT",
+                "Spares tray left  ·  tools right.\nRemoved parts go on the lower shelf.");
+            BuildCard(t, new Vector3(-0.450f, -0.212f, 0f), "ESD CONTROL",
+                "Wrist strap to the bench stud.\nHandle boards by the edges only.");
+            BuildCard(t, new Vector3(0.450f, -0.212f, 0f), "REPORT A FAULT",
+                "Log the unit number and the symptom.\nLeave the work order on the bench.");
         }
 
-        static void BuildCard(Transform parent, Vector3 pos, string heading)
+        /// <summary>
+        /// One notice: heading strip over two lines of body copy.
+        ///
+        /// Both labels stand 14 mm proud of the plate. They used to be placed at the
+        /// card's local origin — dead centre of an 18 mm plate — so the plate's own
+        /// front face sat 9 mm nearer the participant than the glyphs and the depth
+        /// test discarded them. Every card rendered as a blank white rectangle, which
+        /// is the "wall board text is missing" report: the strings were always there
+        /// and the references were fine, the geometry hid them.
+        ///
+        /// Body copy is lab procedure only. Nothing here may hint at either fault:
+        /// the board is read from anywhere in the room, and a notice naming a
+        /// connector or a fuse would answer the task from the doorway.
+        /// </summary>
+        static void BuildCard(Transform parent, Vector3 pos, string heading, string body)
         {
             var card = Group($"Notice {heading}", parent, pos);
-            Box("Face", card, Vector3.zero, new Vector3(0.82f, 0.23f, 0.018f), "Lab_PanelSurface");
-            Box("Accent", card, new Vector3(0f, 0.096f, -0.002f), new Vector3(0.82f, 0.038f, 0.020f), "Lab_Accent");
+            Box("Face", card, Vector3.zero, new Vector3(0.84f, 0.27f, 0.018f), "Lab_PanelSurface");
+            Box("Accent", card, new Vector3(0f, 0.116f, -0.002f), new Vector3(0.84f, 0.038f, 0.020f), "Lab_Accent");
 
-            var h = Label("Heading", card, Vector3.zero, heading, 0.30f, "#1E2A3A", Vector3.zero, 0.76f);
+            // #14202E on Lab_PanelSurface (#F4F6F8) is about 15:1 — well past the 4.5:1
+            // floor, which matters because this board is read across the room.
+            // Sized to fill the card rather than to fit it. At 0.20/0.15 the copy
+            // occupied about a third of the plate and was unreadable from the
+            // participant's start pose 4.8 m away; the card was always this big.
+            //
+            // The heading sits clear of the accent strip above it, and the body's box
+            // starts below the heading's glyphs: the body is top-aligned in a 0.15-tall
+            // rect, so its anchor is its centre and the two will overlap if the anchor
+            // is not at least half that box below the heading.
+            var h = Label("Heading", card, new Vector3(0f, 0.062f, -0.014f), heading, 0.34f, "#14202E", Vector3.zero, 0.80f);
             h.fontStyle = TMPro.FontStyles.Bold;
             h.characterSpacing = 6f;
+
+            var copy = Label("Body", card, new Vector3(0f, -0.056f, -0.014f), body, 0.30f, "#2B3949", Vector3.zero, 0.78f);
+            copy.alignment = TMPro.TextAlignmentOptions.Top;
+            copy.enableWordWrapping = true;
+            copy.rectTransform.sizeDelta = new Vector2(0.78f, 0.15f);
+            copy.lineSpacing = 2f;
         }
     }
 }
