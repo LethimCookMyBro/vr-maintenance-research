@@ -62,17 +62,26 @@ namespace TMUVR.MaintenanceResearch
 
         void OnMouseEnter()
         {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
             task?.RecordHover(this, "mouse");
             Focus(+1);
         }
 
         void OnMouseExit()
         {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
             task?.RecordHoverExit(this, "mouse");
             Focus(-1);
         }
 
-        void OnMouseDown() => task?.RecordInteraction(this);
+        void OnMouseDown()
+        {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
+            task?.RecordInteraction(this);
+        }
 
         void OnHoverEntered(HoverEnterEventArgs args)
         {

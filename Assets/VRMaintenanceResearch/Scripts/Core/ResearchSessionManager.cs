@@ -20,6 +20,21 @@ namespace TMUVR.MaintenanceResearch
         public ResearchLogService Logger => logger;
         public bool IsConfigured { get; private set; }
 
+        /// <summary>
+        /// Whether Unity's OnMouseEnter/OnMouseDown path may raise research events.
+        ///
+        /// The deployment is a PC running Quest Link, so the game view sits on the
+        /// researcher's monitor while the participant works. Those handlers fire on a
+        /// plain mouse click over that view, and a researcher reaching for the window
+        /// would write a hover or a grab into the participant's event stream under
+        /// interactor=mouse. It stays available in development mode, where it is how the
+        /// scenes are driven without a headset, and is off in a participant session.
+        ///
+        /// True when no session exists yet, so editor tooling still works.
+        /// </summary>
+        public static bool MousePathPermitted =>
+            Instance == null || Instance.configuration == null || Instance.configuration.developmentMode;
+
         void Awake()
         {
             if (Instance != null && Instance != this)

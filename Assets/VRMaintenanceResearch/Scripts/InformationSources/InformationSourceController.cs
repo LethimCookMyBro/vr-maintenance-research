@@ -79,6 +79,8 @@ namespace TMUVR.MaintenanceResearch
 
         void OnMouseEnter()
         {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
             RecordHover("mouse");
             isHovered = activeHoverInteractors.Count > 0;
             RefreshSelectorState();
@@ -86,11 +88,19 @@ namespace TMUVR.MaintenanceResearch
 
         void OnMouseExit()
         {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
             RecordHoverExit("mouse");
             isHovered = activeHoverInteractors.Count > 0;
             RefreshSelectorState();
         }
-        void OnMouseDown() => Toggle();
+
+        void OnMouseDown()
+        {
+            if (!ResearchSessionManager.MousePathPermitted)
+                return;
+            Toggle();
+        }
         void OnHoverEntered(HoverEnterEventArgs args)
         {
             RecordHover(args.interactorObject?.transform == null ? "unknown" : args.interactorObject.transform.name);
