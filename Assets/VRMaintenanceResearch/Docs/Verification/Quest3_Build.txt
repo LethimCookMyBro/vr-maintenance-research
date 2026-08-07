@@ -1,0 +1,81 @@
+=== Meta Quest 3 APK build - 2026-08-08 ===
+
+An Android player was produced end to end. This establishes that the project
+compiles, links and packages for the headset. It does NOT establish anything about
+how it behaves there: the APK was not installed and not run. No Quest 3 was
+connected.
+
+Result
+------
+switch to Android:  succeeded
+result:             Succeeded
+errors:             3   (all one package bug, see below - none from this project)
+warnings:           366 (shader and package messages, as on the Windows build)
+apk:                Builds/Quest3/VRMaintenanceResearch.apk, 179,766,537 bytes
+uncompressed total: 1,427,957,701 bytes
+build time:         00:46:02
+scenes:             ResearcherSetup, VRTraining, ComputerRepairTask, FanRepairTask,
+                    XRI_Examples_Main
+
+The fifth scene is Unity's own example scene. Nothing in the research code loads it,
+but it is enabled in Build Settings and therefore ships. It was left in place because
+the project's stated invariant is that the original XRI example content stays
+untouched; removing it is the researcher's call and would cut the APK substantially.
+
+Configuration confirmed for this build
+--------------------------------------
+scripting backend:   IL2CPP
+architecture:        ARM64
+graphics:            Vulkan (auto graphics off)
+colour space:        Linear
+render pipeline:     UniversalRP-HighQuality
+stereo render mode:  single pass instanced (Android)
+Meta Quest Support:  enabled, Quest 3 (eureka) targeted
+controller profiles: Oculus Touch and Meta Quest Touch Plus, both enabled on Android
+application id:      com.unity.xr.interaction.examples  (Unity's example package id,
+                     not a research application id - see KNOWN_LIMITATIONS)
+
+The three errors
+----------------
+All three are the same NullReferenceException, thrown inside Unity's own OpenXR
+project-validation pass, not by this project:
+
+  MetaQuestFeature.cs:554, in a lambda from CreateValidationRules,
+  reached from OpenXRProjectValidationBuildStep.OnPreprocessBuild
+
+The rule at MetaQuestFeature.cs:552 reads
+
+  OpenXRSettings.GetSettingsForBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup)
+
+- the editor's SELECTED build target group - rather than the group being validated,
+then calls GetFeature<MetaQuestFeature>() on the result. MetaQuestFeature exists only
+in the Android feature list, so whenever the selected group is Standalone the feature
+is null and the rule dereferences it. This build switched the ACTIVE target
+programmatically, which leaves the selected group unchanged, so the condition was met.
+Using the Build Settings window would not reproduce it.
+
+The build still succeeded because the pre-process callback catches the exception. The
+cost is that the rest of the validation pass is abandoned, so a successful build log
+is not by itself evidence of a clean OpenXR validation.
+
+Validation was therefore run separately with the selected group matching, and
+recorded in OpenXR_Validation.txt: no issues on Android, no issues on Standalone.
+
+Restored afterwards
+-------------------
+The active build target was returned to StandaloneWindows64. The Android build had
+also written platform state into version-controlled files - two Android XR settings
+appended to PlayerSettings.preloadedAssets, m_optimizeBufferDiscards flipped on the
+Android OpenXR settings, URP shader-stripping prefilter flags recomputed on two
+quality assets, and TMP dynamic font atlases touched by play mode. All were reverted;
+they regenerate on the next build for whichever platform.
+
+Re-verified after the restore: scene integrity 7/7 PASS, visual validator ALL SCENES
+PASS with no warnings, full flow walkthrough A-B WALKTHROUGH PASSED, zero console
+errors.
+
+Still open, and only a headset can close it
+-------------------------------------------
+Installing and launching the APK, tracking, ray aiming, grab, socket placement, poke,
+haptics, audio, text legibility at real display resolution, comfort and reach for
+different heights, and frame timing. See QUEST3_NEXT_STEPS.md.

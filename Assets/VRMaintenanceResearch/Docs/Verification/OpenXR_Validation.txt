@@ -1,0 +1,18 @@
+=== OpenXR project validation ===
+Unity 6000.3.20f1, com.unity.xr.openxr 1.16.1
+
+The Android pass throws unless the editor's SELECTED build target group is
+also Android. MetaQuestFeature.cs:552 reads
+OpenXRSettings.GetSettingsForBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup)
+instead of the group being validated, then calls GetFeature<MetaQuestFeature>()
+on it. MetaQuestFeature exists only in the Android feature list, so with
+Standalone selected the feature is null and the rule dereferences it. This is a
+package bug, not a project setting: the build itself succeeded, because the
+pre-process callback catches it - but the rest of the validation pass is
+abandoned, so a clean build log is not evidence of a clean validation.
+
+--- Android (selected group forced to Android) ---
+  no issues
+
+--- Standalone (Quest Link) ---
+  no issues

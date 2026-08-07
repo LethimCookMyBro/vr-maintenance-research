@@ -18,6 +18,14 @@ Verified editor-side:
   controller profiles both enabled, IL2CPP, ARM64, Vulkan, Linear colour, URP, single
   pass instanced. The Standalone profile set for Quest Link is enabled too, at
   multi-pass.
+- **An Android player was actually produced**: `Succeeded`, 179 MB APK, 46 minutes.
+  `Docs/Verification/Quest3_Build.txt`. It was not installed and not run — no headset
+  was connected. The three errors in that build are one Unity OpenXR package bug
+  (`MetaQuestFeature.cs:554`), not a project setting; the build's validation pass was
+  abandoned as a result, so validation was re-run separately and is clean for both
+  Android and Standalone: `Docs/Verification/OpenXR_Validation.txt`.
+- The active build target was returned to Windows afterwards, and the platform state
+  the Android build wrote into version-controlled files was reverted.
 
 Still open, and only a headset can close them:
 
