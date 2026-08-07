@@ -34,3 +34,83 @@
 
 - A fresh Windows Mono Development build launches on this desktop, but its Player log reports `XR_ERROR_FORM_FACTOR_UNAVAILABLE` without an available headset form factor. This establishes startup only; it does not establish the standalone interactive flow.
 - The compact source station, reader, status card, simulator-HUD gate, and F9-only researcher controls were runtime-checked in the Unity Editor. Quest 3 validation and full standalone interaction remain pending; Thai/Japanese glyph rendering was checked in the Editor, not on hardware.
+
+## Data comparability - 2026-08-08
+
+- **Telemetry recorded before commit `743b1c3` attributes in-machine interactions to
+  the wrong object and must not be compared with data recorded after it.**
+  `XRBaseInteractable` auto-collects `GetComponentsInChildren<Collider>()` when its own
+  collider list is empty, and both builders reparent the in-machine interactables under
+  their device so local coordinates stay readable. The device therefore claimed its
+  children's colliders — `Desktop Case` seven, `Electric Fan Body` six — and because the
+  parent registers first, `TryGetInteractableForCollider` returned the **device** for a
+  ray aimed at any part inside the machine. Every hover and grab on the ATX connector,
+  the fuse holder, the board, the supply or the case fan was logged against
+  `computer.case` or `fan.body`. Nothing looked wrong from outside: the correct repair
+  object sits out on the bench in both scenes, so the loop completed and the play-mode
+  checks passed. The only symptom was an XRI warning at `OnEnable`. Affected columns are
+  `object_id` and `object_category` on hover, grab and component events; task timing,
+  completion and information-source rows are unaffected.
+- `VRTraining` kept the same defect until 2026-08-08, because only the two workstation
+  builders called `BindOwnColliders`. Training telemetry recorded before that date has
+  the same caveat for `training.training-cylinder`.
+- **A session recorded before 2026-08-08 with `developmentMode` set to false could not
+  have been completed.** The researcher panel returned early in that configuration and
+  it is the only caller of `CompleteCurrentTaskAndAdvance` and `SafetyStop`, so there
+  was no route from the first task to the second. Any such session folder is a partial
+  record by construction.
+- The participant start pose changed on 2026-08-02 and device transforms were
+  re-authored, so movement coordinates are not spatially comparable across that date
+  either. That limitation is recorded above and is unchanged.
+
+## Measurement definitions and asymmetries - 2026-08-08
+
+- **`unsuccessful_action_count` is a sum across four event types and is not comparable
+  between the two benches on its own.** It counts `IncorrectToolSelected`,
+  `IncorrectComponentInteraction`, `DeviceTestFailed` and `UnsuccessfulAction` together.
+  The four per-type counts appended to `task_summary.csv` at `derivation_version` 1.1
+  are the columns to compare; the sum is retained for continuity.
+- The two benches do not offer the same failure opportunities. The computer bench can
+  record an incorrect component interaction through `computer.ram`, seated in the
+  board's fourth memory slot; the fan bench cannot, because `fan.faulty-fuse` was stowed
+  during the diagnostic framing pass and was that scene's only other `RepairAction`.
+  Neither bench offers an incorrect tool: both tool trays hold one screwdriver. So in
+  practice the fan's failure count can only come from failed device tests, while the
+  computer's has two sources. **This asymmetry was not equalised.** Manufacturing a
+  second wrong part on the fan bench to balance a count would reintroduce the assembly
+  reading that the framing pass removed. `fan.faulty-fuse` is deactivated, not deleted;
+  reactivating the GameObject restores it exactly, and the builders refresh a stowed
+  part before putting it back.
+- Every interactable lifts its own colour while an interactor is on it, with one tint
+  for all of them. It marks which objects respond to the controller, not which one is
+  the answer, but it does narrow the search space to the interactive set and should be
+  described as an affordance cue in any write-up.
+
+## Content and configuration - 2026-08-08
+
+- `ResearchTaskDefinition.thaiTitle`, `japaneseTitle`, `thaiParticipantInstructions` and
+  `japaneseParticipantInstructions` are **read by nothing**. The work order's Thai and
+  Japanese wording is hardcoded in `LocalizedTaskBrief.cs`. The fields were left empty
+  rather than filled in, because filling them would imply content that no code reads.
+  The information sources are different: `InformationSourceController` does read
+  `thaiTitle`/`japaneseTitle` and the corresponding content fields from
+  `InformationSourceDefinition`, and all referenced sources carry all three languages.
+- `LocalizedTaskBrief` finds its text with `transform.Find("Heading")` and
+  `transform.Find("Body")`. Both return null silently and `Refresh` then returns without
+  touching anything, so a rebuild that renamed either child would leave every Thai and
+  Japanese participant reading the English brief with nothing logged. A scene integrity
+  test now asserts both children exist with a `TMP_Text`.
+- Translated wording still awaits approval and linguistic equivalence review. This is
+  unchanged from 2026-08-02.
+- The information reader is a fixed left-side station and is deliberately **not**
+  repositionable by the participant. `information_source_layout_id` is a logged variable
+  and relative salience is part of what the study measures, so making the reader movable
+  is a protocol decision, not a usability fix.
+- Build Settings still include `Assets/XRI_Examples/Scenes/XRI_Examples_Main.unity` at
+  index 4. Nothing in the research code loads it, but it ships inside a research build.
+  It was left in place because the project's stated invariant is that the original XRI
+  example scenes and assets remain untouched; removing it is the researcher's call.
+- The application identifier is `com.unity.xr.interaction.examples` on both Android and
+  Standalone — Unity's identifier for the example package, not a research application
+  id. On Android it also determines where `Application.persistentDataPath` puts session
+  data. Changing it is an app-identity decision and was not made here.

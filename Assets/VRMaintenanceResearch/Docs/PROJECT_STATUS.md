@@ -1,6 +1,79 @@
 # VR Maintenance Research - Project Status
 
-## Current phase
+## Current phase - 2026-08-08
+
+A participant can now complete a whole session inside the headset. Before this pass
+they could not: `ResearcherTaskControls` is the only caller of
+`CompleteCurrentTaskAndAdvance`, `SafetyStop`, `AbortTask` and `Retry`, and it is an
+IMGUI panel behind F9 that returned early unless `developmentMode` was set. With
+development mode off - the configuration an actual participant run uses - there was
+no route from the first task to the second and no safety stop for anyone. With it on,
+the route existed only on the desktop.
+
+Editor-side work is complete against the current design. What remains is physical
+Meta Quest 3 validation, approved translations, and advisor review of the spatial
+and framing changes. No hardware claim is made anywhere in this document.
+
+### Sections below are the record up to 2026-08-03
+
+The three dated sections that follow describe the visual redesign and the spatial
+verification. The ITEM_3D model rebuild (`298a538`, `e7cd4d4`, `c02bb64`), the
+diagnostic framing pass (`de7d5fd`) and the collider-shadowing fix (`743b1c3`) are
+recorded in `Docs/Verification/ITEM_3D_REBUILD_RECORD.md` and
+`Docs/Verification/DIAGNOSTIC_FRAMING_RECORD.md`.
+
+## Participant flow, telemetry and regression cover - 2026-08-08
+
+- `TaskStatusBoard` carries a Continue button that appears only once the task has
+  already reached a terminal state, so it advances the session without deciding
+  anything about the task. It reuses the board's existing world-space canvas and
+  `TrackedDeviceGraphicRaycaster`, so it is reachable by a controller ray.
+- `ResearcherTaskControls` no longer gates itself on `developmentMode`. Reset Task and
+  Skip Training still hide outside development mode and both underlying methods
+  self-gate. The panel is the operator surface on the PC running Quest Link.
+- `TaskReset` was being dropped. `ResetDevelopmentTask` logged it before `EndTask`, and
+  a task that had already ended closed its writer when it ended, so resetting a
+  finished task wrote `Dropped event before task writer: TaskReset` to the technical
+  log and nothing to the event stream. It is now logged after `StartAttempt`, in the
+  attempt it creates, carrying the previous attempt id.
+- `task_summary.csv` gained `incorrect_tool_selected_count`,
+  `incorrect_component_interaction_count`, `device_test_failed_count` and
+  `unsuccessful_action_event_count`. `derivation_version` is `1.1`; the raw event
+  schema is unchanged at `1.0` and the columns are appended at the end.
+- Runtime errors and exceptions now reach `technical_log.txt`, and the first fifty
+  exceptions per session also become `TechnicalError` rows.
+- `VRTraining` still had the collider-shadowing bug that `743b1c3` fixed in the two
+  task scenes: only the workstation builders called `BindOwnColliders`, so
+  `training.training-cylinder` kept an empty collider list.
+  `TrainingSceneBuilder` now binds too. All three training stable ids are unchanged.
+- `TrainingDevelopment.availableComponents` declared `training.cube-a/-b/cylinder`
+  while the scene logs `training.training-cube-a/-b/-cylinder`. The manifest is read
+  only by the visual validator and the scene ids are the ones that reach the logs, so
+  the manifest was corrected. The validator now reports ALL SCENES PASS with no
+  warnings at all, for the first time.
+
+## Executed evidence - 2026-08-08
+
+Editor-side only. No Quest hardware run and no human pilot data.
+
+- `Docs/Verification/Scene_Integrity_Tests.txt` - 7/7 PASS. Stable id uniqueness,
+  collider ownership, the required repair object, both task orders resolving to
+  enabled build scenes, information-source localisation, work-order localisation
+  wiring, and English task fallbacks.
+- `Docs/Verification/Full_Flow_Walkthrough_ComputerThenFan.txt` and
+  `Full_Flow_Walkthrough_FanThenComputer.txt` - both WALKTHROUGH PASSED. Setup,
+  training, first task, second task and end of session, driven with
+  `developmentMode` off, across the scene loads that separate them.
+- `Docs/Verification/Runtime_Checks_ComputerRepairTask.txt` and
+  `Runtime_Checks_FanRepairTask.txt` - fail, repair, pass, reset, plus the Continue
+  button appearing after completion and disappearing after reset.
+- `VR Maintenance Research/Run Foundation Edit Mode Tests` - 6/6 PASS.
+- Three consecutive walkthrough sessions wrote three separate `Sessions` folders with
+  no overwriting. Every technical log is empty: no dropped events, no exceptions.
+- Zero console errors throughout. The remaining warnings are XRI simulator haptics
+  and a desktop audio driver fallback, both from running without a headset attached.
+
+## Earlier phases
 
 Visual redesign is complete on branch `visual-polish-claude`, built from the validated
 baseline `f117cc8`. The graybox prototype is now a clean academic VR maintenance
