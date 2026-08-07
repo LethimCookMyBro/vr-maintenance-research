@@ -25,6 +25,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             BuildStationSigns();
             BenchDressing.Build(0f, 1.30f, 0.62f, withTools: false);
 
+            // Same reason as the two workstation builders: an interactable with an empty
+            // collider list auto-collects GetComponentsInChildren<Collider>() and answers
+            // for its children. Training was left out of the original fix, so
+            // training.training-cylinder was still unbound.
+            BindOwnColliders();
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[TrainingScene] rebuilt");

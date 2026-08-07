@@ -1,0 +1,9 @@
+=== scene integrity tests ===
+PASS StableObjectIdsAreUniqueAndDeliberateInEveryScene
+PASS EveryInteractableAnswersOnlyForItsOwnColliders
+PASS EveryTaskSceneKeepsTheRepairObjectItsDefinitionRequires
+PASS BothTaskOrdersResolveToEnabledBuildScenes
+PASS EveryInformationSourceCarriesAllThreeLanguages
+PASS BothTaskScenesCanLocalizeTheWorkOrder
+PASS EveryTaskDefinitionCarriesItsEnglishFallback
+ALL 7 PASS

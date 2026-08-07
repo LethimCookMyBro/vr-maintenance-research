@@ -23,10 +23,14 @@ MonoBehaviour:
   englishTitle: Neutral XR Training
   englishParticipantInstructions: Practice movement, grabbing, a socket, ray interaction,
     neutral information access, and reset. No maintenance solution is shown.
+  thaiTitle: 
+  japaneseTitle: 
+  thaiParticipantInstructions: 
+  japaneseParticipantInstructions: 
   availableComponents:
-  - training.cube-a
-  - training.cube-b
-  - training.cylinder
+  - training.training-cube-a
+  - training.training-cube-b
+  - training.training-cylinder
   availableTools: []
   availableReplacementParts: []
   informationSources: []

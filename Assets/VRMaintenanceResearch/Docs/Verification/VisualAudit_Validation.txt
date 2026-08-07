@@ -4,9 +4,6 @@
   PASS
 === VRTraining ===
   PASS
-  WARN task part 'training.cube-a' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
-  WARN task part 'training.cube-b' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
-  WARN task part 'training.cylinder' declared by TrainingDevelopment has no matching StableObjectId in the scene (pre-existing data mismatch, not changed by the visual pass)
 === ResearcherSetup ===
   PASS
 ALL SCENES PASS
