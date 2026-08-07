@@ -9,10 +9,20 @@ namespace TMUVR.MaintenanceResearch
     /// Abort Task, Safety Stop, Continue to Next Task, and the two training controls.
     ///
     /// Changes are presentation only:
-    ///  - still gated on developmentMode, and now additionally collapsed by default so
-    ///    it does not sit over the participant view during normal operation,
+    ///  - collapsed by default so it does not sit over the participant view during
+    ///    normal operation,
     ///  - opened with the F9 key,
     ///  - Safety Stop separated by a rule and given the reserved amber/red treatment.
+    ///
+    /// The panel is no longer gated on developmentMode. It was, which meant a real
+    /// participant session had no Safety Stop and no way to advance from the first task
+    /// to the second: this panel is the only caller of SafetyStop, AbortTask, Retry and
+    /// CompleteCurrentTaskAndAdvance. The two development-only buttons (Reset Task,
+    /// Skip Training) still hide outside development mode, and both underlying methods
+    /// self-gate regardless.
+    ///
+    /// This is the operator surface on the PC running Quest Link. The participant's own
+    /// in-headset route out of a finished task is the Continue button on TaskStatusBoard.
     /// </summary>
     public sealed class ResearcherTaskControls : MonoBehaviour
     {
@@ -60,7 +70,7 @@ namespace TMUVR.MaintenanceResearch
         void OnGUI()
         {
             var session = ResearchSessionManager.Instance;
-            if (session == null || !session.Configuration.developmentMode)
+            if (session == null)
                 return;
 
             EnsureStyles();
@@ -68,19 +78,20 @@ namespace TMUVR.MaintenanceResearch
             if (!expanded)
                 return;
 
-            var height = trainingScene ? 116f : 268f;
+            var development = session.Configuration.developmentMode;
+            var height = trainingScene ? (development ? 116f : 88f) : (development ? 268f : 242f);
             GUILayout.BeginArea(new Rect(Screen.width - PanelWidth - 12f, 12f, PanelWidth, height), GUIContent.none, PanelStyle());
             GUILayout.Space(8f);
 
             if (trainingScene)
             {
-                GUILayout.Label("Development Training Controls", headingStyle);
+                GUILayout.Label(development ? "Training Controls (Development)" : "Training Controls", headingStyle);
                 if (GUILayout.Button("Continue to First Task", normalButton))
                 {
                     FindFirstObjectByType<TrainingMaintenanceTask>()?.CompleteTraining();
                     session.StartFirstTaskAfterTraining();
                 }
-                if (GUILayout.Button("Skip Training (development only)", normalButton))
+                if (development && GUILayout.Button("Skip Training (development only)", normalButton))
                 {
                     FindFirstObjectByType<TrainingMaintenanceTask>()?.CompleteTraining();
                     session.SkipTrainingWhenPermitted();
@@ -89,14 +100,14 @@ namespace TMUVR.MaintenanceResearch
                 return;
             }
 
-            GUILayout.Label("Researcher Controls (Development)", headingStyle);
+            GUILayout.Label(development ? "Researcher Controls (Development)" : "Researcher Controls", headingStyle);
             GUILayout.Label(task == null ? "Task unavailable" : "State: " + task.State, captionStyle);
             GUILayout.Space(4f);
 
             if (GUILayout.Button("Pause", normalButton)) task?.PauseTask();
             if (GUILayout.Button("Resume", normalButton)) task?.ResumeTask();
             if (GUILayout.Button("Retry", normalButton)) task?.Retry();
-            if (GUILayout.Button("Reset Task", normalButton)) task?.ResetDevelopmentTask();
+            if (development && GUILayout.Button("Reset Task", normalButton)) task?.ResetDevelopmentTask();
             if (GUILayout.Button("Abort Task", normalButton)) task?.AbortTask();
 
             if (task != null && (task.State == TaskState.Completed || task.State == TaskState.Aborted || task.State == TaskState.TimedOut || task.State == TaskState.SafetyStopped))

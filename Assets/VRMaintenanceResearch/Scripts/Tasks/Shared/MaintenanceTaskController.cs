@@ -178,10 +178,20 @@ namespace TMUVR.MaintenanceResearch
             if (!allowDevelopmentReset || ResearchSessionManager.Instance == null || !ResearchSessionManager.Instance.Configuration.developmentMode)
                 return;
 
-            Log(ResearchEventType.TaskReset, "task.reset", "researcher-control", "success", "development_reset");
+            // Log the reset into the attempt it creates, not the one it closes.
+            // EndTask drops the task's writer, and a task that already reached a
+            // terminal state closed its writer when it ended, so a TaskReset logged
+            // before this point lands nowhere: resetting a finished task wrote
+            // "Dropped event before task writer: TaskReset" to the technical log and
+            // nothing to the event stream, while resetting a running one recorded
+            // normally. Recording it after StartAttempt always lands, and
+            // task_attempt_id plus the previous attempt in the detail keeps the chain
+            // between attempts explicit.
+            var previousAttempt = AttemptId;
             logger.EndTask(TaskId, TaskState.Reset);
             AttemptId++;
             StartAttempt();
+            Log(ResearchEventType.TaskReset, "task.reset", "researcher-control", "success", "development_reset;previous_attempt=" + previousAttempt);
         }
 
         public void NotifyInformation(InformationSourceDefinition source, ResearchEventType eventType, string detail)

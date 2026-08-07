@@ -12,9 +12,18 @@ namespace TMUVR.MaintenanceResearch
     public sealed class ResearchLogService : MonoBehaviour
     {
         const string SchemaVersion = "1.0";
+
+        // Raw event schema is unchanged, so SchemaVersion stays 1.0. The summary gained
+        // four per-type failure counts, which are derived from the same raw rows: the
+        // single unsuccessful_action_count collapsed IncorrectToolSelected,
+        // IncorrectComponentInteraction, DeviceTestFailed and UnsuccessfulAction into
+        // one number, and the two benches do not offer the same failure types, so that
+        // number is not comparable across tasks on its own. The four columns are
+        // appended at the end so a 1.0 parser reading by index still works.
+        const string DerivationVersion = "1.1";
         static readonly string[] EventHeader = { "schema_version", "participant_code", "session_id", "task_id", "task_attempt_id", "task_context", "task_order", "participant_group", "language", "layout_id", "information_source_layout_id", "timestamp_from_task_start_seconds", "absolute_timestamp_utc", "event_sequence_number", "event_type", "object_id", "object_category", "information_source_id", "information_source_type", "source_slot", "action_result", "task_state", "measurement_method", "coordinate_space_id", "position_x_m", "position_y_m", "position_z_m", "rotation_x", "rotation_y", "rotation_z", "rotation_w", "additional_value", "application_build_version", "task_content_version" };
         static readonly string[] MovementHeader = { "schema_version", "participant_code", "session_id", "task_id", "task_attempt_id", "timestamp_from_task_start_seconds", "absolute_timestamp_utc", "sample_sequence_number", "device_type", "coordinate_space_id", "position_x_m", "position_y_m", "position_z_m", "rotation_x", "rotation_y", "rotation_z", "rotation_w", "tracking_valid", "simulator_mode", "sampling_frequency_hz", "application_build_version", "task_content_version" };
-        static readonly string[] SummaryHeader = { "schema_version", "participant_code", "session_id", "task_id", "task_attempt_id", "derivation_version", "first_meaningful_action", "first_meaningful_action_timestamp_seconds", "first_information_source_opened", "first_information_source_timestamp_seconds", "action_occurred_before_first_information_access", "returned_to_information_after_unsuccessful_action", "information_source_switch_count", "repeated_information_access_count", "total_information_viewing_duration_seconds", "manual_viewing_duration_seconds", "text_guide_viewing_duration_seconds", "video_viewing_duration_seconds", "visual_guide_viewing_duration_seconds", "unsuccessful_action_count", "retry_count", "device_test_count", "low_activity_period_count", "total_low_activity_duration_seconds", "completion_status", "completion_time_seconds", "timeout_status", "abort_status" };
+        static readonly string[] SummaryHeader = { "schema_version", "participant_code", "session_id", "task_id", "task_attempt_id", "derivation_version", "first_meaningful_action", "first_meaningful_action_timestamp_seconds", "first_information_source_opened", "first_information_source_timestamp_seconds", "action_occurred_before_first_information_access", "returned_to_information_after_unsuccessful_action", "information_source_switch_count", "repeated_information_access_count", "total_information_viewing_duration_seconds", "manual_viewing_duration_seconds", "text_guide_viewing_duration_seconds", "video_viewing_duration_seconds", "visual_guide_viewing_duration_seconds", "unsuccessful_action_count", "retry_count", "device_test_count", "low_activity_period_count", "total_low_activity_duration_seconds", "completion_status", "completion_time_seconds", "timeout_status", "abort_status", "incorrect_tool_selected_count", "incorrect_component_interaction_count", "device_test_failed_count", "unsuccessful_action_event_count" };
         readonly Dictionary<ResearchTaskId, TaskLog> taskLogs = new Dictionary<ResearchTaskId, TaskLog>();
         ResearchSessionConfig config;
         string rootPath;
@@ -22,6 +31,8 @@ namespace TMUVR.MaintenanceResearch
         long nextEventSequence;
         bool started;
         bool closed;
+        const int MaxTechnicalErrorEvents = 50;
+        int technicalErrorsLogged;
         StreamWriter sessionEvents;
         StreamWriter technicalLog;
 
@@ -48,6 +59,8 @@ namespace TMUVR.MaintenanceResearch
                 sessionEvents = CsvUtility.CreateUtf8Writer(Path.Combine(rootPath, "session_events.csv"), EventHeader);
                 technicalLog = new StreamWriter(Path.Combine(rootPath, "technical_log.txt"), true, new UTF8Encoding(false)) { AutoFlush = true };
                 started = true;
+                technicalErrorsLogged = 0;
+                Application.logMessageReceived += OnUnityLog;
                 WriteManifest("InProgress");
                 LogEvent(ResearchTaskId.Session, 0, "session", "session", ResearchEventType.SessionStarted, "session", "session", "", "", "", "success", TaskState.Active, "system", Vector3.zero, Quaternion.identity, "session_started");
                 return true;
@@ -201,8 +214,10 @@ namespace TMUVR.MaintenanceResearch
                 : CsvUtility.CreateUtf8Writer(summaryPath, SummaryHeader);
             var completionTime = records.Count == 0 ? 0d : records[records.Count - 1].elapsedSeconds;
             var actionBeforeInformation = meaningful.sequence > 0 && (firstSource.sequence == 0 || (meaningful.eventType != ResearchEventType.InformationSourceOpened && meaningful.sequence < firstSource.sequence));
-            CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskLog.definition.taskId, taskLog.attemptId, "1.0", meaningful.sequence == 0 ? "" : meaningful.eventType.ToString(), meaningful.sequence == 0 ? "" : (object)meaningful.elapsedSeconds, firstSource.sequence == 0 ? "" : firstSource.informationSourceId, firstSource.sequence == 0 ? "" : (object)firstSource.elapsedSeconds, actionBeforeInformation, firstFailure.sequence > 0 && sourceOpens.Any(source => source.sequence > firstFailure.sequence), switches, repeats, durations.totalInformation, durations.manual, durations.text, durations.video, durations.visual, records.Count(record => IsFailure(record.eventType)), records.Count(record => record.eventType == ResearchEventType.RetryStarted), records.Count(record => record.eventType == ResearchEventType.DeviceTestStarted), durations.lowActivityPeriods, durations.lowActivity, terminalState.ToString(), completionTime, terminalState == TaskState.TimedOut, terminalState == TaskState.Aborted || terminalState == TaskState.SafetyStopped);
+            CsvUtility.WriteRow(writer, SchemaVersion, config.participantCode, config.sessionId, taskLog.definition.taskId, taskLog.attemptId, DerivationVersion, meaningful.sequence == 0 ? "" : meaningful.eventType.ToString(), meaningful.sequence == 0 ? "" : (object)meaningful.elapsedSeconds, firstSource.sequence == 0 ? "" : firstSource.informationSourceId, firstSource.sequence == 0 ? "" : (object)firstSource.elapsedSeconds, actionBeforeInformation, firstFailure.sequence > 0 && sourceOpens.Any(source => source.sequence > firstFailure.sequence), switches, repeats, durations.totalInformation, durations.manual, durations.text, durations.video, durations.visual, records.Count(record => IsFailure(record.eventType)), Count(records, ResearchEventType.RetryStarted), Count(records, ResearchEventType.DeviceTestStarted), durations.lowActivityPeriods, durations.lowActivity, terminalState.ToString(), completionTime, terminalState == TaskState.TimedOut, terminalState == TaskState.Aborted || terminalState == TaskState.SafetyStopped, Count(records, ResearchEventType.IncorrectToolSelected), Count(records, ResearchEventType.IncorrectComponentInteraction), Count(records, ResearchEventType.DeviceTestFailed), Count(records, ResearchEventType.UnsuccessfulAction));
         }
+
+        static int Count(List<EventRecord> records, ResearchEventType type) => records.Count(record => record.eventType == type);
 
         static (double totalInformation, double manual, double text, double video, double visual, int lowActivityPeriods, double lowActivity) DeriveDurations(List<EventRecord> records)
         {
@@ -244,11 +259,34 @@ namespace TMUVR.MaintenanceResearch
         static string RotationCell(bool tracked, float value) => tracked ? value.ToString("0.0000000", CultureInfo.InvariantCulture) : "";
         double ElapsedSeconds => Math.Max(0d, (DateTimeOffset.UtcNow - sessionStartedUtc).TotalSeconds);
         void WriteTechnical(string text) { try { technicalLog?.WriteLine(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture) + " " + text); } catch { } }
+        /// <summary>
+        /// A runtime exception that breaks an interaction mid-trial used to leave no
+        /// trace in the session folder, so a broken trial looked like a slow one. Every
+        /// error and exception now reaches technical_log.txt; only exceptions also
+        /// become a TechnicalError row, and only the first
+        /// <see cref="MaxTechnicalErrorEvents"/> of them, so a per-frame exception
+        /// cannot bury the event stream it is meant to annotate.
+        /// </summary>
+        void OnUnityLog(string message, string stackTrace, LogType type)
+        {
+            if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert)
+                return;
+
+            WriteTechnical(type + ": " + message);
+            if (type != LogType.Exception || technicalErrorsLogged >= MaxTechnicalErrorEvents)
+                return;
+
+            technicalErrorsLogged++;
+            var truncated = message.Length > 200 ? message.Substring(0, 200) : message;
+            LogEvent(ResearchTaskId.Session, 0, "session", "session", ResearchEventType.TechnicalError, "system." + type.ToString().ToLowerInvariant(), "system", "", "", "", "failure", TaskState.Active, "system", Vector3.zero, Quaternion.identity, truncated);
+        }
+
         void CloseAll()
         {
             if (closed)
                 return;
             closed = true;
+            Application.logMessageReceived -= OnUnityLog;
             foreach (var taskLog in taskLogs.Values)
             {
                 taskLog.events?.Dispose();

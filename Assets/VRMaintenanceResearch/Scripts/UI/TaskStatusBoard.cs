@@ -6,10 +6,14 @@ using UnityEngine.XR.Interaction.Toolkit.UI;
 namespace TMUVR.MaintenanceResearch
 {
     /// <summary>
-    /// Read-only world-space status board mounted above and behind the workbench.
-    /// It only mirrors <see cref="MaintenanceTaskController.State"/> and the attempt
-    /// number. It never writes a research event, never changes task state and never
-    /// names the faulty component.
+    /// World-space status board mounted above and behind the workbench. It mirrors
+    /// <see cref="MaintenanceTaskController.State"/> and the attempt number, and it
+    /// carries the participant's only in-headset route out of a finished task.
+    ///
+    /// It never writes a research event, never changes task state and never names the
+    /// faulty component. The Continue button appears only once the task has already
+    /// reached a terminal state, so it advances the session without deciding anything
+    /// about the task: the participant cannot use it to skip or shortcut the work.
     /// </summary>
     public sealed class TaskStatusBoard : MonoBehaviour
     {
@@ -21,8 +25,10 @@ namespace TMUVR.MaintenanceResearch
         TextMeshProUGUI stateLabel;
         TextMeshProUGUI attemptLabel;
         Image statePip;
+        Button continueButton;
         TaskState lastState = (TaskState)(-1);
         int lastAttempt = -1;
+        bool advancing;
 
         void Start()
         {
@@ -71,7 +77,37 @@ namespace TMUVR.MaintenanceResearch
 
             attemptLabel = ResearchUiKit.Label("Attempt", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Right);
             ResearchUiKit.Place(attemptLabel.rectTransform, 340f, 94f, 656f, 36f);
+
+            continueButton = ResearchUiKit.TextButton("Continue", background.transform, "Continue", 48f, ResearchUiKit.Accent, Color.white, out _);
+            ResearchUiKit.Place(continueButton.image.rectTransform, 44f, 160f, 952f, 170f);
+            continueButton.onClick.AddListener(Advance);
+            continueButton.gameObject.SetActive(false);
         }
+
+        /// <summary>
+        /// The participant's route from a finished task to the next one, so the headset
+        /// never has to come off mid-session. Guarded against a second press because
+        /// CompleteCurrentTaskAndAdvance counts tasks and loads a scene.
+        /// </summary>
+        void Advance()
+        {
+            if (advancing)
+                return;
+            advancing = true;
+            continueButton.interactable = false;
+            var session = ResearchSessionManager.Instance;
+            if (session == null)
+            {
+                advancing = false;
+                continueButton.interactable = true;
+                return;
+            }
+            session.CompleteCurrentTaskAndAdvance();
+        }
+
+        static bool IsTerminal(TaskState state) =>
+            state == TaskState.Completed || state == TaskState.TimedOut ||
+            state == TaskState.Aborted || state == TaskState.SafetyStopped;
 
         void Refresh(bool force)
         {
@@ -92,6 +128,13 @@ namespace TMUVR.MaintenanceResearch
             stateLabel.text = "Status: " + Readable(task.State);
             attemptLabel.text = "Attempt " + task.AttemptId;
             statePip.color = PipColor(task.State);
+
+            if (continueButton == null)
+                return;
+            var terminal = IsTerminal(task.State);
+            continueButton.gameObject.SetActive(terminal);
+            if (terminal && !advancing)
+                continueButton.interactable = true;
         }
 
         static string Readable(TaskState state)

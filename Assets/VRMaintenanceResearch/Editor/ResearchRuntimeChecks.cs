@@ -73,10 +73,39 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             report.AppendLine($"after test #2 (repaired): state={controller.State} " +
                               $"{(controller.State == TaskState.Completed ? "PASS task completed" : "FAIL task did not complete")}");
 
-            // 4. Reset must put the task back to a runnable state.
+            // 4. A finished task must offer the participant a way out inside the headset.
+            //    Without this the only route to the next task is the researcher's F9
+            //    desktop panel, which means removing the headset mid-session.
+            const BindingFlags boardFlags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var board = Object.FindFirstObjectByType<TaskStatusBoard>();
+            var boardRefresh = typeof(TaskStatusBoard).GetMethod("Refresh", boardFlags);
+            if (board == null)
+            {
+                report.AppendLine("FAIL no TaskStatusBoard in scene — no in-headset route out of the task");
+            }
+            else
+            {
+                // Update() has not run since the state changed inside this one call, so
+                // drive the refresh the same way a frame would.
+                boardRefresh?.Invoke(board, new object[] { true });
+                var unlocked = ContinueUnlocked(board, typeof(TaskStatusBoard), boardFlags);
+                report.AppendLine($"status board Continue after completion: unlocked={unlocked} " +
+                                  $"{(unlocked ? "PASS reachable by controller ray" : "FAIL participant cannot advance in VR")}");
+            }
+
+            // 5. Reset must put the task back to a runnable state, and must take the
+            //    Continue button away again so it cannot skip a live task.
             controller.ResetDevelopmentTask();
             report.AppendLine($"after reset: state={controller.State} " +
                               $"{(controller.State == TaskState.Active || controller.State == TaskState.NotStarted ? "PASS reset" : "FAIL reset left " + controller.State)}");
+
+            if (board != null)
+            {
+                boardRefresh?.Invoke(board, new object[] { true });
+                var stillUnlocked = ContinueUnlocked(board, typeof(TaskStatusBoard), boardFlags);
+                report.AppendLine($"status board Continue after reset: unlocked={stillUnlocked} " +
+                                  $"{(stillUnlocked ? "FAIL Continue survives a reset and can skip a live task" : "PASS hidden while the task is running")}");
+            }
 
             Write(report, scene);
         }
