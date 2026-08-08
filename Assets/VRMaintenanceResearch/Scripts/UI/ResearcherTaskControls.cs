@@ -110,10 +110,24 @@ namespace TMUVR.MaintenanceResearch
             if (development && GUILayout.Button("Reset Task", normalButton)) task?.ResetDevelopmentTask();
             if (GUILayout.Button("Abort Task", normalButton)) task?.AbortTask();
 
+            // Advancing is deliberately here and not on the participant's status board:
+            // the headset comes off between the two tasks for NASA-TLX, so a control in
+            // VR would let the participant load the second task before the questionnaire
+            // was administered.
             if (task != null && (task.State == TaskState.Completed || task.State == TaskState.Aborted || task.State == TaskState.TimedOut || task.State == TaskState.SafetyStopped))
             {
-                if (GUILayout.Button("Continue to Next Task", normalButton))
+                if (session.SessionComplete)
+                {
+                    // The session ends in the finished task scene rather than jumping back
+                    // to ResearcherSetup, which is not head-tracked. Press this once the
+                    // participant has removed the headset.
+                    if (GUILayout.Button("Return to Setup", normalButton))
+                        session.ReturnToSetup();
+                }
+                else if (GUILayout.Button("Continue to Next Task", normalButton))
+                {
                     session.CompleteCurrentTaskAndAdvance();
+                }
             }
 
             GUILayout.Space(8f);

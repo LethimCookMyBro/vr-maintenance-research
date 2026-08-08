@@ -7,6 +7,7 @@ state at start: Active
 after test #1 (no repair): state=Active PASS expected fail, task still active
 repair object found: Main Power Connector (kind=RepairAction)
 after test #2 (repaired): state=Completed PASS task completed
-status board Continue after completion: unlocked=True PASS reachable by controller ray
+status board notice after completion: shown=True PASS participant is told the task is over
+status board controls: 0 PASS read-only, cannot skip NASA-TLX
 after reset: state=Active PASS reset
-status board Continue after reset: unlocked=False PASS hidden while the task is running
+status board notice after reset: shown=False PASS hidden while the task is running

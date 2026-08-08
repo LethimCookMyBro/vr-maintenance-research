@@ -2,13 +2,17 @@
 
 ## Current phase - 2026-08-08
 
-A participant can now complete a whole session inside the headset. Before this pass
-they could not: `ResearcherTaskControls` is the only caller of
+A session can now be run end to end in the configuration a real participant run uses.
+Before this pass it could not: `ResearcherTaskControls` is the only caller of
 `CompleteCurrentTaskAndAdvance`, `SafetyStop`, `AbortTask` and `Retry`, and it is an
 IMGUI panel behind F9 that returned early unless `developmentMode` was set. With
-development mode off - the configuration an actual participant run uses - there was
-no route from the first task to the second and no safety stop for anyone. With it on,
-the route existed only on the desktop.
+development mode off there was no route from the first task to the second and no
+safety stop for anyone, participant or researcher.
+
+The division of control is deliberate and follows the protocol: the participant does
+everything inside the headset that belongs to the task - training, reading, tools,
+components, inspect, retry - and the researcher owns the transitions between tasks,
+because the headset comes off between them for NASA-TLX.
 
 Editor-side work is complete against the current design. What remains is physical
 Meta Quest 3 validation, approved translations, and advisor review of the spatial
@@ -24,13 +28,27 @@ recorded in `Docs/Verification/ITEM_3D_REBUILD_RECORD.md` and
 
 ## Participant flow, telemetry and regression cover - 2026-08-08
 
-- `TaskStatusBoard` carries a Continue button that appears only once the task has
-  already reached a terminal state, so it advances the session without deciding
-  anything about the task. It reuses the board's existing world-space canvas and
-  `TrackedDeviceGraphicRaycaster`, so it is reachable by a controller ray.
-- `ResearcherTaskControls` no longer gates itself on `developmentMode`. Reset Task and
-  Skip Training still hide outside development mode and both underlying methods
-  self-gate. The panel is the operator surface on the PC running Quest Link.
+- `ResearcherTaskControls` no longer gates itself on `developmentMode`, which is what
+  restores every operator control - Pause, Resume, Retry, Abort, Safety Stop and
+  Continue to Next Task - in a real session. Reset Task and Skip Training still hide
+  outside development mode and both underlying methods self-gate. The panel is the
+  operator surface on the PC running Quest Link.
+- `TaskStatusBoard` shows a finished notice in the participant's language once the
+  task ends, and carries **no control**. The participant removes the headset between
+  the two tasks for NASA-TLX, so a Continue button in VR would let them load the
+  second task before the questionnaire was administered. Advancing is the
+  researcher's.
+- The session now **ends in the finished task scene** rather than loading
+  `ResearcherSetup`. That scene has no XR Origin and its `Setup Camera` carries no
+  `TrackedPoseDriver`, so loading it at the end put a participant who was still
+  wearing the headset in front of a view that does not follow their head, and showed
+  them the configuration screen with the participant code on it.
+  `ResearchSessionManager.ReturnToSetup()` is the researcher's route back, on a
+  desktop button that appears once the session is complete.
+- The `OnMouseEnter`/`OnMouseDown` path on interactables and information sources is
+  gated on `developmentMode`. The game view sits on the researcher's monitor during a
+  Quest Link session, and a stray click over it wrote hovers and grabs into the
+  participant's event stream under `interactor=mouse`.
 - `TaskReset` was being dropped. `ResetDevelopmentTask` logged it before `EndTask`, and
   a task that had already ended closed its writer when it ended, so resetting a
   finished task wrote `Dropped event before task writer: TaskReset` to the technical

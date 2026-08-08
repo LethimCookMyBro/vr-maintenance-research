@@ -89,6 +89,9 @@ namespace TMUVR.MaintenanceResearch
                 SceneManager.LoadScene(FirstTaskScene());
         }
 
+        /// <summary>True once both tasks are done. The scene deliberately does not change.</summary>
+        public bool SessionComplete { get; private set; }
+
         public void CompleteCurrentTaskAndAdvance()
         {
             completedTasks++;
@@ -98,7 +101,21 @@ namespace TMUVR.MaintenanceResearch
                 return;
             }
 
+            // Stay in the finished task scene. ResearcherSetup has no XR Origin and its
+            // Setup Camera carries no TrackedPoseDriver, so loading it here put a
+            // participant who was still wearing the headset in front of a view that does
+            // not follow their head - and it would show them the configuration screen,
+            // participant code included. The researcher returns to setup from the desktop
+            // panel once the headset is off.
+            SessionComplete = true;
             logger.EndSession("Completed");
+        }
+
+        /// <summary>Researcher-only, from the desktop panel, once the headset is off.</summary>
+        public void ReturnToSetup()
+        {
+            SessionComplete = false;
+            completedTasks = 0;
             SceneManager.LoadScene(researcherSetupScene);
         }
 

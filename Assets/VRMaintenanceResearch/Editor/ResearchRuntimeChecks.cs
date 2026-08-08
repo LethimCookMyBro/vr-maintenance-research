@@ -73,28 +73,33 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             report.AppendLine($"after test #2 (repaired): state={controller.State} " +
                               $"{(controller.State == TaskState.Completed ? "PASS task completed" : "FAIL task did not complete")}");
 
-            // 4. A finished task must offer the participant a way out inside the headset.
-            //    Without this the only route to the next task is the researcher's F9
-            //    desktop panel, which means removing the headset mid-session.
+            // 4. A finished task must tell the participant it is over, in their own
+            //    language, and must not hand them a control: the headset comes off
+            //    between the two tasks for NASA-TLX, so anything pressable here could
+            //    load the next task before that questionnaire was administered.
             const BindingFlags boardFlags = BindingFlags.Instance | BindingFlags.NonPublic;
             var board = Object.FindFirstObjectByType<TaskStatusBoard>();
             var boardRefresh = typeof(TaskStatusBoard).GetMethod("Refresh", boardFlags);
             if (board == null)
             {
-                report.AppendLine("FAIL no TaskStatusBoard in scene — no in-headset route out of the task");
+                report.AppendLine("FAIL no TaskStatusBoard in scene — the participant is told nothing when the task ends");
             }
             else
             {
                 // Update() has not run since the state changed inside this one call, so
                 // drive the refresh the same way a frame would.
                 boardRefresh?.Invoke(board, new object[] { true });
-                var unlocked = ContinueUnlocked(board, typeof(TaskStatusBoard), boardFlags);
-                report.AppendLine($"status board Continue after completion: unlocked={unlocked} " +
-                                  $"{(unlocked ? "PASS reachable by controller ray" : "FAIL participant cannot advance in VR")}");
+                var shown = NoticeShown(board, boardFlags);
+                report.AppendLine($"status board notice after completion: shown={shown} " +
+                                  $"{(shown ? "PASS participant is told the task is over" : "FAIL nothing tells the participant the task ended")}");
+
+                var buttons = board.GetComponentsInChildren<UnityEngine.UI.Button>(true).Length;
+                report.AppendLine($"status board controls: {buttons} " +
+                                  $"{(buttons == 0 ? "PASS read-only, cannot skip NASA-TLX" : "FAIL the participant can press something on the board")}");
             }
 
             // 5. Reset must put the task back to a runnable state, and must take the
-            //    Continue button away again so it cannot skip a live task.
+            //    finished notice away again so a live task does not read as over.
             controller.ResetDevelopmentTask();
             report.AppendLine($"after reset: state={controller.State} " +
                               $"{(controller.State == TaskState.Active || controller.State == TaskState.NotStarted ? "PASS reset" : "FAIL reset left " + controller.State)}");
@@ -102,9 +107,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             if (board != null)
             {
                 boardRefresh?.Invoke(board, new object[] { true });
-                var stillUnlocked = ContinueUnlocked(board, typeof(TaskStatusBoard), boardFlags);
-                report.AppendLine($"status board Continue after reset: unlocked={stillUnlocked} " +
-                                  $"{(stillUnlocked ? "FAIL Continue survives a reset and can skip a live task" : "PASS hidden while the task is running")}");
+                var stillShown = NoticeShown(board, boardFlags);
+                report.AppendLine($"status board notice after reset: shown={stillShown} " +
+                                  $"{(stillShown ? "FAIL a running task still reads as finished" : "PASS hidden while the task is running")}");
             }
 
             Write(report, scene);
@@ -153,14 +158,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
-        /// The board has no "ready" property: it unlocks by enabling its Continue
-        /// button, so that button's own state is the thing to assert.
+        /// The training board has no "ready" property: it unlocks by enabling its
+        /// Continue button, so that button's own state is the thing to assert.
         /// </summary>
         static bool ContinueUnlocked(object board, System.Type type, BindingFlags flags)
         {
             var field = type.GetField("continueButton", flags);
             var button = field?.GetValue(board) as UnityEngine.UI.Button;
             return button != null && button.interactable && button.gameObject.activeSelf;
+        }
+
+        /// <summary>The status board signals a finished task by enabling the panel its notice sits in.</summary>
+        static bool NoticeShown(TaskStatusBoard board, BindingFlags flags)
+        {
+            var label = typeof(TaskStatusBoard).GetField("finishedLabel", flags)?.GetValue(board) as TMPro.TextMeshProUGUI;
+            return label != null && label.transform.parent.gameObject.activeSelf;
         }
 
         static void Write(StringBuilder report, string scene)

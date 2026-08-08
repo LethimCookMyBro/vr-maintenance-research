@@ -6,14 +6,16 @@ using UnityEngine.XR.Interaction.Toolkit.UI;
 namespace TMUVR.MaintenanceResearch
 {
     /// <summary>
-    /// World-space status board mounted above and behind the workbench. It mirrors
-    /// <see cref="MaintenanceTaskController.State"/> and the attempt number, and it
-    /// carries the participant's only in-headset route out of a finished task.
+    /// Read-only world-space status board mounted above and behind the workbench. It
+    /// mirrors <see cref="MaintenanceTaskController.State"/> and the attempt number,
+    /// and once the task ends it tells the participant, in their own language, that
+    /// the work is done and to wait.
     ///
     /// It never writes a research event, never changes task state and never names the
-    /// faulty component. The Continue button appears only once the task has already
-    /// reached a terminal state, so it advances the session without deciding anything
-    /// about the task: the participant cannot use it to skip or shortcut the work.
+    /// faulty component — and it deliberately carries no control. The participant
+    /// removes the headset between the two tasks for NASA-TLX, so a Continue button
+    /// here would let them load the second task before that questionnaire was
+    /// administered. Advancing is the researcher's, from the desktop panel.
     /// </summary>
     public sealed class TaskStatusBoard : MonoBehaviour
     {
@@ -24,11 +26,10 @@ namespace TMUVR.MaintenanceResearch
 
         TextMeshProUGUI stateLabel;
         TextMeshProUGUI attemptLabel;
+        TextMeshProUGUI finishedLabel;
         Image statePip;
-        Button continueButton;
         TaskState lastState = (TaskState)(-1);
         int lastAttempt = -1;
-        bool advancing;
 
         void Start()
         {
@@ -78,31 +79,28 @@ namespace TMUVR.MaintenanceResearch
             attemptLabel = ResearchUiKit.Label("Attempt", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Right);
             ResearchUiKit.Place(attemptLabel.rectTransform, 340f, 94f, 656f, 36f);
 
-            continueButton = ResearchUiKit.TextButton("Continue", background.transform, "Continue", 48f, ResearchUiKit.Accent, Color.white, out _);
-            ResearchUiKit.Place(continueButton.image.rectTransform, 44f, 160f, 952f, 170f);
-            continueButton.onClick.AddListener(Advance);
-            continueButton.gameObject.SetActive(false);
+            var finishedPanel = ResearchUiKit.Panel("Finished", background.transform, ResearchUiKit.Slate);
+            ResearchUiKit.Place(finishedPanel.rectTransform, 44f, 160f, 952f, 170f);
+            finishedLabel = ResearchUiKit.Label("Finished Text", finishedPanel.transform, string.Empty, 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Center);
+            ResearchUiKit.Stretch(finishedLabel.rectTransform, 16f);
+            finishedPanel.gameObject.SetActive(false);
         }
 
         /// <summary>
-        /// The participant's route from a finished task to the next one, so the headset
-        /// never has to come off mid-session. Guarded against a second press because
-        /// CompleteCurrentTaskAndAdvance counts tasks and loads a scene.
+        /// The one thing on this board addressed to the participant rather than the
+        /// researcher, so it is the one thing that has to be in their language. Same
+        /// hardcoded-switch shape as InformationSourceController.CompactSourceLabel.
+        /// It says the work is over and to wait; it does not say what happens next,
+        /// because what happens next is the researcher's script, not the software's.
         /// </summary>
-        void Advance()
+        static string FinishedMessage(ResearchLanguage language)
         {
-            if (advancing)
-                return;
-            advancing = true;
-            continueButton.interactable = false;
-            var session = ResearchSessionManager.Instance;
-            if (session == null)
+            switch (language)
             {
-                advancing = false;
-                continueButton.interactable = true;
-                return;
+                case ResearchLanguage.Thai: return "งานนี้เสร็จแล้ว\nกรุณารอผู้วิจัย";
+                case ResearchLanguage.Japanese: return "この作業は終了しました。\n研究者をお待ちください。";
+                default: return "This task is finished.\nPlease wait for the researcher.";
             }
-            session.CompleteCurrentTaskAndAdvance();
         }
 
         static bool IsTerminal(TaskState state) =>
@@ -129,12 +127,17 @@ namespace TMUVR.MaintenanceResearch
             attemptLabel.text = "Attempt " + task.AttemptId;
             statePip.color = PipColor(task.State);
 
-            if (continueButton == null)
+            if (finishedLabel == null)
                 return;
+
             var terminal = IsTerminal(task.State);
-            continueButton.gameObject.SetActive(terminal);
-            if (terminal && !advancing)
-                continueButton.interactable = true;
+            finishedLabel.transform.parent.gameObject.SetActive(terminal);
+            if (!terminal)
+                return;
+
+            InformationSourceController.EnsureLocalizedFontFallbacks();
+            var session = ResearchSessionManager.Instance;
+            finishedLabel.text = FinishedMessage(session == null ? ResearchLanguage.English : session.Configuration.language);
         }
 
         static string Readable(TaskState state)

@@ -150,8 +150,15 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             yield return RunTask("second", computerFirst ? "FanRepairTask" : "ComputerRepairTask");
 
             // ---- end of session ---------------------------------------------
-            yield return Until("session returns to the researcher scene", () => Scene() == "ResearcherSetup");
+            var lastTaskScene = Scene();
+            yield return Until("session is marked complete", () => session.SessionComplete);
+            Check("the participant is left in a head-tracked scene, not ResearcherSetup",
+                Scene() == lastTaskScene, "scene changed to " + Scene());
             Check("logger closed the session", !session.Logger.IsStarted, "logger still open");
+
+            // The researcher's route back, taken once the headset is off.
+            session.ReturnToSetup();
+            yield return Until("researcher can return to setup", () => Scene() == "ResearcherSetup");
 
             var folder = config.sessionId;
             var root = Path.Combine(Application.persistentDataPath, "VRMaintenanceResearchData", "Sessions", folder);
@@ -214,18 +221,25 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             controller.RunDeviceTest();
             Check(which + " task completes after the repair", controller.State == TaskState.Completed, "state=" + controller.State);
 
-            // The participant's own way out, with developmentMode off.
+            // The board tells the participant to wait; it must not offer them a way on,
+            // because the headset comes off between tasks for NASA-TLX.
             var board = Object.FindFirstObjectByType<TaskStatusBoard>();
             Check(which + " task has a status board", board != null, "none");
             if (board == null)
                 yield break;
 
             yield return null;
-            var advance = Field<Button>(board, "continueButton");
-            Check(which + " task offers Continue in the headset once finished",
-                advance != null && advance.gameObject.activeSelf && advance.interactable, "not available");
-            CheckReachable(which + " task Continue", advance);
-            advance.onClick.Invoke();
+            var finished = Field<TMPro.TextMeshProUGUI>(board, "finishedLabel");
+            Check(which + " task board shows the finished notice",
+                finished != null && finished.transform.parent.gameObject.activeSelf, "notice not shown");
+            Check(which + " task board notice is in the participant's language",
+                finished != null && finished.text.Contains("กรุณารอผู้วิจัย"), finished == null ? "no label" : finished.text);
+            Check(which + " task board carries no control the participant could press",
+                board.GetComponentsInChildren<Button>(true).Length == 0,
+                board.GetComponentsInChildren<Button>(true).Length + " buttons on the board");
+
+            // Advancing is the researcher's, from the desktop panel.
+            ResearchSessionManager.Instance.CompleteCurrentTaskAndAdvance();
         }
 
         // ---------- assertions ----------

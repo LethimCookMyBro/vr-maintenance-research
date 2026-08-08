@@ -3,7 +3,7 @@ participant-style: no Inspector edits and no desktop researcher panel between st
 PASS session manager exists
 PASS session accepts a non-development configuration
 PASS session starts
-      data folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Sessions\20260807T190421Z_143782bb
+      data folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Sessions\20260808T041811Z_3e827442
 PASS real sessions write outside the Development folder
 PASS training scene loads
 PASS training board exists
@@ -21,10 +21,9 @@ PASS first task survives a failed device test
 PASS first task keeps its repair object 'fan.working-fuse'
 PASS first task completes after the repair
 PASS first task has a status board
-PASS first task offers Continue in the headset once finished
-PASS first task Continue sits on a world-space canvas
-PASS first task Continue canvas raycasts tracked devices
-PASS first task Continue graphic accepts raycasts
+PASS first task board shows the finished notice
+PASS first task board notice is in the participant's language
+PASS first task board carries no control the participant could press
 PASS second task scene loads (ComputerRepairTask)
 PASS second task has a controller
 PASS second task becomes active
@@ -34,12 +33,13 @@ PASS second task survives a failed device test
 PASS second task keeps its repair object 'computer.main-power-connector'
 PASS second task completes after the repair
 PASS second task has a status board
-PASS second task offers Continue in the headset once finished
-PASS second task Continue sits on a world-space canvas
-PASS second task Continue canvas raycasts tracked devices
-PASS second task Continue graphic accepts raycasts
-PASS session returns to the researcher scene
+PASS second task board shows the finished notice
+PASS second task board notice is in the participant's language
+PASS second task board carries no control the participant could press
+PASS session is marked complete
+PASS the participant is left in a head-tracked scene, not ResearcherSetup
 PASS logger closed the session
+PASS researcher can return to setup
 PASS wrote session_manifest.csv
 PASS wrote session_events.csv
 PASS wrote task_summary.csv

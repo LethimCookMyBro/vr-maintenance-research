@@ -292,7 +292,12 @@ namespace TMUVR.MaintenanceResearch
             }
         }
 
-        static void EnsureLocalizedFontFallbacks()
+        /// <summary>
+        /// Public because the status board also shows Thai and Japanese now, and it must
+        /// not depend on an information source having woken first to avoid rendering its
+        /// instruction as missing-glyph boxes. Registration is idempotent.
+        /// </summary>
+        public static void EnsureLocalizedFontFallbacks()
         {
             if (localizedFallbacksRegistered)
                 return;

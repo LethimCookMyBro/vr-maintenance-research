@@ -86,6 +86,23 @@
   the answer, but it does narrow the search space to the interactive set and should be
   described as an affordance cue in any write-up.
 
+## Headset comfort and control boundaries - 2026-08-08
+
+- `ResearcherSetup` has no XR Origin and its `Setup Camera` carries no
+  `TrackedPoseDriver`. **Nothing should load that scene while a participant is wearing
+  the headset**: the view would not follow their head. The session therefore ends in
+  the finished task scene, and returning to setup is a researcher action taken once
+  the headset is off. The same applies to `ReturnToSetup()` — it is on the desktop
+  panel for that reason and must not be wired to anything the participant can reach.
+- The status board deliberately carries no control. The participant removes the
+  headset between the two tasks for NASA-TLX, so any button there could load the
+  second task before the questionnaire was administered. If the protocol ever moves
+  NASA-TLX to the end of the session, this is the decision to revisit.
+- Mouse interaction (`OnMouseEnter`/`OnMouseDown`) is disabled outside development
+  mode. It remains the way the scenes are driven without a headset, and it is how the
+  desktop simulator checks in `KEYBOARD_MOUSE_CONTROLS.md` are performed — those must
+  be run in development mode.
+
 ## Content and configuration - 2026-08-08
 
 - `ResearchTaskDefinition.thaiTitle`, `japaneseTitle`, `thaiParticipantInstructions` and
