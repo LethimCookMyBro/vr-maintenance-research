@@ -1,621 +1,860 @@
-# Supervisor Review Package — Visual Redesign
+# Supervisor Review Package
 
-**Branch:** `visual-polish-claude`
-**Compared against:** commit `f117cc8` (last pre-redesign state) → working tree at commit `0371ecd`
-**Prepared:** 2026-08-02
-**Status:** review package. Nothing has been merged or pushed, and no scene, prefab or
-script was modified while preparing it.
-
-All measurements below were read out of the scenes themselves (Unity `Transform.position`,
-`lossyScale`, `Renderer.bounds`, `Collider` settings), not from the earlier change log.
-Where a measurement contradicts what `PROTOCOL_CHANGE_LOG.md` already records, the
-contradiction is stated explicitly in [§7](#7-points-where-the-existing-change-log-needs-correcting).
+**Branch:** `visual-polish-claude` · **Head commit at time of writing:** `0248328`
+**Prepared:** 2026-08-08 · **Supersedes** the package dated 2026-08-02
+**Status:** awaiting supervisor decision. Nothing here has been approved, merged or
+pushed to `main`. No participant data has been collected.
 
 ---
 
-## 1. What this package contains
+## 0. Why this document was rewritten
 
-| # | Deliverable | Section | State |
+The previous version of this package was written on **2026-08-02**. The companion
+`PROTOCOL_CHANGE_LOG.md` was last revised on **2026-08-02**. Since then there have been
+**five rounds of work plus a comprehension pass**, all of them on this branch and none of
+them reviewed:
+
+| Round | Date | Commits | What it did |
 |---|---|---|---|
-| 1 | Before/after screenshots, 8 subjects | [§2](#2-screenshots) | Complete |
-| 2 | Transform / initial-state change table with impact columns | [§4](#4-transform-and-initial-state-change-table) | Complete |
-| 3 | Partly disassembled initial state, Computer and Fan | [§5](#5-partly-disassembled-initial-state) | Complete |
-| 4 | Windows standalone run of the full flow + CSV | [§6](#6-windows-standalone-verification) | Complete — flow and CSVs verified, **one blocking defect found** |
-| 5 | Package warnings vs `Assets/VRMaintenanceResearch` warnings | [§8](#8-warning-origin-separation) | Complete |
-| 6 | No merge, push or scene change | [§9](#9-repository-state) | Confirmed |
+| 0 | 2026-08-03 | `501bc01`, `4f4e452`, `22c7158` | Comprehension and readability pass. Added the Thai and Japanese work order; rewrote the training board; **moved all four information sources off the back wall onto a single dock at the participant's left** (§9 below) |
+| 1 | 2026-08-04 | `b6b5777`, `79cc5e6` | Replaced hand-built stand-in shapes with licensed 3-D models, then reverted the part of that integration that was rejected |
+| 2 | 2026-08-04 | `e7cd4d4`, `298a538`, `c02bb64` | Rebuilt the inside of the computer in five stages — board, processor, cooler, memory, card, supply, drive, power loom, bench |
+| 3 | 2026-08-04 | `de7d5fd`, `743b1c3` | Re-framed both benches as *diagnosis* rather than *assembly*; fixed the wall notice board; stopped each machine claiming its own internal parts' click targets |
+| 4 | 2026-08-08 | `6683949`, `24c5399`, `6845fec`, `efe4e0a`, `b152597` | Gave the participant a way out of a finished task; added scene-regression checks; drove a full session with development mode off; produced a real Quest 3 build |
+| 5 | 2026-08-08 | `50ad6fa`, `a32041c`, `43e1708`, `230ddfe`, `0248328` | Stopped the researcher's mouse writing into the participant's data; moved "advance to next task" off the participant's board; rebuilt the parts a participant must be able to name |
 
-> **Read §7.4 first.** The standalone run found an unhandled exception thrown every frame
-> in all three participant scenes, introduced by this redesign, which repeatedly forces the
-> development console over the participant's view. It must be fixed before any participant
-> session. The fix touches the scenes, so it has deliberately not been made here.
+Every one of those rounds either moved something the participant looks at, or changed
+what the recorded data means. This package collects **all of it** into decisions you can
+answer yes or no.
 
----
+### A note on words
 
-## 2. Screenshots
+Only seven technical words are unavoidable. They are used in exactly these senses:
 
-All new captures are in `Docs/Screenshots/Review/`. Every before/after pair was rendered
-from an **identical camera pose** so the two images are directly comparable; the pose is
-listed with each view. Renders are 1600 × 900.
-
-### 2.1 How the "before" images were produced
-
-The four pre-redesign scenes were extracted read-only from commit `f117cc8` into a
-temporary folder, opened, captured, and the folder deleted. **The live scenes were never
-opened for edit, never modified and never saved.** No prefab used by the pre-redesign
-scenes was changed by the redesign (the redesign only *added* `LabEnvironment.prefab`), so
-the "before" images show the pre-redesign state faithfully.
-
-Two caveats on reading the "before" images:
-
-* The pre-redesign scenes shared **one** material across every object, so untextured
-  grey-on-grey is the actual former appearance, not a rendering fault. This is why
-  `Before_*_StartPosition.png` (plan view) is close to unreadable — that flatness *is* the
-  before state.
-* The magenta dot visible in `Before_Computer_*` and `Before_Fan_*` is one of the two
-  objects that rendered magenta under URP (built-in Standard shader). It is one of the
-  defects the redesign fixed.
-
-### 2.2 Subject index
-
-| Subject | Before | After | Camera pose |
-|---|---|---|---|
-| ResearcherSetup (runtime UI) | `Before_ResearcherSetup_UI.png` | `After_ResearcherSetup_UI.png` | Runtime screen capture, not a scene camera |
-| ResearcherSetup (scene) | `Before_ResearcherSetup_Overview.png` | `After_ResearcherSetup_Overview.png` | pos (−3.6, 2.8, −3.6) → look (0, 1.1, 0.6), 55° |
-| VRTraining | `Before_Training_Overview.png`, `Before_Training_ParticipantEye.png` | `After_Training_Overview.png`, `After_Training_ParticipantEye.png`, `After_Training_UI.png` | overview as above; eye view from the scene's own camera pose |
-| Computer task | `Before_Computer_Overview.png`, `Before_Computer_ParticipantEye.png` | `After_Computer_Overview.png`, `After_Computer_ParticipantEye.png` | as above |
-| Fan task | `Before_Fan_Overview.png`, `Before_Fan_ParticipantEye.png` | `After_Fan_Overview.png`, `After_Fan_ParticipantEye.png` | as above |
-| Participant starting position | `Before_*_StartPosition.png`, `Before_*_Elevation.png` | `After_*_StartPosition.png`, `After_*_Elevation.png` | orthographic plan from (0, 2.90, 0.70), size 2.85; orthographic elevation from (−4.40, 1.50, 0.70) looking east, size 1.90 |
-| Information-source layout | `Before_*_InfoLayout.png` | `After_*_InfoLayout.png` | pos (0, 1.6, −2.6) → look (0, 1.35, 3.0), 60° |
-| Device initial state | `Before_*_Device.png` | `After_*_Device.png` | pos (−1.9, 2.0, −1.7) → look (0, 1.15, 0.7), 50° |
-| Removable / repair components | `Before_*_Components.png` | `After_*_Components.png` | pos (0, 2.15, −1.15) → look (0, 0.95, 0.95), 62° |
-| Information panel, opened | — | `After_InformationPanel_Open.png` | pre-existing capture, retained for reference |
-
-The **participant start marker** is the red capsule + floor disc drawn into the plan,
-elevation and overview renders only. It is 1.70 m tall, 0.36 m wide, drawn at the XR
-Origin's `Camera Offset` ground projection. It is a `HideFlags.HideAndDontSave` object
-created at render time and destroyed immediately — it is not part of any scene.
-
-In `Before_Computer_Overview.png` and `Before_Computer_Elevation.png` only the bottom of
-the marker is visible: the rest is **inside** the 2.4 m desktop case. In
-`Before_Fan_Elevation.png` the marker is completely hidden inside the 3 m fan body. This is
-the "participant spawned inside the device volume" defect, shown directly.
-
-Two artefacts to ignore in the *after* renders: the small white object at the participant
-position is the XRI rig's controller-visual meshes sitting at the rig origin in edit mode
-(they follow the headset at runtime), and the ceiling is cropped out of the plan views
-because the plan camera sits at y = 2.90 m, just under the 3.00 m ceiling soffit.
-
----
-
-## 3. Reference geometry (after)
-
-| Item | Value |
+| Word | What it means here |
 |---|---|
-| Room | 9.20 m × 8.20 m, 3.00 m clear height |
-| Workbench top | centre (0, 0.88, 0.90), 4.60 × 0.08 × 0.90 → work surface at **y = 0.92**, front edge at **z = 0.45** |
-| Participant start (all three participant scenes) | XR Origin `Camera Offset` at (0, 1.361, **−1.6**) |
-| Participant → bench front edge | **2.05 m** |
-| Marked work-zone floor line | front edge at z = −0.55, i.e. the participant starts **1.05 m behind the marked work zone** |
-| Information tiles | x = −3.3 / −1.1 / +1.1 / +3.3, y = 1.0, z = 3.0, tile 1.2 × 0.7 m (**unchanged in world coordinates**) |
-| Information panels | same x, y = 1.65, z = 1.5, inactive at start (**unchanged**) |
-
-Pre-redesign, the participant start was (0, 1.361, **0**) and there was no workbench,
-no room shell and no floor marking.
+| **scene** | One loadable room. There are four: the researcher's setup screen, the training room, the computer bench and the fan bench. |
+| **object id** (`computer.ram`) | The permanent name a part carries in the recorded data. It never changes, so data from different sessions can be compared. |
+| **click target** | An invisible shape wrapped round a part. The software decides what you pointed at by testing the pointer against these shapes, **not** against the part you can see. |
+| **stowed** | The part still exists in the room and keeps its id, but is switched off — invisible and unpointable. Switching it back on restores it exactly. |
+| **event** | One line in the recorded data: a time, an object id, and what happened. |
+| **`task_summary.csv`** | The one-row-per-task results file, the file the analysis actually reads. |
+| **builder** | A script that constructs a bench from scratch, so the bench can be rebuilt identically at any time. |
 
 ---
 
-## 4. Transform and initial-state change table
+## 1. The decisions, in one page
 
-Distances are horizontal distance from the participant's own start position in that build,
-so they are directly comparable across the redesign even though the world origin offset
-changed. Angular size is the horizontal angle the object's widest face subtends from the
-start eye position.
+Each is written so **yes** or **no** is a complete answer. Detail follows in §2–§8.
+Write your answer in the last column of the sheet in [§10](#10-answer-sheet).
 
-### 4.1 Participant, environment and information layout
+| # | Item | The question |
+|---|---|---|
+| **ก** | Every part has moved since you last saw a position table (§2) | *Do you accept the current positions of all 31 parts as the layout used for data collection?* |
+| **ข** | Both benches were re-framed from "assemble this" to "diagnose this", which removed parts from the bench (§3) | *Do you accept diagnosis, with fewer parts on the bench, as the task both conditions present?* |
+| **ค** | The fan bench can no longer record a wrong-part action at all; the computer bench can (§4) | *Do you accept that `incorrect_component_interaction_count` can only ever be non-zero on the computer task?* |
+| **ง** | The part that is the answer to the computer task was rotated 44° (§5) | *Do you accept the answer being visible from the participant's approach rather than facing away?* |
+| **จ** | The two device-test controls no longer look alike — one is a button, one is a dial (§6) | *Do you accept two different-looking controls for the same step in the two conditions?* |
+| **ฉ** | Data recorded before `743b1c3` filed internal parts under the machine's name (§7) | *Do you accept that no session recorded before `743b1c3` can be pooled with later sessions?* |
+| **ช** | **New, found while preparing this package.** Pointing at a part often selects a different part (§8) | *Should the click targets be resized to match the parts, before any participant session?* |
+| **ซ** | All four information sources moved to one row at the participant's left, always in the same order (§9) | *Do you accept a fixed left-to-right order — manual, troubleshooting, video, visual guide — identical in both tasks and for every participant?* |
 
-| Change | Before | After | Walking | Reaching | Visibility | Source salience | Difficulty | Movement log | Completion sequence |
-|---|---|---|---|---|---|---|---|---|---|
-| Participant start pose | (0, 1.361, 0) | (0, 1.361, −1.6) | **Yes** — start is now 2.05 m from the bench edge and 1.05 m outside the marked work zone; nothing is reachable without locomoting | **Yes** — nearest interactable goes from 0.75 m (Fan) / 1.13 m (Computer) to 2.30 m; no target is within arm's reach at spawn | **Yes** — participant is no longer inside the device mesh | **Yes** — see next row | Neutral to slightly higher (locomotion added before any manipulation) | **Yes** — all logged head/controller world coordinates shift by −1.6 m in z relative to the participant; pre/post sessions are not spatially comparable | No change to the rule; adds travel time before the first interaction |
-| Information tiles | x ±1.1 / ±3.3, y 1.0, z 3.0 | **identical world coordinates** | Distance to nearest tile 3.20 → **4.73 m**; farthest 4.46 → **5.66 m** | n/a (tiles are ray-selected) | Tile angular width: inner 21.2° → **14.5°**, outer 15.3° → **12.1°** | **Yes, and not in the direction the change log states.** Outer:inner distance ratio 1.394 → **1.197**, i.e. the four sources became *more* equidistant. Head-turn to the outer tile 47.7° → **35.7°** | Slightly higher — smaller tiles | Longer approach to a source raises movement rows per source visit | Unchanged |
-| Training information source | (2.6, 1.0, 1.4), scale 1.25 × 0.80 × 0.12 | (0, 1.0, 3.0), scale 1.20 × 0.70 × 0.10 | 2.95 → **4.60 m** | n/a | Now front-and-centre instead of 62° to the participant's right | Now matches task-source geometry exactly | Lower — no longer off to one side | Yes, same origin-shift effect | Unchanged |
-| Room shell, lighting, floor markings, furniture | none | Added: 4 walls + ceiling, 2-light rig + ceiling panels, work-zone floor lines, workbench, trays, pedestal, storage unit, information station | Adds physical boundaries; does not restrict the 2.05 m approach | No | Substantially higher — surfaces, contrast and shading now differentiate objects | Indirect — the information station backing gives the four tiles a shared frame | Lower (clearer affordances) | No | No |
-| Task status board | none | Read-only board above the information station | No | No | New always-visible surface | No — carries no source content | Slightly lower (attempt number is visible) | No — writes no events | **No** — mirrors state, never names the faulty component |
-| Researcher controls | Always-visible IMGUI panel | Collapsed by default, opened with the handle or **F9**; Safety Stop separated | No | No | Removes a persistent overlay from the participant view | No | No | No | No — every control calls the same task method |
-| Training instruction panel | World canvas with `localScale (0,0,0)` — rendered nothing | Fixed world-space board with live progress and a gated Continue button | No | No | **Yes** — previously invisible | No | Lower — the three training requirements are now legible | No | Continue is gated on the same three requirements |
-| Source control buttons | Next left of Prev; Seek left of Play | Mirrored about the panel centre | No | No | No | No — positions stay symmetric and identical across all four sources and both tasks | Lower (reading order corrected) | No | No |
+> **§8 is the one to read first.** It is the only item that can make the recorded data
+> say something that did not happen, and it is the only item where the recommended
+> answer is "change it". It has **not** been changed, because changing a click target
+> changes which part gets recorded, and that is a research decision, not a repair.
 
-### 4.2 Computer task objects
+---
 
-`d` = horizontal distance from participant start. `∠` = angular width from the start eye position.
+## 2. ก — Every part has moved, and no table of the current positions has been reviewed
 
-| Stable ID | Before pos → After pos | d before → after | Widest dimension before → after | ∠ before → after | Notes |
+### What changed
+
+The last position table you were given (the 2026-08-02 package, §4) described a bench
+laid out on **2026-08-02**. Rounds 1, 2, 3 and 5 each re-authored positions. **All 31
+parts — 13 computer, 15 fan, 3 training — are now somewhere other than that table says.**
+Sizes changed too, in both directions.
+
+### Which commits
+
+`b6b5777` (licensed models) → `e7cd4d4` + `298a538` (computer interior rebuilt in five
+stages) → `de7d5fd` (diagnostic framing) → `0248328` (parts rebuilt to real dimensions).
+
+### Why
+
+Three separate reasons stacked up. Licensed models replaced hand-made shapes, so parts
+took the models' true proportions. The diagnostic re-framing moved parts **into** the
+machines, because a machine with its insides on the bench beside it reads as a machine
+being built. And the recognition pass sized parts from the real components they
+represent, which made most of them much smaller.
+
+### What was not chosen
+
+Keeping the 2026-08-02 positions and only re-skinning the parts. Rejected because the
+licensed board, cooler and supply do not fit the old spacing — the old layout was built
+around a 2.4 m computer case, and the parts inside it are now at hand size.
+
+### The current table — computer bench
+
+`d` is how far the part is from where the participant starts standing. **Apparent width**
+is how wide the part looks from there, in degrees: your thumbnail held at arm's length is
+about 1.5°.
+
+| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width | Note |
+|---|---|---|---|---|---|---|
+| `computer.case` | (0, 1.20, 1.15) | (−0.15, 1.145, 0.78) | 498 mm | 2.38 m | 11.9° | Tower, open side toward the participant |
+| `computer.side-panel` | (−1.72, 0.945, 1.15) | (−1.25, 0.345, 0.90) | 507 mm | 2.80 m | 9.8° | Moved down onto the lower shelf |
+| `computer.motherboard` | (−0.45, 0.935, 1.05) | (−0.20, 1.195, 0.885) | 307 mm | 2.49 m | 7.0° | **Now inside the machine**, not on the bench |
+| `computer.psu` | (0.45, 1.00, 1.10) | (−0.272, 0.982, 0.824) | 163 mm | 2.44 m | 3.8° | **Now inside the machine** |
+| `computer.psu-switch` | (0.45, 1.02, 0.965) | (−0.341, 0.982, 0.905) | 31 mm | 2.53 m | 0.7° | **Now inside**; smallest computer target |
+| `computer.cooling-fan` | (0.12, 0.945, 0.70) | (−0.334, 1.275, 0.847) | 122 mm | 2.47 m | 2.8° | **Now inside** |
+| `computer.internal-cable` | (−0.12, 0.945, 0.70) | (−0.102, 1.097, 0.813) | 53 mm | 2.42 m | 1.3° | **The fault.** Now inside — see §5 |
+| `computer.external-power-cable` | (0.82, 0.935, 0.70) | (0.52, 0.95, 1.24) | 211 mm | 2.89 m | 4.1° | Behind the machine |
+| `computer.main-power-connector` | (−1.28, 0.975, 0.95) | (−1.10, 0.947, 0.95) | 119 mm | 2.78 m | 2.4° | **The correct repair**, in the spares tray |
+| `computer.ram` | (−0.92, 0.975, 0.95) | (−0.129, 1.268, 0.828) | 132 mm | 2.43 m | 3.1° | **Moved out of the tray and seated on the board** — see §3 and §4 |
+| `computer.tool.screwdriver` | (1.10, 0.962, 0.95) | (1.02, 0.965, 0.95) | 200 mm | 2.75 m | 4.1° | Tool tray |
+| `computer.power-button` | (1.95, 0.95, 0.20) | (1.50, 0.95, 0.20) | 132 mm | 2.34 m | 3.2° | Device test — see §6 |
+| `computer.non-target-module` | (1.70, 0.99, 1.15) | (−0.79, 0.985, 0.95) | 170 mm | 2.67 m | — | **Stowed** — see §3 |
+
+### The current table — fan bench
+
+| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width | Note |
+|---|---|---|---|---|---|---|
+| `fan.body` | (0, 1.28, 1.02) | (0, 0.92, 1.00) | 571 mm | 2.60 m | 12.4° | Assembled fan on the bench |
+| `fan.blade` | (0, 1.28, 0.88) | (0.029, 1.32, 0.945) | 324 mm | 2.55 m | 7.3° | Behind the guard |
+| `fan.front-cover` | (−0.55, 0.95, 0.70) | (−0.72, 0.56, 0.98) | 375 mm | 2.68 m | 7.7° | Guard, now on the lower shelf |
+| `fan.fuse-holder` | (0.20, 1.24, 1.02) | (−0.128, 1.318, 1.016) | 51 mm | 2.62 m | 1.1° | In the service bay |
+| `fan.internal-wire` | (0.12, 1.13, 1.02) | (−0.139, 1.292, 1.035) | 39 mm | 2.64 m | 0.9° | In the service bay |
+| `fan.fastener` | (−0.16, 1.20, 0.94) | (−0.17, 1.35, 1.036) | **11 mm** | 2.64 m | **0.24°** | Smallest object in the project |
+| `fan.power-switch` | (0, 0.972, 0.88) | (0.016, 1.006, 0.85) | 70 mm | 2.45 m | 1.6° | On the fan base |
+| `fan.power-cord` | (−0.50, 0.942, 1.26) | (0.30, 0.932, 1.24) | 270 mm | 2.86 m | 5.4° | Coiled behind the fan |
+| `fan.power-plug` | (−0.86, 0.962, 1.26) | (0.404, 0.942, 1.236) | 89 mm | 2.86 m | 1.8° | On the coil's edge |
+| `fan.working-fuse` | (−1.28, 0.975, 0.95) | (−1.10, 0.949, 0.95) | **31 mm** | 2.78 m | **0.63°** | **The correct repair**, in the spares tray |
+| `fan.tool.screwdriver` | (1.10, 0.962, 0.95) | (1.02, 0.955, 0.95) | 200 mm | 2.75 m | 4.1° | Tool tray |
+| `fan.speed-selector` | (1.95, 0.95, 0.20) | (1.50, 0.95, 0.20) | 132 mm | 2.34 m | 3.2° | Device test — see §6 |
+| `fan.motor-module` | (0.55, 0.97, 0.70) | (−1.01, 0.982, 1.15) | 186 mm | 2.93 m | — | **Stowed** |
+| `fan.faulty-fuse` | (−0.92, 0.975, 0.95) | (−0.86, 0.926, 0.95) | 31 mm | 2.69 m | — | **Stowed** — see §4 |
+| `fan.non-target-module` | (1.70, 0.99, 1.15) | (1.58, 0.972, 0.98) | 170 mm | 3.03 m | — | **Stowed** |
+
+### The current table — training room
+
+| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width |
 |---|---|---|---|---|---|
-| `computer.case` | (0, 1.1, 0) → (0, 1.2, 1.15) | 0.00 → 2.75 m | 2.40 → **0.46 m** | participant was inside it → 9.6° | Tower now stands on the bench |
-| `computer.side-panel` | (−1.55, 0.95, 1.35) → (−1.72, 0.945, 1.15) | 2.06 → 3.24 m | 1.20 → 0.50 m | 32.0° → 8.8° | Upright slab → flat plate lying on the bench |
-| `computer.motherboard` | (0, 0.95, 1.42) → (−0.45, 0.935, 1.05) | 1.42 → 2.69 m | 1.25 → 0.40 m | 47.4° → 8.5° | Laid flat on the bench |
-| `computer.psu` | (1.1, 0.95, 1.28) → (0.45, 1.0, 1.1) | 1.69 → 2.74 m | 0.46 → 0.26 m | 15.3° → 5.4° | On the bench beside the tower |
-| `computer.psu-switch` | (1.1, 1.38, 1.05) → (0.45, 1.02, 0.965) | 1.52 → 2.60 m | 0.18 → **0.05 m** | 6.8° → **1.1°** | Small target — see §7.3 |
-| `computer.cooling-fan` | (−0.82, 1.0, 1.4) → (0.12, 0.945, 0.7) | 1.62 → 2.30 m | 0.36 → 0.20 m | 12.7° → 5.0° | Front row of the bench |
-| `computer.internal-cable` | (0.42, 1.45, 1.12) → (−0.12, 0.945, 0.7) | 1.20 → 2.30 m | 0.22 → 0.10 m | 10.5° → 2.5° | Front row of the bench |
-| `computer.external-power-cable` | (1.75, 0.18, 1.1) → (0.82, 0.935, 0.7) | 2.07 → 2.44 m | 1.38 → 0.44 m | 37.0° → 10.2° | Was on the floor; now on the bench |
-| `computer.main-power-connector` **(correct repair)** | (−1.7, 1.0, 0.9) → (−1.28, 0.975, 0.95) | 1.92 → 2.85 m | 0.45 → **0.15 m** | 13.3° → **3.0°** | In the parts tray |
-| `computer.ram` (incorrect) | (−0.9, 1.0, 0.9) → (−0.92, 0.975, 0.95) | 1.27 → 2.71 m | 0.45 → 0.15 m | 19.9° → 3.2° | In the parts tray, beside the connector |
-| `computer.tool.screwdriver` | (1.4, 1.0, 0.8) → (1.1, 0.962, 0.95) | 1.61 → 2.78 m | 1.10 → 0.26 m | 37.8° → 5.4° | In the tool tray |
-| `computer.power-button` **(device test)** | (1.6, 1.0, −0.2) → (1.95, 0.95, 0.2) | 1.61 → 2.65 m | 0.30 → 0.11 m | 10.6° → 2.4° | On the separate control pedestal |
-| `computer.non-target-module` | (−1.05, 0.55, 0.42) → (1.7, 0.99, 1.15) | 1.13 → 3.23 m | 0.30 → 0.20 m | 15.1° → 3.6° | Moved from the participant's left to the right |
+| `training.training-cube-a` | (−0.45, 1.00, 0.95) | (−0.42, 0.972, 0.95) | 131 mm | 2.58 m | 2.9° |
+| `training.training-cube-b` | (0, 1.00, 0.95) | (0, 0.972, 0.95) | 126 mm | 2.55 m | 2.8° |
+| `training.training-cylinder` | (0.45, 1.00, 0.95) | (0.42, 0.966, 0.95) | 110 mm | 2.58 m | 2.4° |
 
-Repair-site → device-test travel: **3.48 m before → 3.32 m after** (effectively unchanged).
+### What this does to the research
 
-### 4.3 Fan task objects
+* **Target size is now the dominant difficulty variable and it is not equal across the
+  two conditions.** The correct repair on the fan bench is a 31 mm glass cartridge
+  (0.63° wide from the start pose). The correct repair on the computer bench is a
+  119 mm connector (2.4°). One is nearly **four times** the apparent width of the other.
+  Pointing accuracy, hover counts and time-to-repair are all sensitive to this.
+* Ten of the twenty-eight task parts are now **inside** their machine rather than on the
+  bench, which is what makes the task a diagnosis (§3) but also means they cannot be
+  reached without stepping in and looking along the machine.
+* All the participant-relative distances in the 2026-08-02 package's §4 are superseded
+  by the tables above.
 
-| Stable ID | Before pos → After pos | d before → after | Widest dimension before → after | ∠ before → after | Notes |
-|---|---|---|---|---|---|
-| `fan.body` | (0, 1.1, 0) → (0, 1.28, 1.02) | 0.00 → 2.62 m | 3.00 m tall, clipping through the floor → 0.30 m head | participant was inside it → 6.6° | Head on a stand, on the bench |
-| `fan.blade` | (0, 1.2, 0.98) → (0, 1.28, 0.88) | 0.98 → 2.48 m | 0.54 → 0.22 m | 30.9° → 5.1° | On the participant-facing side of the head |
-| `fan.front-cover` | (0, 1.2, 1.15) → (−0.55, 0.95, 0.7) | 1.15 → 2.36 m | 0.84 → 0.36 m | 40.2° → 8.7° | **Detached and laid on the bench** — the only true initial-state change |
-| `fan.fuse-holder` | (0.75, 0.55, 0.82) → (0.2, 1.24, 1.02) | 1.11 → 2.63 m | 0.35 → 0.09 m | 17.7° → 2.0° | Mounted on the head |
-| `fan.internal-wire` | (0.92, 0.82, 0.98) → (0.12, 1.13, 1.02) | 1.34 → 2.62 m | 0.68 → 0.17 m | 28.6° → 3.7° | Exposed on the head |
-| `fan.motor-module` | (0, 0.95, 0.75) → (0.55, 0.97, 0.7) | 0.75 → 2.36 m | 0.50 → 0.16 m | 36.9° → 3.9° | Removed, on the bench |
-| `fan.fastener` | (−0.72, 0.82, 0.94) → (−0.16, 1.2, 0.94) | 1.18 → 2.55 m | 0.10 → **0.022 m** | 4.9° → **0.49°** | Smallest target in the project — see §7.3 |
-| `fan.power-switch` | (0.18, 0.52, 1.05) → (0, 0.972, 0.88) | 1.07 → 2.48 m | 0.24 → 0.10 m | 12.8° → 2.3° | On the stand base |
-| `fan.power-cord` | (−0.95, 0.18, 0.82) → (−0.5, 0.942, 1.26) | 1.25 → 2.90 m | 1.16 → 0.44 m | 49.5° → 8.7° | Was on the floor; now on the bench |
-| `fan.power-plug` | (−1.45, 0.18, 0.8) → (−0.86, 0.962, 1.26) | 1.66 → 2.99 m | 0.24 → 0.09 m | 8.2° → 1.7° | On the bench |
-| `fan.working-fuse` **(correct repair)** | (−1.7, 1.0, 0.9) → (−1.28, 0.975, 0.95) | 1.92 → 2.85 m | 0.45 → 0.15 m | 13.3° → 3.0° | In the parts tray |
-| `fan.faulty-fuse` (incorrect) | (−0.9, 1.0, 0.9) → (−0.92, 0.975, 0.95) | 1.27 → 2.71 m | 0.45 → 0.15 m | 19.9° → 3.2° | In the parts tray, beside the working fuse |
-| `fan.tool.screwdriver` | (1.4, 1.0, 0.8) → (1.1, 0.962, 0.95) | 1.61 → 2.78 m | 1.10 → 0.26 m | 37.8° → 5.4° | In the tool tray |
-| `fan.speed-selector` **(device test)** | (1.6, 1.0, −0.2) → (1.95, 0.95, 0.2) | 1.61 → 2.65 m | 0.30 → 0.11 m | 10.6° → 2.4° | On the control pedestal |
-| `fan.non-target-module` | (1.36, 0.38, 0.44) → (1.7, 0.99, 1.15) | 1.43 → 3.23 m | 0.26 → 0.20 m | 10.4° → 3.6° | On the bench |
+### Pictures
 
-### 4.4 Training task objects
+What the participant sees on arriving at each bench. Everything in the tables above is
+somewhere in these two views.
 
-| Stable ID | Before → After | d before → after | Size before → after |
-|---|---|---|---|
-| `training.training-cube-a` | (−1.2, 1, 0) → (−0.45, 1, 0.95) | 1.20 → 2.59 m | 0.30 → 0.12 m cube |
-| `training.training-cube-b` | (0, 1, 0) → (0, 1, 0.95) | 0.00 → 2.55 m | 0.30 → 0.12 m cube |
-| `training.training-cylinder` | (1.2, 1, 0) → (0.45, 1, 0.95) | 1.20 → 2.59 m | Ø0.30 × 0.60 → Ø0.11 × 0.12 m |
+![Computer bench from the participant's starting position](Screenshots/Audit/After_Computer_ParticipantEye.png)
+*Computer bench, from where the participant starts. The tower is open toward them; the
+spares tray is on the left and holds one part.*
 
-The three training grabbables keep their `XRGrabInteractable` and non-kinematic
-`Rigidbody`; they were verified to settle on the workbench collider at y = 0.996 rather
-than falling through.
+![Fan bench from the participant's starting position](Screenshots/Audit/After_Fan_ParticipantEye.png)
+*Fan bench, from the same standing position. The 31 mm spare fuse is in the left-hand
+tray — at 0.63° wide it is close to invisible at this distance, which is the point ก is
+asking about.*
 
-### 4.5 What did **not** change
+Plan views of the same two benches: `Screenshots/Audit/After_Computer_Overview.png` and
+`Screenshots/Audit/After_Fan_Overview.png`.
 
-Verified by direct comparison of the two scene sets:
+### Closed question ก
 
-* Every stable research ID (13 Computer, 15 Fan, 3 Training) — identical sets, no additions,
-  removals or renames.
-* Every `objectCategory`, `ResearchInteractionKind` and `isCorrect` flag.
-* Every interactable's task reference.
-* Interactor component type on every object (`XRSimpleInteractable` for all task objects,
-  `XRGrabInteractable` for the three training objects).
-* Collider *type* on every object (Box / Capsule / Sphere as before); only the scale changed.
-* `activeSelf` / `activeInHierarchy` / `Renderer.enabled` on every interactable — all
-  active and enabled at start, before and after.
-* The four information-source definition assets bound to each scene (`*_v2`), and the
-  content panels' inactive-at-start state.
-* Information tile and panel world transforms.
-* The logging schema, the CSV column set, task-relative timestamps, retry behaviour and
-  the completion rule (correct component, then device test).
+> **Do you accept the current positions and sizes of all 31 parts, as tabled above, as
+> the layout used for data collection?**
+> If **no**, name which parts must move or change size and the review will be re-run.
 
 ---
 
-## 5. Partly disassembled initial state
+## 3. ข — Both benches were re-framed from "assemble this" to "diagnose this"
 
-Both devices are presented **already opened up**, so that every logged component is
-individually ray-reachable and none is hidden inside a closed shell. Nothing is disabled
-or hidden — every component listed is active, rendered and interactable from the first
-frame of the task.
+### What changed
 
-### 5.1 Computer — state of each part at task start
+Before `de7d5fd`, both benches presented a machine with its parts spread out around it.
+Fresh readers looking at that consistently described the task as *build this machine*.
+The re-framing put the machines back together, opened them for service, and **took the
+surplus parts off the bench**:
 
-| Stable ID | Object | Initial state | Where |
-|---|---|---|---|
-| `computer.case` | Desktop tower | **Open** — stands on the bench with its side panel off | Bench centre, (0, 1.2, 1.15) |
-| `computer.side-panel` | Side panel | **Removed and detached** — lying flat on the bench, left end | (−1.72, 0.945, 1.15) |
-| `computer.motherboard` | Motherboard | **Removed and detached** — laid flat on the bench | (−0.45, 0.935, 1.05) |
-| `computer.psu` | Power supply | **Removed and detached** — on the bench beside the tower | (0.45, 1.0, 1.1) |
-| `computer.psu-switch` | PSU switch | **Installed** on the front face of the removed PSU | (0.45, 1.02, 0.965) |
-| `computer.cooling-fan` | Cooling fan | **Removed and detached** — front row of the bench | (0.12, 0.945, 0.7) |
-| `computer.internal-cable` | Internal cable connector | **Removed and detached** — front row of the bench | (−0.12, 0.945, 0.7) |
-| `computer.external-power-cable` | External power cable | **Detached** — coiled on the bench, not plugged in | (0.82, 0.935, 0.7) |
-| `computer.main-power-connector` | Replacement main power connector | **Spare, not installed** — in the parts tray | (−1.28, 0.975, 0.95) |
-| `computer.ram` | RAM module | **Spare, not installed** — in the parts tray beside the connector | (−0.92, 0.975, 0.95) |
-| `computer.non-target-module` | Non-target module | **Detached** — on the bench, right of the tower | (1.7, 0.99, 1.15) |
-| `computer.tool.screwdriver` | Screwdriver | **Available** — in the tool tray | (1.1, 0.962, 0.95) |
-| `computer.power-button` | Power button (device test) | **Available** — on the control pedestal, right of the bench | (1.95, 0.95, 0.2) |
+**Computer bench.** `computer.ram` — a spare memory module that had been lying in the
+spares tray on an antistatic pad — is now **seated in the board's fourth memory slot**.
+The tray keeps exactly one part, the replacement 24-pin power lead. The tool tray keeps
+one screwdriver. `computer.non-target-module` is **stowed**. The antistatic pad is gone.
+The lower shelf is captioned, so the removed side panel reads as *removed* rather than
+*not yet fitted*. The work order gained one sentence, in all three languages: *the unit
+is assembled and open for service*.
 
-**Nothing is installed inside the tower at task start.** The correct repair
-(`computer.main-power-connector`) and the plausible distractor (`computer.ram`) both begin
-as loose spares lying side by side in the parts tray — the participant does not have to
-remove anything before fitting the correct part. This arrangement is **unchanged** from the
-pre-redesign scene; only the coordinates and scales differ.
+**Fan bench.** One assembled fan, one open service bay, one fuse fitted in the holder,
+one spare fuse in the tray, one tool. **Stowed:** the second loose fuse
+(`fan.faulty-fuse`), the spare motor (`fan.motor-module`), and `fan.non-target-module`.
+The mains plug used to stand 0.32 m clear of its own coil, reading as two more parts
+waiting to be fitted; it now sits at the coil's edge. The bench mat caption used to read
+*INSTALLED COMPONENT*, which named the whole machine a component.
 
-### 5.2 Fan — state of each part at task start
+Nothing was deleted. A stowed part keeps its object id and its settings; switching it
+back on restores it exactly, and re-running the builder refreshes it first.
 
-| Stable ID | Object | Initial state | Where |
-|---|---|---|---|
-| `fan.body` | Fan head and stand | **Open** — front cover off, blade and internals exposed | Bench centre, (0, 1.28, 1.02) |
-| `fan.front-cover` | Front guard | **Removed and detached** — lying flat on the bench, left of the fan | (−0.55, 0.95, 0.7) |
-| `fan.blade` | Blade | **Installed and exposed** — on the participant-facing side of the head | (0, 1.28, 0.88) |
-| `fan.fuse-holder` | Fuse holder | **Installed and exposed** — on the head, upper right | (0.2, 1.24, 1.02) |
-| `fan.internal-wire` | Internal wire | **Installed and exposed** — on the head, below the fuse holder | (0.12, 1.13, 1.02) |
-| `fan.motor-module` | Motor module | **Removed and detached** — on the bench, right of the fan | (0.55, 0.97, 0.7) |
-| `fan.fastener` | Fastener | **Loose** — resting beside the head | (−0.16, 1.2, 0.94) |
-| `fan.power-switch` | Power switch | **Installed** on the stand base | (0, 0.972, 0.88) |
-| `fan.power-cord` | Power cord | **Detached** — on the bench behind the fan, not plugged in | (−0.5, 0.942, 1.26) |
-| `fan.power-plug` | Power plug | **Detached** — on the bench, at the end of the cord | (−0.86, 0.962, 1.26) |
-| `fan.working-fuse` | Working replacement fuse | **Spare, not installed** — in the parts tray | (−1.28, 0.975, 0.95) |
-| `fan.faulty-fuse` | Faulty fuse | **Not installed** — in the parts tray, beside the working fuse | (−0.92, 0.975, 0.95) |
-| `fan.non-target-module` | Non-target module | **Detached** — on the bench, right | (1.7, 0.99, 1.15) |
-| `fan.tool.screwdriver` | Screwdriver | **Available** — in the tool tray | (1.1, 0.962, 0.95) |
-| `fan.speed-selector` | Speed selector (device test) | **Available** — on the control pedestal | (1.95, 0.95, 0.2) |
+### Which commit
 
-**The faulty fuse does not begin fitted in the fuse holder.** Both fuses start loose, side
-by side in the parts tray. The participant therefore never has to extract a failed part —
-the task reduces to selecting the correct one of two visually similar spares and then
-running the device test. This is **unchanged** from the pre-redesign scene, but it is worth
-an explicit decision before data collection, because it removes a removal step that the
-task description implies.
+`de7d5fd`, "Frame both benches as diagnosis, and fix the invisible wall board".
 
----
+The same commit fixed a separate defect found while measuring: the four notice cards on
+the lab wall had always rendered as **blank white rectangles**. Their text was present
+and correctly referenced, but each card's opaque front face sat 9 mm nearer the eye than
+its own lettering, so the lettering was discarded. The cards also only ever carried a
+heading, with no body text underneath. Both are fixed; the copy is lab procedure only
+and names neither fault, because the board can be read from anywhere in the room.
 
-## 6. Windows standalone verification
+### Why
 
-**Executed. The complete flow ran outside the Unity Editor and produced correct CSV
-output — and it surfaced a blocking defect, §7.4.**
+The measured variable is *how a person diagnoses a fault*. A bench that reads as an
+assembly job asks a different question, and it asks it of both conditions at once.
 
-Artefact: `Builds/Windows/VRMaintenanceResearch/VRMaintenanceResearch.exe`, Development +
-Allow Debugging, launched windowed at 1280 × 720. No rebuild was needed: the scenes were
-last saved at 15:43 and the player data (`globalgamemanagers`, `level0`–`level4`) was
-written at 15:48, so this binary already contains the redesigned scenes.
+### What was not chosen
 
-Session `20260802T142853Z_7e839ab4`, participant code `REVIEW_STANDALONE`, Thai group /
-English / Computer → Fan, training required, DEVELOPMENT_TEST mode, XR simulator mode.
+1. **Leaving both benches as they were and correcting the framing in the spoken
+   briefing.** Rejected: the briefing is read once and the bench is looked at for the
+   whole task; where the two disagree, the bench wins.
+2. **Deleting the surplus parts outright.** Rejected: stowing keeps the object ids in the
+   scene, so the change is reversible in one step and the data schema is untouched.
+3. **Keeping `computer.ram` in the tray and adding a second distractor to the fan bench
+   to match.** Rejected here because adding a part to the fan bench changes the number of
+   objects the participant sees, which is a protocol change and yours to make — see §4,
+   which is exactly this question put to you directly.
 
-### 6.1 Flow executed
+### What this does to the research
 
-| Step | Observed | Screenshot |
-|---|---|---|
-| ResearcherSetup | Redesigned two-column TextMeshPro screen rendered correctly in the player; participant code accepted; Start Session worked | `r1-setup.png`, `r2-code.png` |
-| → VRTraining | Loaded; world-space training board rendered with all three requirement checkboxes and **Continue (locked)**, confirming the gate works outside the Editor | `r3-training.png` |
-| Researcher panel | Opened via the on-screen handle; training controls present | `r4-training-panel.png` |
-| → ComputerRepairTask | Loaded; task status board read **"Computer Maintenance Task / Status: in progress / Attempt 1"**; lab, bench, tower and all four information tiles rendered | `r5-computer.png` |
-| Researcher controls | Pause → Resume → Abort Task; panel state tracked `Active` → `Aborted`; board changed to **"Stopped by researcher"**; **Continue to Next Task** appeared only after the task ended | `r6-computer-panel.png`, `r7-computer-aborted.png` |
-| → FanRepairTask | Loaded; board read **"Fan Maintenance Task / in progress / Attempt 1"** | `r8-fan.png` |
-| Researcher controls | Retry → Abort Task | `r9-fan-retry.png`, `r10-fan-aborted.png` |
-| → ResearcherSetup | Session ended and returned to setup with the generated Session ID displayed | `r11-return-setup.png` |
-| Exit | Closed cleanly with Alt+F4 | — |
+* Both conditions now pose the same kind of question, which is the point.
+* The number of parts on each bench dropped. Fewer parts means fewer things to
+  investigate, which shortens the search and reduces the number of recorded interactions
+  per task in both conditions.
+* `computer.ram` changed meaning without changing its id or its recorded event type.
+  Selecting it still records an incorrect-component action — but that now means *pulling
+  the memory out of a machine that will not power on*, which is a real misdiagnosis,
+  rather than *picking the wrong spare off a tray*. This makes the event more meaningful,
+  and it also makes it the **only** such event available on either bench (§4).
 
-Screenshots, the manifest, the task summary and a log excerpt are in
-`Docs/Screenshots/Review/Standalone/`. The run was driven with the researcher controls
-only, per the agreed scope — a `Completed` repair outcome outside the Editor would need
-hand-driven XR simulator interaction, because the panel exposes Pause, Resume, Retry, Reset
-Task, Abort Task, Safety Stop and Continue to Next Task but **no force-complete**.
+### Pictures
 
-### 6.2 CSV output on disk
+![Memory seated in the board's fourth slot](Screenshots/Audit/Approach_Computer_BoardDetail.png)
+*`computer.ram` is now seated in the board's fourth memory slot instead of lying in the
+spares tray. Same object, same id, same recorded event — but selecting it now means
+pulling the memory out of a machine that will not power on.*
 
-`C:\Users\User\AppData\LocalLow\Unity Technologies\XRI Examples\VRMaintenanceResearchData\Development\20260802T142853Z_7e839ab4`
+![Fan service bay with one fuse fitted](Screenshots/Audit/Approach_Fan_ServiceBay.png)
+*The fan's service bay: one fuse fitted in the holder. The second loose fuse is stowed,
+which is what §4 is about.*
 
-| File | Rows (incl. header) | Result |
-|---|---|---|
-| `session_manifest.csv` | 2 | 1 row; `session_completion_status = Completed`, `logging_status = active`, `platform = WindowsPlayer`, `unity_version = 6000.3.20f1`, `xri_version = 3.4.0`, all three layout IDs populated, `movement_sampling_hz = 10` |
-| `task_summary.csv` | 4 | 3 rows: **Training `Completed`** (128.37 s), **Computer `Aborted`** (59.50 s, `abort_status = true`), **Fan `Aborted`** (35.42 s, `abort_status = true`, `retry_count = 1`) |
-| `session_events.csv` | 3 | Session start/end |
-| `Training/events.csv` | 8 | — |
-| `Training/movement.csv` | 3 790 | 3 devices × 10 Hz × ~126 s ✓ |
-| `Computer/events.csv` | 10 | `TaskLoaded`, `TaskStarted`, hover, `LowActivityStarted`, `TaskPaused`, `LowActivityEnded`, `TaskResumed`, `TaskAborted` — sequence numbers continuous across tasks (9–17) |
-| `Computer/movement.csv` | 1 717 | 3 devices × 10 Hz × ~57 s ✓ |
-| `Fan/events.csv` | 9 | includes `RetryStarted` |
-| `Fan/movement.csv` | 1 051 | 3 devices × 10 Hz × ~35 s ✓ |
-| `technical_log.txt` | 0 bytes | no technical notes recorded |
+Both benches after re-framing: `Screenshots/Audit/After_Computer_Workstation.png`,
+`Screenshots/Audit/After_Fan_Workstation.png`. The repaired wall notice board:
+`Screenshots/Audit/After_Training_Workstation.png`. Full measurements:
+`Verification/DIAGNOSTIC_FRAMING_RECORD.md`.
 
-Schema, task-relative timestamps, continuous session-wide event sequence numbering,
-low-activity detection, one summary row per task attempt and the pause/resume/retry/abort
-transitions all behave outside the Editor exactly as they do in Play Mode.
+### Closed question ข
 
-Behaviour note: **Retry increments `retry_count` but not `task_attempt_id`.** The Fan row
-is `task_attempt_id = 1, retry_count = 1`. `Reset Task` is the control that starts a new
-attempt row. This matches the earlier Editor runs and is not a redesign change, but the two
-controls are easy to confuse and the distinction should be in the researcher procedure.
-
-Confirmation of §7.6: `Computer/movement.csv` row 1 records the headset at
-`(0.000000, 1.361440, −1.600000)` with `coordinate_space_id = task-local`. The values are
-world coordinates and carry the −1.6 m start offset.
+> **Do you accept diagnosis — an assembled, opened machine with only one spare and one
+> tool on the bench — as the task both conditions present?**
+> If **no**, the stowed parts can be switched back on in one step and the previous
+> arrangement restored.
 
 ---
 
-## 7. Points where the existing change log needs correcting
+## 4. ค — The fan bench cannot record a wrong-part action at all; the computer bench can
 
-### 7.1 "Information-source tiles and panels — unchanged"
+This is the most consequential asymmetry in the current build, and it is a direct and
+acknowledged cost of §3.
 
-`PROTOCOL_CHANGE_LOG.md` records the tiles as deliberately unmoved so that relative
-salience is preserved. The tiles' **world** transforms are indeed unchanged, but the
-participant moved 1.6 m back, so every participant-relative quantity changed:
+### The mechanism, precisely
 
-| Measure | Before | After |
+The software records a wrong-part action — event type `IncorrectComponentInteraction` —
+in exactly one circumstance: the participant selects a part that is marked as a *repair
+action* and is **not** the repair the task requires. That is the only route to that
+event. It is not produced by grabbing, hovering, or touching anything else.
+
+Each bench's repair-action parts, as they stand today:
+
+| Bench | Repair-action parts present | Correct one | Wrong one available? |
+|---|---|---|---|
+| Computer | `computer.main-power-connector`, `computer.ram` | `computer.main-power-connector` | **Yes** — `computer.ram`, active and on the board |
+| Fan | `fan.working-fuse` only | `fan.working-fuse` | **No** — `fan.faulty-fuse` is stowed |
+
+There is a second, separate asymmetry that goes the other way and cancels nothing:
+
+| Bench | Tools present | Any wrong tool? |
 |---|---|---|
-| Distance to inner tiles (x = ±1.1) | 3.20 m | 4.73 m |
-| Distance to outer tiles (x = ±3.3) | 4.46 m | 5.66 m |
-| Outer : inner distance ratio | 1.394 | **1.197** |
-| Inner tile angular width | 21.2° | 14.5° |
-| Outer tile angular width | 15.3° | 12.1° |
-| Head turn to an outer tile | 47.7° | 35.7° |
+| Computer | one screwdriver, marked correct | **No** |
+| Fan | one screwdriver, marked correct | **No** |
 
-The four sources became **more nearly equidistant and more nearly equal in angular size**,
-and all four moved further into the forward field of view. For a study whose independent
-variable is information-source type, this is arguably an improvement — but it is a change
-to relative salience, not the absence of one, and the change log currently states the
-opposite. It should be recorded and approved rather than left as "unchanged".
+So `IncorrectToolSelected` is structurally impossible on **both** benches. The only
+failure route both benches share is a failed device test.
 
-### 7.2 "Fan front guard — its collider blocked controller rays to `fan.blade`"
+### Which commit
 
-Measured pre-redesign geometry: the guard sat at z = 1.15 and the blade at z = 0.98, i.e.
-the **blade was nearer the participant than the guard**. Both colliders are capsules that
-Unity clamps to spheres at those scales — guard radius 0.42 m spanning z 0.73–1.57, blade
-radius 0.27 m spanning z 0.71–1.25. A ray aimed at the blade centre would have hit the
-blade first (0.71 before 0.73); only off-axis aim, more than 0.27 m from the blade centre,
-would have hit the guard instead.
+`de7d5fd`. The commit message states the cost explicitly: *"fan.faulty-fuse was that
+scene's only repair action besides the correct one, so the fan task can no longer record
+an incorrect repair. That is the direct cost of one installed fuse and one spare."*
 
-So the stated reason is only partly supported. Detaching the guard is still defensible —
-it is what makes the fan read as an opened maintenance scene — but the justification in the
-change log should be corrected to "off-axis rays could hit the guard instead of the blade",
-not "the guard blocked the blade".
+### Exactly which columns of `task_summary.csv` this affects
 
-### 7.3 Target size is not mentioned at all, and it dropped sharply
-
-Components were re-authored to human scale, which shrank them well below the reduction the
-change log implies. From the participant's start pose:
-
-| Object | Angular width before | Angular width after | Factor |
+| Column | Computer task | Fan task | Consequence |
 |---|---|---|---|
-| `fan.fastener` | 4.9° | **0.49°** | 10× smaller |
-| `computer.psu-switch` | 6.8° | 1.1° | 6× smaller |
-| `fan.power-plug` | 8.2° | 1.7° | 5× smaller |
-| `fan.fuse-holder` | 17.7° | 2.0° | 9× smaller |
-| `computer.main-power-connector` (correct repair) | 13.3° | 3.0° | 4× smaller |
-| `fan.working-fuse` (correct repair) | 13.3° | 3.0° | 4× smaller |
+| `incorrect_component_interaction_count` | Can be 0 or more | **Always 0** | Not comparable between conditions. Any between-condition test on this column measures the bench layout, not the participant. |
+| `incorrect_tool_selected_count` | **Always 0** | **Always 0** | Dead column in this build. Safe to compare — both are structurally zero — but it carries no information. |
+| `unsuccessful_action_count` | Wrong repair **or** failed device test | **Failed device test only** | The same number means different things on the two benches. On the fan task it is a count of failed device tests; on the computer task it is failed device tests **plus** wrong-part selections. |
+| `device_test_failed_count` | Available | Available | Comparable. This is the only failure count that means the same thing on both benches. |
+| `returned_to_information_after_unsuccessful_action` | Triggered by a wrong repair or a failed test | Triggered **only** by a failed test | The trigger differs, so the two conditions are answering slightly different questions. |
+| `first_meaningful_action`, `first_meaningful_action_timestamp_seconds` | A wrong repair can be the first meaningful action | It cannot | A small bias in which action gets recorded first. |
 
-Even standing at the bench edge (≈ 0.5 m from a part), `fan.fastener` subtends about 2.5°.
-Ray-pointing accuracy and hover/selection event rates are directly affected, so this is a
-task-difficulty change that needs sign-off, and it is a plausible source of accidental
-`IncorrectComponentInteraction` events. It is not currently recorded anywhere.
+`unsuccessful_action_count` is the one that will silently mislead, because it is a single
+number that looks comparable and is not.
 
-### 7.4 Blocking defect — `ResearcherTaskControls` throws every frame in all three participant scenes
+### What was not chosen
 
-Found by the standalone run in §6. This is the most serious item in the package.
+1. **Switching `fan.faulty-fuse` back on.** This restores symmetry in one step, but puts a
+   second loose fuse back on a bench that §3 deliberately cleared, and re-opens the "is
+   this an assembly task" reading. It is one of the two things you can choose.
+2. **Stowing `computer.ram` to match the fan bench.** This makes both conditions
+   symmetrical at zero — no wrong-part action is possible anywhere. The columns become
+   dead but honest. It also removes the most realistic misdiagnosis in the study.
+3. **Adding a wrong tool to both benches.** Rejected without asking: it adds an object to
+   both benches, which is a protocol change.
+4. **Doing nothing and handling it in analysis.** Possible — the columns are separable —
+   but it must be a decision on record before data collection, not a discovery
+   afterwards.
 
-```
-ArgumentOutOfRangeException: Specified argument was out of the range of valid values.
-Parameter name: key: 290
-  at UnityEngine.InputSystem.Keyboard.get_Item (UnityEngine.InputSystem.Key key)
-  at TMUVR.MaintenanceResearch.ResearcherTaskControls.Update ()
-     … Assets/VRMaintenanceResearch/Scripts/UI/ResearcherTaskControls.cs:45
-```
+### What this does to the research
 
-**Cause.** The redesign added `[SerializeField] Key toggleKey = Key.F9;`, where `Key` is
-`UnityEngine.InputSystem.Key`. All three participant scenes serialise `toggleKey: 290`:
+If nothing changes: any hypothesis about error rates must be tested **within** a
+condition, not across the two, and `unsuccessful_action_count` must be decomposed into
+its parts before use. That is a real constraint on what the study can claim, so it needs
+to be a decision rather than a footnote.
 
-```
-Assets/VRMaintenanceResearch/Scenes/VRTraining.unity:759:        toggleKey: 290
-Assets/VRMaintenanceResearch/Scenes/ComputerRepairTask.unity:7809: toggleKey: 290
-Assets/VRMaintenanceResearch/Scenes/FanRepairTask.unity:667:      toggleKey: 290
-```
+### Pictures
 
-290 is `UnityEngine.KeyCode.F9`, the **legacy** input enum. `InputSystem.Key.F9` is a
-different, much smaller value, so `keyboard[290]` is out of range and
-`ResearcherTaskControls.Update()` throws on **every frame** the component is enabled.
+The comparison the fan participant no longer gets to make on the bench:
 
-**Introduced by this redesign.** Neither the field nor the serialised value exists at
-`f117cc8`: the pre-redesign `ResearcherTaskControls.cs` had no key field at all.
+![Intact fuse element](Screenshots/Audit/After_Fan_ElementGood_Macro.png)
+*The working fuse: a continuous 0.7 mm element across the glass.*
 
-**Measured impact in the standalone run:** **129 081 exceptions in a 4½-minute session** —
-one per frame, confirmed three ways in the player log (message, parameter line and
-`ResearcherTaskControls.Update` stack frame all appear exactly 129 081 times). The log grew
-to 81 MB / 904 155 lines from that session alone. In a development build this repeatedly
-forces the Unity **Development Console overlay open across the participant's view** —
-visible in every task screenshot in §6.1 — during a live session. In a release build the
-exception and its stack trace would still be written to the player log every frame.
+![Blown fuse element](Screenshots/Audit/After_Fan_ElementBlown_Macro.png)
+*The blown fuse: the same glass, the same ferrules, the same printed rating — the
+element has parted, and that is the only difference. This fuse is currently **stowed**,
+so the participant never has two cartridges to compare; the only blown one is the one
+fitted in the holder.*
 
-**Functional consequences:**
+Whether that 0.7 mm element is even visible on the headset is an open hardware question
+— `QUEST3_NEXT_STEPS.md`, check 4.
 
-* The **F9 shortcut does not work at all** in any scene. The panel can only be opened with
-  the on-screen handle. `KEYBOARD_MOUSE_CONTROLS.md` and the researcher procedure currently
-  imply F9 works.
-* `Update()` aborts at its first statement each frame. That statement is the only thing in
-  `Update()`, so no other logic is lost — but the exception is unhandled and continuous.
-* Nothing else in the session is affected: the flow, state machine and CSV output in §6 are
-  all correct despite the error storm.
+### Closed question ค
 
-**Why this was not caught earlier.** `TEST_REPORT.md` records "zero Console errors" for the
-redesign. The exception only occurs in Play Mode / the player, and the Editor Console
-collapses identical entries, so it is easy to miss among a busy Console.
-
-This is a one-line fix, but it is a **scene** change as well as a code change, so it has
-deliberately **not** been made — no scenes were altered while preparing this package.
-It should be scheduled before any participant session.
-
-### 7.5 The first-action metric fires 14 ms into every task
-
-Also found by the standalone run. `task_summary.csv` records, for both tasks:
-
-| Task | `first_meaningful_action` | `…_timestamp_seconds` | `action_occurred_before_first_information_access` |
-|---|---|---|---|
-| Computer | `DeviceHovered` | **0.013926** | `true` |
-| Fan | `ComponentHovered` | **0.013359** | `true` |
-
-Nobody did anything in those 14 ms. The participant spawns at (0, 1.361, −1.6) facing +Z
-with the controller rays pointing forward, so the ray lands on `computer.case` /
-`fan.blade` on the first frame after `TaskStarted` and an incidental hover is logged as the
-first meaningful action.
-
-Two consequences for the analysis:
-
-* `first_meaningful_action_timestamp_seconds` is not measuring participant behaviour; it is
-  measuring the spawn geometry, and will read ≈ 0.014 s for every participant.
-* `action_occurred_before_first_information_access` will therefore be `true` for every
-  session in which any information source is opened at all — which is precisely the
-  variable the study is designed to measure.
-
-This is very likely **pre-existing** rather than redesign-introduced (before the redesign
-the participant spawned inside the device mesh, which would also hover immediately), but
-the new start pose does not fix it and the new geometry preserves it. Either the hover
-event should be excluded from the "meaningful action" definition, or the initial ray should
-not be aimed at the device.
-
-Related: the same hover is logged **twice** at an identical timestamp (event sequence 11
-and 12 for Computer, 20 and 21 for Fan) because both the left and right controller hover
-the same object. Hover counts are therefore doubled whenever both rays are on one target.
-
-### 7.6 Movement CSV frame label
-
-`ResearchLogService.LogMovement` writes `pose.position`, which is a **world** position, but
-the CSV's frame column is the literal string `"task-local"`. The values have always been
-world-space, so this is a pre-existing labelling defect rather than something the redesign
-introduced — but combined with the −1.6 m origin shift it will mislead anyone comparing
-sessions recorded before and after 2026-08-02. Either the column value or the schema
-documentation should be corrected before data collection.
+> **Do you accept that a wrong-part action can only ever be recorded on the computer
+> task, and never on the fan task?**
+> If **no**, state which: switch `fan.faulty-fuse` back on (symmetry at two), or stow
+> `computer.ram` (symmetry at zero). Either is a one-step change and neither touches an
+> object id or a data column.
 
 ---
 
-## 8. Warning origin separation
+## 5. ง — The part that is the answer to the computer task was rotated 44°
 
-### 8.1 Compiler warnings — current source
+### What changed
 
-There is no assembly definition under `Assets/VRMaintenanceResearch`, so the research
-scripts compile into `Assembly-CSharp` together with every other `Assets/` script. A
-research-owned compiler warning surfaces in exactly the same place as any other `Assets/`
-warning and is distinguished only by the file path in the message.
+`computer.internal-cable` is the 24-pin power plug hanging unplugged inside the machine.
+It **is** the fault in the computer task: the whole of that task is noticing that this
+plug is not in the socket it belongs to.
 
-| Origin | Errors | Warnings |
-|---|---|---|
-| `Assets/VRMaintenanceResearch` | **0** | **0** |
-| Other `Assets/` | 0 | 0 |
-| `Packages/` and `Library/PackageCache` | 0 | 0 |
+Its lean changed from **−18° to +26°** — a 44° rotation. Its position, its size, its
+click target, its object id and its recorded event type are all unchanged.
 
-Evidence, in order of strength:
+### Which commit
 
-* The one research-owned compiler warning that existed during the redesign —
-  `ResearchUiKit.cs(75,13): warning CS0618: 'TMP_Text.enableWordWrapping' is obsolete` — is
-  gone from the source, which now uses `textWrappingMode` (verified by reading the file).
-  It is the **only** distinct `warning CS` message that `Assets/VRMaintenanceResearch` has
-  ever produced in this Editor session's log.
-* The current `Assembly-CSharp.dll` was compiled at 15:51:46, after that fix. **No
-  `warning CS` or `error CS` line appears anywhere in the Editor log after that compile.**
-* A recompilation was requested during this review; Unity found the assemblies already up
-  to date and rebuilt nothing, and the Console reports 0 errors and 0 warnings.
+`0248328`, "Make the parts a participant has to name look like the parts they are".
 
-### 8.2 Build warnings — the 486 reported by the last Windows build
+### Why
 
-Counted directly from the Editor log window covering that build (lines 616 000–696 868,
-ending at the build report), excluding asset-import chatter. Total: **491 warning lines,
-485 distinct shader warnings + 6 duplicate emissions of 1 compiler warning**, which is how
-Unity arrives at a reported count of 486.
+At −18° the plug leaned *into* the machine, so a participant standing at the open side
+saw its blank white back. At +26° it leans *out*, so the two rows of twelve bores — the
+thing that makes it recognisable as a power plug, and matches the spare in the tray —
+face the person looking at it. The socket it belongs in opens toward the same side, so a
+lead pulled out of it and left hanging would in reality point up at its own socket.
 
-| Origin | Warning lines | Distinct messages | Class |
+### What was not chosen
+
+1. **Marking the fault** — a glow, a colour, an arrow, a wider gap. Rejected outright:
+   the task is finding it. Nothing about this plug is brighter, larger or differently
+   coloured than the identical spare lying in the tray.
+2. **Moving the plug somewhere more visible.** Rejected: that would change how far the
+   participant has to travel and where they have to look, which is measured. Only the
+   rotation changed.
+3. **Leaving it at −18°.** Rejected because a participant who cannot tell what the object
+   is cannot form a hypothesis about it, and would fall back on either poking things or
+   opening a manual — and *which of those they do* is one of the study's outcomes.
+
+### What this does to the research
+
+This moves the answer's visibility without moving the answer. It should make the fault
+findable by looking, which is the intended path, and correspondingly reduce the number
+of participants who find it by exhaustive poking or by reading a manual first. Since the
+split between *look*, *poke* and *read* is an outcome, this rotation shifts an outcome
+distribution. It is small and deliberate, but it is not neutral.
+
+**It has not been tested with a person.** No participant has looked at either version.
+
+### Pictures
+
+This is the item where looking is much faster than reading. Both images are the same
+camera position; only the plug's lean differs.
+
+![The fault plug at the previous −18°, leaning into the machine](Screenshots/Recognition/Before_Computer_AtxFault_Inspect.png)
+*Before, at −18°: the plug leans into the machine and shows the participant its blank
+white back. Nothing about it says "power connector".*
+
+![The fault plug at the current +26°, bores facing the open side](Screenshots/Recognition/After_Computer_AtxFault_Inspect.png)
+*After, at +26°: the same plug in the same place, turned so its two rows of twelve bores
+face the person looking in. It is now recognisably the mate of the spare in the tray.*
+
+![The socket the plug belongs in](Screenshots/Recognition/After_Computer_AtxHeader_Inspect.png)
+*The socket on the board that the plug should be in. The task is noticing that these two
+are not joined.*
+
+![The identical spare lying in the tray](Screenshots/Recognition/After_Computer_AtxSpare_Inspect.png)
+*The spare in the tray — same body, same size, same rail colours. Nothing marks either
+one as the answer.*
+
+The same pair from the start pose, before stepping in:
+`Screenshots/Recognition/Before_Computer_AtxFault_StartPose.png` and
+`Screenshots/Recognition/After_Computer_AtxFault_StartPose.png`.
+
+### Closed question ง
+
+> **Do you accept the fault plug being turned so that its bores face the participant's
+> approach, rather than facing away?**
+> If **no**, the rotation reverts to −18° in one line and both benches rebuild.
+
+---
+
+## 6. จ — The two device-test controls no longer look alike
+
+### What changed
+
+Every task ends the same way: the participant operates the machine's own control to see
+whether the repair worked. Both conditions used to use **the same shape** — three
+stacked cylinders with a 120 mm disc on top — so the final step looked identical in the
+two conditions.
+
+They are now two different real controls:
+
+| Condition | Object id | Control now | Fitted size |
 |---|---|---|---|
-| `Packages/com.unity.ai.inference` — `ConvGeneric.compute` | 460 | 5 | `TRANSPOSE_OUTPUT variants not supported with NON_UNIFORM_CONVGROUP_PER_OC`, once per compiled kernel variant |
-| `Packages/com.unity.ai.inference` — `ScatterND`, `ConvTranspose`, `GridSample`, `ScatterElements`, `SliceSet`, `Pad` | 25 | 8 | Signed/unsigned mismatch, integer modulus/divide performance, loop-variable shadowing |
-| **Packages subtotal** | **485** | **13** | all shader-compilation warnings |
-| `Assets/VRMaintenanceResearch` | 6 | **1** | `ResearchUiKit.cs(75,13) CS0618` obsolete TMP API, emitted once per compile pass, from **before** the fix |
-| Other `Assets/` | 0 | 0 | — |
+| Computer | `computer.power-button` | An industrial **push button** — plate and mushroom head | 111 × 100 × 111 mm |
+| Fan | `fan.speed-selector` | A rotary **dial** — plate and knob | 125 × 90 × 125 mm |
 
-**485 of the 486 build warnings originate in `Packages/com.unity.ai.inference`** (Unity's
-AI Inference / Sentis package). They are shader-compilation warnings for compute kernels
-the research scenes never use; the package is pulled in by the project, not by this work.
+A third control changed at the same time: `fan.power-switch`, the switch on the fan's
+base, is now a **slider** with a handle in a travel slot.
 
-The one research-owned build warning is the obsolete-TMP-API warning, and it is already
-fixed in source. The shipped `VRMaintenanceResearch.exe` was built at 15:48 from an
-`Assembly-CSharp` compiled before the 15:51 fix, so **that specific binary still contains
-the pre-fix call**. The difference is an obsolete-API alias with identical behaviour, so it
-does not affect the standalone verification in §6 — but a rebuild would drop the count from
-486 to 485.
+All three keep their object ids, their click targets, their recorded event types and
+their positions. Both device-test controls stand on the same pedestal at the same place,
+(1.50, 0.95, 0.20), and both carry the same sign: **INSPECT / PRESS TO CHECK THE UNIT**.
 
-### 8.3 Runtime warnings in Play Mode
+### Which commit
 
-Four warnings appear when Play Mode is entered on this machine, all from packages, none
-from research code:
+`0248328`.
 
-| Message | Origin |
+### Why
+
+The parts were sized from the real components they represent, and a computer's power
+button and a fan's speed control are not the same object. A fan whose only control is a
+push button does not read as a fan.
+
+### What was not chosen
+
+1. **Giving both conditions the push button.** Rejected: it is the honest control for the
+   computer and the wrong one for the fan, so it would make one condition less realistic
+   in exactly the way the recognition pass was trying to fix.
+2. **Giving both conditions the dial.** Same objection, reversed.
+3. **Keeping the old three-cylinder shape in both.** Rejected: neither condition could
+   name it, so in both conditions the last step was "operate the unidentifiable thing".
+
+### What this does to the research
+
+The two conditions now differ in the **motor action** of the final step: pressing versus
+turning. A press is a single, familiar, low-precision action. A turn requires grip and
+rotation and is more sensitive to controller tracking and to hand size. If the fan task
+turns out to have systematically longer completion times or more device-test attempts,
+this difference is a candidate explanation and cannot be separated from it after the
+fact.
+
+The sign above both controls is identical, and the wording says what to do without
+naming what to fix, so the *instruction* is matched even though the control is not.
+
+**Not yet measured:** whether a dial is harder to operate than a button on the actual
+headset. That is on the Quest 3 checklist (`QUEST3_NEXT_STEPS.md`, check 6).
+
+### Pictures
+
+The two controls that end the two tasks, side by side.
+
+![Computer condition: push button](Screenshots/Recognition/After_Computer_PowerButton_Inspect.png)
+*Computer condition — a push button. The participant presses it.*
+
+![Fan condition: rotary dial](Screenshots/Recognition/After_Fan_SpeedSelector_Inspect.png)
+*Fan condition — a rotary dial. The participant turns it. Same pedestal, same position,
+same sign; different hand action.*
+
+![The identical shape both controls used to be](Screenshots/Recognition/Before_Computer_PowerButton_Inspect.png)
+*What both used to be: three stacked cylinders under a 120 mm disc, identical in the two
+conditions and nameable in neither.*
+
+Each in place on its pedestal: `Screenshots/Audit/Approach_Computer_InspectControl.png`
+and `Screenshots/Audit/Approach_Fan_InspectControl.png`.
+
+### Closed question จ
+
+> **Do you accept two different-looking controls — a push button in the computer
+> condition, a dial in the fan condition — for the same final step?**
+> If **no**, both can be set to the same shape; say which shape.
+
+---
+
+## 7. ฉ — Data recorded before `743b1c3` filed internal parts under the machine's name
+
+### What happened
+
+Both benches build their internal parts as children of the machine, so their positions
+stay readable relative to it. The interaction toolkit, when a machine's own click-target
+list is left empty, fills it by collecting **every click target underneath that machine,
+including its children's**. The machine registers first, so a pointer aimed at anything
+inside it resolved to the machine.
+
+The result: **every hover and every selection of a part inside a machine was recorded
+against the machine's object id.**
+
+| Scene | Machine that absorbed its children | Child parts recorded as the machine |
+|---|---|---|
+| Computer | `computer.case` | `computer.motherboard`, `computer.psu`, `computer.psu-switch`, `computer.cooling-fan`, `computer.internal-cable`, `computer.ram` (6 parts, 7 targets in total) |
+| Fan | `fan.body` | `fan.blade`, `fan.fastener`, `fan.fuse-holder`, `fan.internal-wire`, `fan.power-switch` (5 parts, 6 targets in total) |
+
+There was one visible symptom — a single warning line when the scene loaded — and
+nothing else. Both correct repair parts sit out on the bench, outside the machine, so the
+repair loop always completed and every check passed.
+
+### Which commit fixed it
+
+`743b1c3`, "Stop the device interactables swallowing their children's colliders". Each
+part's click-target list is now written explicitly to its own target, so the nesting no
+longer matters. Verified at 13/13 and 15/15 parts, with no warning at scene load.
+
+The defect **pre-dates** the diagnostic re-framing, but `de7d5fd` seating
+`computer.ram` on the board added one more shadowed part to it.
+
+### Why this matters for the data
+
+Any recording made before `743b1c3` has, in its event rows:
+
+* `computer.case` or `fan.body` where the participant actually touched one of the eleven
+  internal parts;
+* correspondingly **inflated** hover and selection counts on `computer.case` and
+  `fan.body`;
+* **zero or near-zero** counts for all eleven internal parts, which reads as "nobody
+  looked at the fuse holder" when in fact they did.
+
+This is not recoverable. The rows do not record which child was actually under the
+pointer, so no filter or re-derivation can separate them.
+
+### What was not chosen
+
+Re-deriving the old sessions from movement data. Rejected: the movement file records
+where the head and hands were, not what the pointer resolved to, so the mapping cannot
+be reconstructed.
+
+### What this does to the research
+
+* Every session recorded before `743b1c3` (2026-08-04) must be treated as pilot or
+  discarded for any analysis involving per-part interaction.
+* **No participant data has been collected**, so at present this costs nothing. It
+  matters only if any earlier development or pilot recording were later pooled in.
+* Session-level columns that do not name a part — total time, information source usage,
+  low-activity periods, completion status — are unaffected.
+
+### Closed question ฉ
+
+> **Do you accept that no session recorded before `743b1c3` (2026-08-04) may be pooled
+> with sessions recorded after it, for any analysis that names an individual part?**
+> If **no**, say what recovery you expect; the data needed for it is not in the files.
+
+---
+
+## 8. ช — Pointing at a part often selects a different part
+
+**Found on 2026-08-08 while preparing this package. Not previously reported. Not fixed.**
+
+### What was measured
+
+A pointer ray was cast from the participant's eye to the centre of what each part
+actually draws — that is, the participant points straight at the part they can see — and
+the software was asked which part it decided had been pointed at. Two standing poses were
+used: where the participant starts, and leaning in over the bench.
+
+**31 of 54 aims resolved to a different part.**
+
+Full output: `Verification/Ray_Aim_Attribution.txt`. It is reproducible from the menu:
+*Tools → VR Maintenance Research → Visual Audit → Report Ray Aim Attribution*.
+
+| Scene | Aims tested | Resolved to a different part |
+|---|---|---|
+| Computer bench | 24 | 14 |
+| Fan bench | 24 | 17 |
+| Training room | 6 | **0** |
+
+### Why
+
+Eleven parts carry the **default click target of a Unity capsule shape: 1 000 mm across
+and 2 000 mm tall**, at a bench where the parts themselves are between 11 mm and 571 mm.
+The builders resize click targets through one helper, and that helper only handles box
+shapes — it returns without doing anything when the shape is a capsule. So every part
+built from a capsule kept a target the size of a person while its visible body was
+rebuilt at true scale.
+
+The eleven: `computer.cooling-fan`, `computer.external-power-cable`,
+`computer.tool.screwdriver`, `fan.blade`, `fan.body`, `fan.fastener`, `fan.front-cover`,
+`fan.internal-wire`, `fan.motor-module`, `fan.power-cord`, `fan.tool.screwdriver`.
+
+Two of them sit in front of everything else and absorb almost all of it:
+`computer.cooling-fan` takes **every** misdirected aim on the computer bench, and
+`fan.blade` takes fifteen of the seventeen on the fan bench.
+
+### The parts that cannot be aimed at
+
+| Part | Resolves to | Why it matters |
+|---|---|---|
+| `computer.internal-cable` | `computer.cooling-fan` | **This is the fault in the computer task.** Pointing at it records the cooling fan. |
+| `computer.ram` | `computer.cooling-fan` | The only wrong-part action in the whole study (§4) cannot be triggered by pointing at it. |
+| `computer.main-power-connector` | `computer.cooling-fan` *(from the bench pose; correct from the start pose)* | **The correct repair.** Reachable from where the participant starts, not from where they will be standing when they reach for it. |
+| `fan.working-fuse` | `fan.front-cover` | **The correct repair on the fan bench**, from both poses. |
+| `fan.fuse-holder`, `fan.internal-wire`, `fan.power-switch`, `fan.power-plug`, `fan.body`, `fan.fastener` | `fan.blade` | The entire fan service bay resolves to the blade. |
+| `computer.motherboard`, `computer.psu`, `computer.psu-switch`, `computer.case`, `computer.side-panel` | `computer.cooling-fan` | The whole computer interior resolves to the cooling fan. |
+
+### Why no existing check caught it
+
+Every check in the project reaches a part by name or by reference and never points at
+anything:
+
+* the scene-integrity tests read settings on components;
+* the visual validator reads appearance;
+* the play-mode runtime checks and the full-flow walkthroughs call the task controller's
+  record-interaction method **directly**, passing the object they looked up by id.
+
+So the repair loop has been verified at the level of *"if this part is selected, the
+right thing happens"* — which is true — and never at the level of *"if the participant
+points at this part, this part is selected"*, which is what fails. `743b1c3` fixed which
+target belongs to which part; it did not change how big the targets are.
+
+### What has **not** been done
+
+The click targets have **not** been resized. Resizing them changes which object id lands
+in the event stream for a given pointing action, which changes what the data means. That
+is a research decision, and this package does not make research decisions.
+
+The fix itself is small and reversible: the resize helper in the two bench builders is
+extended to handle capsule shapes as well as box shapes, then both benches are rebuilt.
+Every object id, event type and data column stays exactly as it is; only the size of
+eleven invisible shapes changes. The report above is the before/after measurement.
+
+### What this does to the research if it is left as it is
+
+Per-part interaction data from both benches would be close to meaningless:
+`computer.cooling-fan` and `fan.blade` would absorb most hovers and selections, and the
+parts the participant was actually investigating would show near-zero counts —
+the same failure mode as §7, from a different cause, and this time still live.
+
+More seriously, the **fan task may not be completable by pointing**: `fan.working-fuse`
+is the required repair and resolves to `fan.front-cover` from both tested poses. There
+may be a pose from which it is reachable; that has not been established, and no person
+has tried it.
+
+### Closed question ช
+
+> **Should the eleven oversized click targets be resized to match their parts, before any
+> participant session?**
+> A **yes** is a one-line change in each of the two bench builders, followed by a rebuild
+> and a full re-verification. Object ids, event types, data columns and the number of
+> parts on each bench are untouched.
+> A **no** means per-part interaction counts are not usable in the analysis and the fan
+> task's completability must be confirmed on the headset first.
+
+---
+
+## 9. ซ — The four information sources moved, and their order is now fixed
+
+### What changed
+
+The study's independent variable is **which kind of information source a participant
+chooses**. Where those four sources sit, and in what order, therefore sits directly on
+top of the thing being measured.
+
+On 2026-08-02 the four sources were a row of large cards on the back wall, spread
+symmetrically to the participant's left **and** right. They are now a single row of small
+cards on a dock at the participant's **left only**, angled toward them.
+
+| Measure | 2026-08-02 | Now |
+|---|---|---|
+| Position | Back wall, x = −3.3 / −1.1 / +1.1 / +3.3, z = 3.0 | Left-hand dock, (−2.12, 1.30, 0.30) → (−1.43, 1.30, 0.84), angled 38° toward the participant |
+| Card width | 1.2 m | 0.244 m |
+| Distance from the start pose | 4.73 m (inner) to 5.66 m (outer) | **2.80 m to 2.85 m** |
+| Farthest : nearest distance | 1.197 | **1.018** |
+| Apparent width | 14.5° (inner), 12.1° (outer) | **4.9°–5.0°, all four** |
+| Spread across the body | Left and right, symmetric | **All four on the left** |
+| Order | Fixed | Fixed |
+
+### Which commit
+
+`4f4e452` (2026-08-03), refined in `22c7158`. The stated reason: the four cards used to
+sit in a grid on the bench's back edge directly over the spare-parts tray, and an opened
+reader covered the left third of the bench.
+
+### Why
+
+The dock keeps the sources off the bench, so an opened reader can never cover the parts
+the participant is diagnosing, and the dock cannot grow back over the bench.
+
+### What this does to the research — two separate effects
+
+**1. The four sources are now almost perfectly equal in salience.** Distance varies by
+1.8% across the four and apparent width by 2%. For a study whose independent variable is
+source type, that is close to ideal: no source is nearer, larger or easier to reach than
+another. This is a **larger** improvement than the one the 2026-08-02 package flagged as
+worth approving, and it moves in the same direction.
+
+**2. Position in the row is completely confounded with source type.** The dock builds
+the row by sorting on source type, so the order is always:
+
+> **manual → troubleshooting guide → video → visual guide**
+
+left to right, in both tasks, for every participant. There is one layout identifier in
+the build, `sources-layout-development-a`, and no second layout exists. So:
+
+* the manual is always the source at one end of the row and the visual guide always at
+  the other;
+* any tendency to reach for the nearest end, or to read a row left to right, adds a
+  constant bias to the same source type in every session;
+* `information_source_layout_id` records the layout faithfully — it will simply record
+  the same value for every participant, so the bias cannot be modelled out afterwards.
+
+The protocol log already lists a "source-layout assignment schedule" as a document to
+produce before data collection. Nothing in the build implements one.
+
+### What was not chosen
+
+1. **Randomising or counterbalancing the row order per participant.** Not done, because
+   it is a protocol decision and would need an assignment schedule and a second layout
+   identifier so the data can say which participant saw which order.
+2. **Putting the sources back on the back wall.** That restores left/right symmetry but
+   also restores the unequal distances the 2026-08-02 package flagged, and puts the
+   opened reader back over the bench.
+3. **Splitting the four across both sides of the participant.** Would restore symmetry
+   without the reader problem, but doubles the fixture and makes two of the four
+   invisible without a head turn.
+
+### Closed question ซ
+
+> **Do you accept a fixed left-to-right order — manual, troubleshooting, video, visual
+> guide — identical in both tasks and for every participant?**
+> If **no**, a counterbalanced order needs an assignment schedule from you and a distinct
+> `information_source_layout_id` per order, so the data records which one each
+> participant saw.
+
+---
+
+## 10. Where the 2026-08-02 decisions now stand
+
+| # | 2026-08-02 item | State today |
+|---|---|---|
+| 1 | Researcher-panel key crashed the software every frame | **Fixed.** All three scenes now store the correct key value and the code corrects a wrong one on load. |
+| 2 | First-action metric fires ~14 ms into every task from an incidental pointer hover | **Still open.** Unchanged. Still needs your decision on whether a hover counts as a meaningful action. |
+| 3 | Participant start pose, 2.05 m from the bench | **Still open**, and now folded into ก. |
+| 4 | Information-source salience became more equal | **Superseded by ซ.** The tiles did not stay where that package left them — they moved to a left-hand dock on 2026-08-03 and are now near-identical in distance and apparent size. §9 has the current numbers and a new question about their fixed order. |
+| 5 | Target size | **Superseded by ก**, which has the current numbers. Targets are smaller again. |
+| 6 | Fan fuse initial state — both fuses loose in the tray | **Changed by `de7d5fd`, and now folded into ค.** One fuse is fitted in the holder; the other is stowed. |
+| 7 | Movement file's frame label says `task-local` but records world coordinates | **Still open.** Unchanged. |
+| 8 | The same hover is recorded twice when both controllers point at one object | **Still open.** Unchanged. |
+| 9 | A hand-driven completed run outside the editor | **Done** — `6845fec` drove a whole session end to end with development mode off, both task orders. |
+| 10 | Physical Quest 3 validation | **Still outstanding.** A Quest 3 build was produced (`b152597`) but never installed and never run. See `QUEST3_NEXT_STEPS.md`. |
+
+Two further changes from rounds 4 and 5 need recording but do not need a decision:
+
+* **`50ad6fa`** — the researcher's mouse could write into the participant's data. The
+  deployment is a PC running Quest Link, so the game view sits on the researcher's
+  monitor while the participant works; a mouse click over a part recorded a hover, a grab
+  or an information-source open in the participant's event stream. That path is now off
+  during a participant session. Rows already affected are identifiable: they carry
+  `interactor=mouse`.
+* **`a32041c`** — the participant removes the headset between the two tasks for
+  NASA-TLX. A *Continue* button on the participant's status board would have let them
+  load the second task before that questionnaire was administered. The board now carries
+  no control at all and shows a finished notice in the participant's own language.
+  Advancing is the researcher's, from the desktop panel. The session also no longer ends
+  by loading the setup screen, which had no head tracking and displayed the participant
+  code.
+
+---
+
+## 11. Answer sheet
+
+Nothing below has been filled in. Tick or write in the right-hand column.
+
+| # | Question | Yes | No | If no, what instead |
+|---|---|---|---|---|
+| ก | Accept the current positions and sizes of all 31 parts? | ☐ | ☐ | |
+| ข | Accept diagnosis, with fewer parts on the bench, as the task? | ☐ | ☐ | |
+| ค | Accept that a wrong-part action is only recordable on the computer task? | ☐ | ☐ | |
+| ง | Accept the fault plug turned to face the participant's approach? | ☐ | ☐ | |
+| จ | Accept a push button in one condition and a dial in the other? | ☐ | ☐ | |
+| ฉ | Accept that pre-`743b1c3` sessions cannot be pooled with later ones? | ☐ | ☐ | |
+| ช | Resize the eleven oversized click targets before any participant session? | ☐ | ☐ | |
+| ซ | Accept a fixed source order — manual, troubleshooting, video, visual guide — for every participant? | ☐ | ☐ | |
+| — | Carried over: does an incidental pointer hover count as a meaningful action? | ☐ | ☐ | |
+| — | Carried over: correct the movement file's frame label to `world`? | ☐ | ☐ | |
+| — | Carried over: should a two-controller hover of one object record one event or two? | ☐ | ☐ | |
+| — | Carried over: approve the participant start pose, 2.05 m from the bench? | ☐ | ☐ | |
+
+---
+
+## 12. What was verified for this package, and what was not
+
+**Verified, in the editor, on 2026-08-08 at commit `0248328`:**
+
+| Check | Result |
 |---|---|
-| `XR: Error setting active audio output driver. Falling back to default.` (×2) | `com.unity.xr.management`, `com.unity.xr.openxr` |
-| `Failed to get haptic capabilities of XRSimulatedController… error code −1` (×2) | `com.unity.xr.interaction.toolkit` |
+| Scene integrity, 7 tests | 7/7 pass — `Verification/Scene_Integrity_Tests.txt` |
+| Scene validator, 4 scenes | All pass, no warnings — `Verification/VisualAudit_Validation.txt` |
+| Foundation tests, 6 tests | 6/6 pass |
+| Repair loop, both benches | Fail → repair → pass → reset — `Verification/Runtime_Checks_*.txt` |
+| Training checks | Pass |
+| Full session, both task orders | Pass — `Verification/Full_Flow_Walkthrough_*.txt` |
+| Object ids | All 31 byte-identical to the baseline |
+| Console | No errors |
+| Pointer attribution | **31 of 54 aims resolve to a different part** — `Verification/Ray_Aim_Attribution.txt` (§8) |
 
-These are consequences of running without a headset and using the XR simulator. The
-OpenXR `XR_ERROR_FORM_FACTOR_UNAVAILABLE` message in the standalone runtime log has the
-same cause. Physical Meta Quest 3 validation remains pending and no Quest performance
-claim is made.
+**Not verified, and not claimed anywhere in this document:**
 
-### 8.4 Caveat on the recompile
-
-The first recompile request used `RequestScriptCompilationOptions.CleanBuildCache`, which
-failed after about two minutes with a Tundra build error on
-`Unity.RenderPipelines.Core.ShaderLibrary.dll` and two other **package** assemblies. Unity
-kept the previously built assemblies and no research assembly was affected. A normal
-recompilation was then requested; Unity found all 149 assemblies up to date and rebuilt
-nothing, and the Editor is idle with an error-free Console.
-
-Because that clean rebuild did not complete, §8.1 rests on the Editor log and the source
-itself rather than on a from-scratch compile. It should be re-confirmed with a clean Editor
-restart before the package is signed off.
-
----
-
-## 9. Repository state
-
-* Branch `visual-polish-claude`, HEAD `0371ecd`. **Nothing merged, nothing pushed.**
-* No `.unity` scene file was modified. The four scenes were opened read-only for
-  measurement and capture and were never saved; `git status` shows no scene changes.
-* No prefab, material, script or ScriptableObject was modified.
-* The pre-redesign scene copies used for the "before" captures were extracted to a
-  temporary folder outside the research tree and deleted afterwards.
-* The standalone run in §6 wrote one new session folder under the user's
-  `AppData\LocalLow` research-data directory. It is outside the repository and outside the
-  Editor's `Development` runs used for earlier testing; nothing existing was overwritten.
-* Files added by this package, all documentation:
-  * `Docs/SUPERVISOR_REVIEW_PACKAGE.md` (this file)
-  * `Docs/Screenshots/Review/` — 51 before/after PNGs
-  * `Docs/Screenshots/Review/Standalone/` — 11 run screenshots, `session_manifest.csv`,
-    `task_summary.csv`, `standalone-run-excerpt.log`
-
----
-
-## 10. Decisions requested
-
-**Must fix before any participant session**
-
-1. **`toggleKey` exception** — §7.4. Set `toggleKey` to a valid `UnityEngine.InputSystem.Key`
-   value in all three participant scenes (or guard the lookup in `ResearcherTaskControls`).
-   Requires a scene edit, so it is not done here. Rebuild afterwards.
-2. **First-action metric** — §7.5. `first_meaningful_action` fires at ≈ 0.014 s in every
-   task from an incidental spawn-time ray hover, and
-   `action_occurred_before_first_information_access` is consequently `true` in every
-   session. Decide whether hover counts as a meaningful action, and whether the initial ray
-   should point at the device.
-
-**Protocol decisions**
-
-3. **Participant start pose** — approve 2.05 m from the bench edge and 1.05 m outside the
-   marked work zone, or move the start into the work zone. Note that no target is reachable
-   at spawn, so every task now begins with locomotion.
-4. **Information-source salience** — §7.1. The four sources became more equidistant and more
-   nearly equal in angular size. Approve as an improvement, or restore the pre-redesign
-   participant-relative geometry by moving the tile row 1.6 m closer.
-5. **Target size** — §7.3. Approve the reduced component sizes, or raise a floor on the
-   smallest targets (`fan.fastener`, `computer.psu-switch`, `fan.internal-wire`).
-6. **Fan fuse initial state** — §5.2. Confirm that both fuses starting loose in the tray,
-   with nothing to extract, is the intended task.
-
-**Data-schema decisions**
-
-7. **Movement CSV frame label** — §7.6. Correct the column value to `world`, or convert the
-   logged pose to a genuine task-local frame.
-8. **Duplicate hover events** — §7.5. Decide whether a left-and-right-controller hover of
-   the same object should log one event or two; it currently logs two.
-
-**Remaining verification**
-
-9. A hand-driven `Completed` run outside the Editor (correct component + device test
-   through the XR simulator) has still not been done — §6 used the researcher controls, so
-   Computer and Fan recorded `Aborted`. Confirm whether that is needed before sign-off.
-10. Physical Meta Quest 3 validation remains outstanding. No Quest performance claim is
-    made anywhere in this package.
+* Anything on a physical Meta Quest 3. A build exists; it has never been installed or
+  run. No frame rate, comfort, legibility or tracking claim is made.
+* Whether any of these changes helps a real participant. No person has been through any
+  version of either bench.
+* Whether the Thai and Japanese wording is correct. It has never been checked by a
+  reader of either language — see `TRANSLATION_REVIEW.md`.
