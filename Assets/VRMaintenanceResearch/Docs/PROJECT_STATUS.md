@@ -1,5 +1,29 @@
 # VR Maintenance Research - Project Status
 
+## Blocking, awaiting a decision - 2026-08-08
+
+**Pointing at a part often selects a different part.** A ray from the participant's eye
+to the centre of what a part draws resolves to a *different* interactable in **31 of 54
+aims** across the two benches. Eleven interactables kept the default 1 000 x 2 000 x
+1 000 mm collider of a Unity capsule primitive, because `SetCollider` in both workstation
+builders resizes boxes only and silently skips capsules. `computer.cooling-fan` and
+`fan.blade` absorb almost every misdirected aim.
+
+Among the parts that cannot be aimed at: the fault in Task A (`computer.internal-cable`),
+the only incorrect-component action in the study (`computer.ram`), and the correct repair
+on the fan bench (`fan.working-fuse`) — so **the fan task may not be completable by
+pointing**.
+
+Not fixed: resizing a collider changes which `stableObjectId` lands in the event stream,
+which is a research variable. Decision **ช** in `Docs/SUPERVISOR_REVIEW_PACKAGE.md`;
+check 2 in `Docs/QUEST3_NEXT_STEPS.md`; measurement in
+`Docs/Verification/Ray_Aim_Attribution.txt`.
+
+No existing check could see it. They all reach an interactable by name or reference and
+never cast a ray — including the play-mode repair-loop checks, which call
+`MaintenanceTaskController.RecordInteraction` directly. `743b1c3` fixed collider
+*ownership*, not collider *size*.
+
 ## Part recognition - 2026-08-08
 
 The parts a participant has to identify in order to diagnose are now modelled at the

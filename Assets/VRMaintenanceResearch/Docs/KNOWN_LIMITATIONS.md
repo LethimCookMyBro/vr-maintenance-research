@@ -19,7 +19,7 @@
 ## Visual redesign, 2026-08-02
 
 - **The redesigned scenes have not been run in the standalone player.** The Windows build succeeds, but every visual and interaction check in this pass was done in the Unity Editor.
-- **No Quest 3 performance claim is made.** The scenes are *prepared* for Quest — 17 shared URP materials, ~20 k triangles per task scene, 2 real-time directional lights, no post-processing change, no transparency beyond the existing UI, 1024 px maximum texture, static batching flags on all environment geometry — but none of this has been measured on hardware.
+- **No Quest 3 performance claim is made.** The scenes are *prepared* for Quest — shared URP materials, 2 real-time directional lights, no post-processing change, no transparency beyond the existing UI, 1024 px maximum texture, static batching flags on all environment geometry — but none of this has been measured on hardware. The triangle and material counts quoted here on 2026-08-02 (~20 k per task scene, 17 materials) were superseded by the model integration and recognition passes; as of `0248328` it is 120,385 triangles / 97 materials for `ComputerRepairTask` and 37,898 / 43 for `FanRepairTask`.
 - **The participant start pose changed** from `(0, 0, 0)` to `(0, 0, -1.6)` in all three participant scenes. Movement CSV coordinates recorded before 2026-08-02 are therefore not spatially comparable with later ones. The logging schema is unchanged.
 - **Device and component transforms changed.** Stable IDs, scripts, interactable components, collider components, task references and completion logic are all preserved, but positions, rotations and scales were re-authored so the equipment is human-scale and rests on a workbench. `PROTOCOL_CHANGE_LOG.md` records every change; an advisor should confirm the new arrangement does not alter intended task difficulty.
 - **The fan front guard is now a removed part lying on the bench** rather than a mounted guard. Mounted, its collider blocked controller rays to `fan.blade`. The disassembled arrangement is deliberate and keeps every component reachable.
@@ -114,6 +114,37 @@
   they did before this pass, so a ray at the boundary between them can resolve to either.
   Neither is new; both should be revisited together if collider geometry is ever
   re-authored.
+- **Correction to the bullet above, 2026-08-08: eleven colliders are not "noticeably
+  larger", they are 1 000 x 2 000 x 1 000 mm, and that part was never deliberate.**
+  `SetCollider` in both workstation builders resizes `BoxCollider` only and returns
+  without doing anything when the collider is a `CapsuleCollider`
+  (`ComputerWorkstationBuilder.cs:878`, `FanWorkstationBuilder.cs:696`). Every
+  interactable built from a Unity capsule primitive therefore kept the primitive's
+  default collider — radius 0.5, height 2, at unit scale — while its visible body was
+  rebuilt at true scale. The eleven: `computer.cooling-fan`,
+  `computer.external-power-cable`, `computer.tool.screwdriver`, `fan.blade`, `fan.body`,
+  `fan.fastener`, `fan.front-cover`, `fan.internal-wire`, `fan.motor-module`,
+  `fan.power-cord`, `fan.tool.screwdriver`.
+
+  Measured consequence: a ray from the participant's eye to the centre of what a part
+  draws resolves to a **different** part in **31 of 54 aims** across the two benches.
+  `computer.cooling-fan` absorbs every misdirected aim on the computer bench and
+  `fan.blade` fifteen of seventeen on the fan bench. Parts that cannot be aimed at
+  include `computer.internal-cable` (the fault in Task A), `computer.ram` (the only
+  incorrect-component action in the study) and `fan.working-fuse` (the correct repair on
+  the fan bench). See `Verification/Ray_Aim_Attribution.txt`, reproducible from
+  *Tools → VR Maintenance Research → Visual Audit → Report Ray Aim Attribution*.
+
+  **Not fixed**, because resizing a collider changes which `stableObjectId` lands in the
+  event stream, which is a research variable. It is decision **ช** in
+  `SUPERVISOR_REVIEW_PACKAGE.md` and check 2 in `QUEST3_NEXT_STEPS.md`.
+
+  Why no earlier check saw it: every existing check reaches an interactable by name or by
+  reference and never casts a ray. The scene-integrity tests read components, the visual
+  validator reads appearance, and the play-mode runtime checks and full-flow walkthroughs
+  call `MaintenanceTaskController.RecordInteraction` directly with the object they looked
+  up by id. `743b1c3` fixed which collider belongs to which interactable; it did not
+  change how big any collider is.
 - **The unplugged ATX connector now leans 26° out of vertical, toward the open side
   panel, where before it leaned 18° the other way.** This makes the twenty-four bores
   that identify it visible from the participant's approach instead of pointing at the
