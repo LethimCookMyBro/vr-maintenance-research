@@ -109,7 +109,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             label.fontSize = size;
             label.color = ResearchMaterialPalette.Hex(colorHex);
             label.alignment = TextAlignmentOptions.Center;
-            label.enableWordWrapping = false;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
             label.rectTransform.sizeDelta = new Vector2(boxWidth, size * 0.02f + 0.02f);
             return label;
         }

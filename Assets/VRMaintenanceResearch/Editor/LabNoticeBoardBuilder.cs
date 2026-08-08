@@ -104,7 +104,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             var copy = Label("Body", card, new Vector3(0f, -0.056f, -0.014f), body, 0.30f, "#2B3949", Vector3.zero, 0.78f);
             copy.alignment = TMPro.TextAlignmentOptions.Top;
-            copy.enableWordWrapping = true;
+            copy.textWrappingMode = TMPro.TextWrappingModes.Normal;
             copy.rectTransform.sizeDelta = new Vector2(0.78f, 0.15f);
             copy.lineSpacing = 2f;
         }

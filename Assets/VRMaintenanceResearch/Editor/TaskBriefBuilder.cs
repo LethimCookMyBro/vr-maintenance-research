@@ -86,7 +86,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             var text = Label("Body", t, new Vector3(0f, -0.051f, -0.016f), body, 0.30f, "#1E2A3A", Vector3.zero, 0.75f);
             text.alignment = TMPro.TextAlignmentOptions.TopLeft;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TMPro.TextWrappingModes.Normal;
             text.rectTransform.sizeDelta = new Vector2(0.748f, 0.410f);
             text.lineSpacing = 4f;
         }
