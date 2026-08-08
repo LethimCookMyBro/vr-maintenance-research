@@ -160,26 +160,5 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.transform.SetPositionAndRotation(position, Quaternion.Euler(euler));
             go.transform.localScale = Vector3.one;
         }
-
-        static void SetCollider(GameObject go, Vector3 size)
-        {
-            if (go == null)
-                return;
-            var box = go.GetComponent<BoxCollider>();
-            if (box != null)
-            {
-                box.center = Vector3.zero;
-                box.size = size;
-                return;
-            }
-            // Training Cylinder ships with a CapsuleCollider.
-            var capsule = go.GetComponent<CapsuleCollider>();
-            if (capsule != null)
-            {
-                capsule.center = Vector3.zero;
-                capsule.radius = size.x * 0.5f;
-                capsule.height = size.y;
-            }
-        }
     }
 }

@@ -1,9 +1,26 @@
 === scene integrity tests ===
 PASS StableObjectIdsAreUniqueAndDeliberateInEveryScene
 PASS EveryInteractableAnswersOnlyForItsOwnColliders
+PASS NoInteractableClaimsMoreSpaceThanItOccupies
+FAIL EveryInteractableAnswersTheRayAimedAtIt
+        11 of 54 aims resolve to a different part:
+        ComputerRepairTask start pose (0, 1.361, -1.6): aiming at 'computer.case' selects 'computer.motherboard' — blocked at 2471 mm by 'Motherboard Placeholder'
+        ComputerRepairTask start pose (0, 1.361, -1.6): aiming at 'computer.psu-switch' selects 'computer.psu' — blocked at 2411 mm by 'Power Supply Placeholder'
+        ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.case' selects 'computer.motherboard' — blocked at 730 mm by 'Motherboard Placeholder'
+        ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.psu-switch' selects 'computer.psu' — blocked at 791 mm by 'Power Supply Placeholder'
+        ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.side-panel' selects 'nothing' — blocked at 909 mm by 'Workbench Top', which no interactable owns
+        FanRepairTask start pose (0, 1.361, -1.6): aiming at 'fan.fuse-holder' selects 'fan.blade' — blocked at 2488 mm by 'Fan Blade'
+        FanRepairTask start pose (0, 1.361, -1.6): aiming at 'fan.internal-wire' selects 'fan.fuse-holder' — blocked at 2578 mm by 'Fan Fuse Holder'
+        FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.front-cover' selects 'nothing' — blocked at 844 mm by 'Workbench Top', which no interactable owns
+        FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.fuse-holder' selects 'fan.blade' — blocked at 565 mm by 'Fan Blade'
+        FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.internal-wire' selects 'fan.blade' — blocked at 588 mm by 'Fan Blade'
+        FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.power-cord' selects 'fan.body' — blocked at 741 mm by 'Electric Fan Body'
+        Expected: <empty>
+        But was:  < "ComputerRepairTask start pose (0, 1.361, -1.6): aiming at 'computer.case' selects 'computer.motherboard' — blocked at 2471 mm by 'Motherboard Placeholder'", "ComputerRepairTask start pose (0, 1.361, -1.6): aiming at 'computer.psu-switch' selects 'computer.psu' — blocked at 2411 mm by 'Power Supply Placeholder'", "ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.case' selects 'computer.motherboard' — blocked at 730 mm by 'Motherboard Placeholder'", "ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.psu-switch' selects 'computer.psu' — blocked at 791 mm by 'Power Supply Placeholder'", "ComputerRepairTask bench pose (0, 1.500, 0.30): aiming at 'computer.side-panel' selects 'nothing' — blocked at 909 mm by 'Workbench Top', which no interactable owns", "FanRepairTask start pose (0, 1.361, -1.6): aiming at 'fan.fuse-holder' selects 'fan.blade' — blocked at 2488 mm by 'Fan Blade'", "FanRepairTask start pose (0, 1.361, -1.6): aiming at 'fan.internal-wire' selects 'fan.fuse-holder' — blocked at 2578 mm by 'Fan Fuse Holder'", "FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.front-cover' selects 'nothing' — blocked at 844 mm by 'Workbench Top', which no interactable owns", "FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.fuse-holder' selects 'fan.blade' — blocked at 565 mm by 'Fan Blade'", "FanRepairTask bench pose (0, 1.500, 0.30): aiming at 'fan.internal-wire' selects 'fan.blade' — blocked at 588 mm by 'Fan Blade'"... >
+      
 PASS EveryTaskSceneKeepsTheRepairObjectItsDefinitionRequires
 PASS BothTaskOrdersResolveToEnabledBuildScenes
 PASS EveryInformationSourceCarriesAllThreeLanguages
 PASS BothTaskScenesCanLocalizeTheWorkOrder
 PASS EveryTaskDefinitionCarriesItsEnglishFallback
-ALL 7 PASS
+1 of 9 FAILED

@@ -110,7 +110,16 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             body.transform.SetPositionAndRotation(new Vector3(0f, k_BenchTop, 1.00f), Quaternion.Euler(0f, -28f, 0f));
             body.transform.localScale = Vector3.one;
-            SetCollider(body, new Vector3(0.30f, 0.56f, 0.30f));
+            // The stand, the column and the control pod — the fan minus its head.
+            //
+            // The origin sits on the bench, so a 560 mm box centred on it put half the
+            // grab volume under the bench top and stopped 5 mm short of the middle of
+            // what the fan draws: aiming at the centre of the fan selected the blade.
+            // It stops below the head deliberately. The blade, the fuse holder, the
+            // wiring and the cover screw are all separately tracked parts living up
+            // there, and a body box tall enough to reach them would stand in front of
+            // all four.
+            SetCollider(body, new Vector3(0.30f, 0.35f, 0.30f), new Vector3(0f, 0.175f, 0f));
             var visual = ResetVisual("Electric Fan Body", out _);
             if (visual == null)
                 return;
@@ -518,7 +527,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 Coil("Coil Inner", cord, 0.046f, 0.014f, 14, 0.0070f, 10f);
                 // Run back toward the fan's cord gland so the lead belongs to the fan.
                 Box("Run To Fan", cord, new Vector3(-0.130f, 0.001f, -0.020f), new Vector3(0.100f, 0.0070f, 0.0070f), "Lab_CableBlack", new Vector3(0f, 14f, 0f));
-                SetCollider(cordGo, new Vector3(0.22f, 0.06f, 0.22f));
+
+                // Over the coil and the run back to the fan, and stopping short of the
+                // plug. The plug deliberately sits at the coil's edge so the two read as
+                // one lead; the collider used to be centred on the origin and reach past
+                // it, so aiming at the plug selected the cord.
+                SetCollider(cordGo, new Vector3(0.22f, 0.05f, 0.19f), new Vector3(-0.070f, 0.007f, 0f));
             }
 
             // --- sealed spare, deliberately not part of this repair ---
@@ -691,17 +705,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.transform.SetParent(null, false);
             go.transform.SetPositionAndRotation(position, Quaternion.Euler(euler));
             go.transform.localScale = Vector3.one;
-        }
-
-        static void SetCollider(GameObject go, Vector3 size)
-        {
-            if (go == null)
-                return;
-            var box = go.GetComponent<BoxCollider>();
-            if (box == null)
-                return;
-            box.center = Vector3.zero;
-            box.size = size;
         }
     }
 }

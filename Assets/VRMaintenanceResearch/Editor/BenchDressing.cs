@@ -110,12 +110,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.transform.localScale = Vector3.one;
             var position = go.transform.position;
 
-            var sphere = go.GetComponent<SphereCollider>();
-            if (sphere != null)
-            {
-                sphere.center = Vector3.zero;
-                sphere.radius = 0.075f;
-            }
+            // The same box the sphere already bounded, through the one rule every other
+            // part goes through. The control keeps the reach it had; what it loses is a
+            // second hand-rolled collider path for a future primitive to slip through.
+            SetCollider(go, new Vector3(0.15f, 0.15f, 0.15f));
 
             var visual = ResetVisual(interactableName, out _);
             if (visual != null)
@@ -200,12 +198,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             tool.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
             tool.transform.localScale = Vector3.one;
 
-            var box = tool.GetComponent<BoxCollider>();
-            if (box != null)
-            {
-                box.center = Vector3.zero;
-                box.size = new Vector3(0.24f, 0.06f, 0.06f);
-            }
+            // Neutral Tool is a capsule primitive, so the box-only version of this stood
+            // a 1 x 2 x 1 m grab volume on the tool tray of both benches.
+            SetCollider(tool, new Vector3(0.24f, 0.06f, 0.06f));
 
             var model = tool.transform.Find("CC0 Screwdriver");
             if (model != null)

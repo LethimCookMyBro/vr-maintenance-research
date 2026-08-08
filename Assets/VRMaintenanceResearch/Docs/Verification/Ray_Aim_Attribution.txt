@@ -1,62 +1,64 @@
 === ray aim attribution ===
 A ray is cast from the eye pose to the centre of what the part actually
-renders. MISATTRIBUTED means the first interactable the ray meets is a
-different one, so pointing at this part logs the other part's id.
+renders, and resolved the way XRRayInteractor resolves one: the nearest
+collider wins, and a collider belonging to no interactable blocks
+everything behind it. MISATTRIBUTED means pointing at this part logs a
+different part's id.
 
 === ComputerRepairTask
 --- start pose (0, 1.361, -1.6)
-computer.case	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 495 x 450 x 351 mm)
+computer.case	MISATTRIBUTED -> computer.motherboard	blocked at 2471 mm by 'Motherboard Placeholder'
 computer.cooling-fan	OK
 computer.external-power-cable	OK
-computer.internal-cable	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 79 x 107 x 105 mm)
+computer.internal-cable	OK
 computer.main-power-connector	OK
-computer.motherboard	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 243 x 312 x 108 mm)
+computer.motherboard	OK
 computer.power-button	OK
-computer.psu	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 183 x 90 x 189 mm)
-computer.psu-switch	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 32 x 30 x 44 mm)
-computer.ram	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 23 x 140 x 33 mm)
+computer.psu	OK
+computer.psu-switch	MISATTRIBUTED -> computer.psu	blocked at 2411 mm by 'Power Supply Placeholder'
+computer.ram	OK
 computer.side-panel	OK
 computer.tool.screwdriver	OK
 --- bench pose (0, 1.500, 0.30)
-computer.case	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 495 x 450 x 351 mm)
+computer.case	MISATTRIBUTED -> computer.motherboard	blocked at 730 mm by 'Motherboard Placeholder'
 computer.cooling-fan	OK
 computer.external-power-cable	OK
-computer.internal-cable	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 79 x 107 x 105 mm)
-computer.main-power-connector	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 128 x 50 x 150 mm)
-computer.motherboard	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 243 x 312 x 108 mm)
+computer.internal-cable	OK
+computer.main-power-connector	OK
+computer.motherboard	OK
 computer.power-button	OK
-computer.psu	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 183 x 90 x 189 mm)
-computer.psu-switch	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 32 x 30 x 44 mm)
-computer.ram	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 23 x 140 x 33 mm)
-computer.side-panel	MISATTRIBUTED -> computer.cooling-fan	(its own collider spans 511 x 50 x 528 mm)
+computer.psu	OK
+computer.psu-switch	MISATTRIBUTED -> computer.psu	blocked at 791 mm by 'Power Supply Placeholder'
+computer.ram	OK
+computer.side-panel	MISATTRIBUTED -> (nothing)	blocked at 909 mm by 'Workbench Top', which no interactable owns
 computer.tool.screwdriver	OK
 === FanRepairTask
 --- start pose (0, 1.361, -1.6)
 fan.blade	OK
-fan.body	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.fastener	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
+fan.body	OK
+fan.fastener	OK
 fan.front-cover	OK
-fan.fuse-holder	MISATTRIBUTED -> fan.blade	(its own collider spans 96 x 50 x 121 mm)
-fan.internal-wire	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.power-cord	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.power-plug	MISATTRIBUTED -> fan.blade	(its own collider spans 115 x 60 x 115 mm)
-fan.power-switch	MISATTRIBUTED -> fan.blade	(its own collider spans 104 x 65 x 101 mm)
+fan.fuse-holder	MISATTRIBUTED -> fan.blade	blocked at 2488 mm by 'Fan Blade'
+fan.internal-wire	MISATTRIBUTED -> fan.fuse-holder	blocked at 2578 mm by 'Fan Fuse Holder'
+fan.power-cord	OK
+fan.power-plug	OK
+fan.power-switch	OK
 fan.speed-selector	OK
 fan.tool.screwdriver	OK
-fan.working-fuse	MISATTRIBUTED -> fan.front-cover	(its own collider spans 117 x 50 x 68 mm)
+fan.working-fuse	OK
 --- bench pose (0, 1.500, 0.30)
 fan.blade	OK
-fan.body	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.fastener	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.front-cover	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.fuse-holder	MISATTRIBUTED -> fan.blade	(its own collider spans 96 x 50 x 121 mm)
-fan.internal-wire	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.power-cord	MISATTRIBUTED -> fan.blade	(its own collider spans 1000 x 2000 x 1000 mm)
-fan.power-plug	MISATTRIBUTED -> fan.blade	(its own collider spans 115 x 60 x 115 mm)
-fan.power-switch	MISATTRIBUTED -> fan.blade	(its own collider spans 104 x 65 x 101 mm)
+fan.body	OK
+fan.fastener	OK
+fan.front-cover	MISATTRIBUTED -> (nothing)	blocked at 844 mm by 'Workbench Top', which no interactable owns
+fan.fuse-holder	MISATTRIBUTED -> fan.blade	blocked at 565 mm by 'Fan Blade'
+fan.internal-wire	MISATTRIBUTED -> fan.blade	blocked at 588 mm by 'Fan Blade'
+fan.power-cord	MISATTRIBUTED -> fan.body	blocked at 741 mm by 'Electric Fan Body'
+fan.power-plug	OK
+fan.power-switch	OK
 fan.speed-selector	OK
 fan.tool.screwdriver	OK
-fan.working-fuse	MISATTRIBUTED -> fan.front-cover	(its own collider spans 117 x 50 x 68 mm)
+fan.working-fuse	OK
 === VRTraining
 --- start pose (0, 1.361, -1.6)
 training.training-cube-a	OK
@@ -67,4 +69,4 @@ training.training-cube-a	OK
 training.training-cube-b	OK
 training.training-cylinder	OK
 
-31 of 54 aims resolve to a different part
+11 of 54 aims resolve to a different part

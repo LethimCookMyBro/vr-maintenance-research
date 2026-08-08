@@ -88,6 +88,122 @@ namespace TMUVR.MaintenanceResearch
             }
         }
 
+        /// <summary>
+        /// The other half of the 743b1c3 regression, and the check that would have
+        /// caught it from the outside.
+        ///
+        /// EveryInteractableAnswersOnlyForItsOwnColliders proves each part owns the
+        /// right collider. It says nothing about how big that collider is, and the
+        /// builders' SetCollider used to give up in silence on anything that was not a
+        /// BoxCollider — so eleven parts built from capsule primitives kept a
+        /// 1000 x 2000 x 1000 mm grab volume on objects 11 to 571 mm across, and two
+        /// status lamps kept a 1 m sphere. Every other check in this file, in the visual
+        /// validator and in the play-mode runtime checks reaches its interactable by
+        /// name, so all of them passed while 31 of 54 aims resolved to a different part.
+        ///
+        /// This is the only check that goes through the physics scene. It aims where a
+        /// participant aims — the centre of what the part draws, from the two poses they
+        /// stand in — and resolves the hit the way XRRayInteractor resolves one, so a
+        /// failure here means the event stream would carry the wrong stableObjectId.
+        /// </summary>
+        [Test]
+        public void EveryInteractableAnswersTheRayAimedAtIt()
+        {
+            var missed = new List<string>();
+            var aimed = 0;
+
+            foreach (var scenePath in EditorTools.ResearchRayAimReport.Scenes)
+            {
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                using var probe = new EditorTools.ResearchRayAimReport.AimProbe();
+
+                foreach (var (poseName, eye) in EditorTools.ResearchRayAimReport.Poses)
+                foreach (var part in probe.Parts)
+                {
+                    if (!EditorTools.ResearchRayAimReport.TryVisibleCentre(part, out var centre))
+                        continue;
+
+                    aimed++;
+                    var hit = probe.Resolve(eye, centre, out var blocker);
+                    if (hit == part)
+                        continue;
+
+                    missed.Add($"{scene.name} {poseName}: aiming at '{part.StableObjectId}' selects " +
+                               $"'{(hit == null ? "nothing" : hit.StableObjectId)}' — {blocker}");
+                }
+            }
+
+            Assert.That(missed, Is.Empty,
+                $"{missed.Count} of {aimed} aims resolve to a different part:\n  " + string.Join("\n  ", missed));
+        }
+
+        /// <summary>
+        /// No part's grab volume may stand more than a hand's width outside the part.
+        ///
+        /// This is the deterministic half of the collider-size gate, and the one that
+        /// fails the moment the bug above comes back. A grab volume is allowed to be
+        /// larger than what it wraps — a 9 mm cover screw needs something a controller
+        /// can actually hit — but "larger" has a ceiling. When the builders' SetCollider
+        /// gave up on anything that was not a BoxCollider, eleven parts kept the capsule
+        /// primitive's own 1000 x 2000 x 1000 mm collider: an excess of about a metre on
+        /// parts 11 to 571 mm across. The widest excess the benches now carry is 52 mm,
+        /// on the 200 mm screwdriver.
+        ///
+        /// Unlike the ray check this needs no pose and no line of sight, so it says
+        /// nothing about whether a part can be aimed at — only that no part is claiming
+        /// space it does not occupy.
+        /// </summary>
+        [Test]
+        public void NoInteractableClaimsMoreSpaceThanItOccupies()
+        {
+            const float allowance = 0.100f;
+            var oversized = new List<string>();
+
+            foreach (var scenePath in EditorTools.ResearchRayAimReport.Scenes)
+            {
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                foreach (var part in Object.FindObjectsByType<ResearchInteractable>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                {
+                    if (!TryBounds(part.GetComponentsInChildren<Renderer>(false)
+                            .Where(renderer => renderer.enabled && renderer.GetComponentInParent<ResearchInteractable>() == part)
+                            .Select(renderer => renderer.bounds), out var visible))
+                        continue;
+                    if (!TryBounds(part.GetComponents<Collider>().Select(collider => collider.bounds), out var claimed))
+                        continue;
+
+                    var over = Vector3.Max(visible.min - claimed.min, claimed.max - visible.max);
+                    var excess = Mathf.Max(over.x, over.y, over.z);
+                    if (excess > allowance)
+                        oversized.Add($"{scene.name}: '{part.StableObjectId}' draws " +
+                                      $"{visible.size.x * 1000f:0} x {visible.size.y * 1000f:0} x {visible.size.z * 1000f:0} mm " +
+                                      $"but claims {claimed.size.x * 1000f:0} x {claimed.size.y * 1000f:0} x {claimed.size.z * 1000f:0} mm " +
+                                      $"— {excess * 1000f:0} mm beyond itself");
+                }
+            }
+
+            Assert.That(oversized, Is.Empty,
+                $"{oversized.Count} grab volumes reach more than {allowance * 1000f:0} mm past their part:\n  " + string.Join("\n  ", oversized));
+        }
+
+        static bool TryBounds(IEnumerable<Bounds> all, out Bounds bounds)
+        {
+            bounds = default;
+            var found = false;
+            foreach (var one in all)
+            {
+                if (!found)
+                {
+                    bounds = one;
+                    found = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(one);
+                }
+            }
+            return found;
+        }
+
         [Test]
         public void EveryTaskSceneKeepsTheRepairObjectItsDefinitionRequires()
         {
@@ -217,6 +333,8 @@ namespace TMUVR.MaintenanceResearch
             {
                 (nameof(StableObjectIdsAreUniqueAndDeliberateInEveryScene), tests.StableObjectIdsAreUniqueAndDeliberateInEveryScene),
                 (nameof(EveryInteractableAnswersOnlyForItsOwnColliders), tests.EveryInteractableAnswersOnlyForItsOwnColliders),
+                (nameof(NoInteractableClaimsMoreSpaceThanItOccupies), tests.NoInteractableClaimsMoreSpaceThanItOccupies),
+                (nameof(EveryInteractableAnswersTheRayAimedAtIt), tests.EveryInteractableAnswersTheRayAimedAtIt),
                 (nameof(EveryTaskSceneKeepsTheRepairObjectItsDefinitionRequires), tests.EveryTaskSceneKeepsTheRepairObjectItsDefinitionRequires),
                 (nameof(BothTaskOrdersResolveToEnabledBuildScenes), tests.BothTaskOrdersResolveToEnabledBuildScenes),
                 (nameof(EveryInformationSourceCarriesAllThreeLanguages), tests.EveryInformationSourceCarriesAllThreeLanguages),

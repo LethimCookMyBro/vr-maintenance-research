@@ -54,6 +54,23 @@
 - `VRTraining` kept the same defect until 2026-08-08, because only the two workstation
   builders called `BindOwnColliders`. Training telemetry recorded before that date has
   the same caveat for `training.training-cylinder`.
+- **Telemetry recorded before the collider-size fix of 2026-08-08 names the wrong object
+  in 31 of 54 aims and must not be compared with data recorded after it.** This is the
+  second half of the `743b1c3` defect: that commit fixed *which* interactable owns a
+  collider, this one fixes *how big* the collider is. `SetCollider` existed in four
+  copies and three of them resized a `BoxCollider` and returned in silence on anything
+  else, so eleven parts built from capsule primitives kept the primitive's own
+  1 000 x 2 000 x 1 000 mm collider and two status lamps kept a 1 m sphere. A ray from
+  the participant's eye to the centre of what a part draws therefore resolved to a
+  different part in **31 of 54 aims**; `computer.cooling-fan` absorbed every misdirected
+  aim on the computer bench and `fan.blade` fifteen of seventeen on the fan bench.
+  Affected columns are the same as above — `object_id` and `object_category` on hover,
+  grab and component events. Task timing, completion and information-source rows are
+  unaffected, because the loop is driven by id and never by a ray.
+
+  No participant data exists for either half of this defect: no session has been
+  recorded on hardware. The caveat is stated so that any pilot capture taken from an
+  Editor build before this date is discarded rather than pooled.
 - **A session recorded before 2026-08-08 with `developmentMode` set to false could not
   have been completed.** The researcher panel returned early in that configuration and
   it is the only caller of `CompleteCurrentTaskAndAdvance` and `SafetyStop`, so there
@@ -127,17 +144,48 @@
   `fan.power-cord`, `fan.tool.screwdriver`.
 
   Measured consequence: a ray from the participant's eye to the centre of what a part
-  draws resolves to a **different** part in **31 of 54 aims** across the two benches.
-  `computer.cooling-fan` absorbs every misdirected aim on the computer bench and
-  `fan.blade` fifteen of seventeen on the fan bench. Parts that cannot be aimed at
-  include `computer.internal-cable` (the fault in Task A), `computer.ram` (the only
-  incorrect-component action in the study) and `fan.working-fuse` (the correct repair on
-  the fan bench). See `Verification/Ray_Aim_Attribution.txt`, reproducible from
-  *Tools → VR Maintenance Research → Visual Audit → Report Ray Aim Attribution*.
+  draws resolved to a **different** part in **31 of 54 aims** across the two benches.
+  `computer.cooling-fan` absorbed every misdirected aim on the computer bench and
+  `fan.blade` fifteen of seventeen on the fan bench.
 
-  **Not fixed**, because resizing a collider changes which `stableObjectId` lands in the
-  event stream, which is a research variable. It is decision **ช** in
+  **Fixed 2026-08-08.** There is now one `SetCollider`, in `ResearchBuildKit`, and every
+  builder goes through it: whatever collider an object arrives with, it leaves with a
+  `BoxCollider` of the size the builder asked for, and a replacement names the object on
+  the console instead of passing in silence. Four hand-rolled copies were deleted
+  (`ComputerWorkstationBuilder`, `FanWorkstationBuilder`, `TrainingSceneBuilder`, and the
+  box-only branch in `BenchDressing.PlaceScrewdriver`, which is why both benches stood a
+  1 x 2 x 1 m grab volume on the tool tray). Three further colliders that did not cover
+  their own part were corrected in the same pass: `computer.external-power-cable` and
+  `fan.power-cord` were centred on their origin rather than on the coil they draw, and
+  `Desktop Case` was one solid box the size of the whole tower, which put the case in
+  front of all six components inside it — the `743b1c3` symptom expressed as geometry. It
+  is now five boxes, one per closed face, open on the side whose panel is off.
+
+  Result: **31 of 54 misattributed before, 11 after**, and the widest a grab volume now
+  reaches past the part it belongs to is 52 mm, against roughly a metre before. No
+  `stableObjectId`, transform, part count or task definition changed; the 31 ids are
+  byte-identical to the previous commit.
+
+  **The remaining 11 are occlusion, not misattribution.** In every one of them the
+  pointer correctly reports the geometry that is actually in front of the part, from the
+  two poses the check uses. They are: `computer.case` (2 — its own bounds centre is the
+  air inside the open shell, and the motherboard is what is really there),
+  `computer.psu-switch` (2 — the rocker is on the case's rear face, pointing away from
+  both poses), `computer.side-panel` and `fan.front-cover` (1 each — stowed on the lower
+  shelf, with the workbench top between them and the higher pose), `fan.fuse-holder` and
+  `fan.internal-wire` (2 each — the service bay is behind the propeller), and
+  `fan.power-cord` (1 — the coil sits behind the fan from the bench pose). A sweep of 56
+  standing poses confirms **every part is selectable from somewhere**; the weakest is
+  `fan.internal-wire` at 4 of 56. Closing these would mean moving parts or reshaping the
+  propeller, which is a scene decision, not a collider bug — it stays decision **ช** in
   `SUPERVISOR_REVIEW_PACKAGE.md` and check 2 in `QUEST3_NEXT_STEPS.md`.
+
+  See `Verification/Ray_Aim_Attribution.txt`, reproducible from *Tools → VR Maintenance
+  Research → Visual Audit → Report Ray Aim Attribution*. Two scene-integrity tests now
+  guard this: `NoInteractableClaimsMoreSpaceThanItOccupies` (deterministic, green, fails
+  the moment a grab volume reaches more than 100 mm past its part) and
+  `EveryInteractableAnswersTheRayAimedAtIt` (the 54-aim check, currently red on the 11
+  occlusions above).
 
   Why no earlier check saw it: every existing check reaches an interactable by name or by
   reference and never casts a ray. The scene-integrity tests read components, the visual

@@ -118,14 +118,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             go.transform.SetPositionAndRotation(k_CasePos, Quaternion.Euler(0f, k_CaseYaw, 0f));
             go.transform.localScale = Vector3.one;
 
-            // Root scale is now 1, so the grab collider must be sized explicitly
-            // or it would become a 1 m cube swallowing the whole bench.
-            var box = go.GetComponent<BoxCollider>();
-            if (box != null)
-            {
-                box.center = Vector3.zero;
-                box.size = new Vector3(k_W * 2f, k_H * 2f, k_D * 2f);
-            }
+            // The chassis is a shell, not a block.
+            //
+            // Root scale is now 1, so the grab volume has to be written out or it would
+            // be a 1 m cube swallowing the bench. It used to be written as one box the
+            // size of the whole tower — and since the motherboard, the supply, the
+            // memory, the exhaust fan, the rear switch and the hanging ATX plug all live
+            // inside that box, the case stood in front of every one of them. A ray aimed
+            // through the open side at the fault reported computer.case, which is the
+            // same failure 743b1c3 fixed in the collider lists, arriving again as
+            // geometry.
+            //
+            // Five boxes, one per closed face, leaving -X open — the side whose panel is
+            // lying on the shelf. Pointing at the metal still selects the case; pointing
+            // into the machine now reaches the part being pointed at.
+            const float skin = 0.010f;
+            SetColliders(go,
+                (new Vector3(k_W - skin * 0.5f, 0f, 0f), new Vector3(skin, k_H * 2f, k_D * 2f)),     // closed side (glass)
+                (new Vector3(0f, k_H - skin * 0.5f, 0f), new Vector3(k_W * 2f, skin, k_D * 2f)),     // roof
+                (new Vector3(0f, -k_H + skin * 0.5f, 0f), new Vector3(k_W * 2f, skin, k_D * 2f)),    // floor
+                (new Vector3(0f, 0f, k_D - skin * 0.5f), new Vector3(k_W * 2f, k_H * 2f, skin)),     // rear panel
+                (new Vector3(0f, 0f, -k_D + 0.006f), new Vector3(k_W * 2f + 0.006f, k_H * 2f + 0.006f, 0.014f))); // front bezel
 
             var visual = ResetVisual("Desktop Case", out _);
             return visual;
@@ -834,7 +847,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                     Box($"Prong {i + 1}", ext, new Vector3(-0.014f + i * 0.014f, 0.002f, -0.024f), new Vector3(0.005f, 0.014f, 0.018f), "Lab_ToolSteel");
                 Cyl("Coil Outer", ext, new Vector3(0.10f, -0.014f, 0.02f), new Vector3(0.170f, 0.008f, 0.170f), "Lab_CableBlack");
                 Cyl("Coil Inner", ext, new Vector3(0.10f, -0.004f, 0.02f), new Vector3(0.120f, 0.008f, 0.120f), "Lab_CableBlack");
-                SetCollider(extGo, new Vector3(0.08f, 0.06f, 0.06f));
+
+                // Over the plug *and* its coil. The object's origin is the plug, so a
+                // collider centred on the origin covered a plug 52 mm wide and left the
+                // 170 mm coil — most of what the participant sees — with nothing behind
+                // it: a ray aimed at the middle of this part hit no collider at all.
+                SetCollider(extGo, new Vector3(0.22f, 0.06f, 0.18f), new Vector3(0.080f, 0f, 0.020f));
             }
 
             // --- status lamp at the test end of the bench ---
@@ -872,18 +890,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             }
 
             go.transform.localScale = scale;
-        }
-
-        /// <summary>Grab colliders must be resized once the root scale is normalised to 1.</summary>
-        static void SetCollider(GameObject go, Vector3 size)
-        {
-            if (go == null)
-                return;
-            var box = go.GetComponent<BoxCollider>();
-            if (box == null)
-                return;
-            box.center = Vector3.zero;
-            box.size = size;
         }
     }
 }

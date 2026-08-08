@@ -1,28 +1,46 @@
 # VR Maintenance Research - Project Status
 
-## Blocking, awaiting a decision - 2026-08-08
+## Collider sizes fixed, 11 occlusions left - 2026-08-08
 
-**Pointing at a part often selects a different part.** A ray from the participant's eye
-to the centre of what a part draws resolves to a *different* interactable in **31 of 54
-aims** across the two benches. Eleven interactables kept the default 1 000 x 2 000 x
-1 000 mm collider of a Unity capsule primitive, because `SetCollider` in both workstation
-builders resizes boxes only and silently skips capsules. `computer.cooling-fan` and
-`fan.blade` absorb almost every misdirected aim.
+**Pointing at a part used to select a different part in 31 of 54 aims. It is now 11, and
+all 11 are things standing in the way rather than colliders lying about their size.**
 
-Among the parts that cannot be aimed at: the fault in Task A (`computer.internal-cable`),
-the only incorrect-component action in the study (`computer.ram`), and the correct repair
-on the fan bench (`fan.working-fuse`) — so **the fan task may not be completable by
-pointing**.
+The cause was one method in four copies. `SetCollider` resized a `BoxCollider` and
+returned in silence on anything else, so eleven interactables built from Unity capsule
+primitives kept the primitive's own 1 000 x 2 000 x 1 000 mm collider — on bodies 11 to
+571 mm across — and two status lamps kept a 1 m sphere. There is now a single
+`SetCollider` in `ResearchBuildKit`: any collider that is not a box is replaced with a box
+of the size the builder asked for, and the replacement is logged with the object's name.
+Three colliders that did not cover their own part were corrected with it —
+`computer.external-power-cable` and `fan.power-cord` were centred on their origin instead
+of on the coil they draw, and `Desktop Case` was a solid box the size of the whole tower,
+standing in front of all six components inside it. The case is now five boxes, one per
+closed face, open on the side whose panel is off.
 
-Not fixed: resizing a collider changes which `stableObjectId` lands in the event stream,
-which is a research variable. Decision **ช** in `Docs/SUPERVISOR_REVIEW_PACKAGE.md`;
-check 2 in `Docs/QUEST3_NEXT_STEPS.md`; measurement in
-`Docs/Verification/Ray_Aim_Attribution.txt`.
+Nothing else moved: all 31 stable ids are byte-identical to `6d54e57`, no transform, part
+count, task definition or CSV column changed, and both builders are idempotent (a second
+run reproduces the same objects, transforms and colliders).
 
-No existing check could see it. They all reach an interactable by name or reference and
-never cast a ray — including the play-mode repair-loop checks, which call
+**The 11 that remain** are cases where the pointer correctly reports what is actually in
+front of the part, from the two poses the check uses: `computer.case` (its bounds centre
+is the air inside the open shell), `computer.psu-switch` (on the case's rear face),
+`computer.side-panel` and `fan.front-cover` (on the lower shelf, under the workbench top),
+`fan.fuse-holder` and `fan.internal-wire` (service bay behind the propeller) and
+`fan.power-cord` (behind the fan from the bench pose). A 56-pose sweep confirms every part
+is selectable from somewhere; the weakest is `fan.internal-wire` at 4 of 56. Closing them
+means moving parts or reshaping the propeller — still decision **ช** in
+`Docs/SUPERVISOR_REVIEW_PACKAGE.md` and check 2 in `Docs/QUEST3_NEXT_STEPS.md`.
+
+Two tests in `ResearchSceneIntegrityTests` now hold the line, taking the suite from 7 to
+9: `NoInteractableClaimsMoreSpaceThanItOccupies` is green and fails if any grab volume
+reaches more than 100 mm past its part (the widest is now 52 mm), and
+`EveryInteractableAnswersTheRayAimedAtIt` is the 54-aim ray check, red on the 11 above.
+Measurement in `Docs/Verification/Ray_Aim_Attribution.txt`.
+
+No existing check could see the original defect. They all reach an interactable by name or
+reference and never cast a ray — including the play-mode repair-loop checks, which call
 `MaintenanceTaskController.RecordInteraction` directly. `743b1c3` fixed collider
-*ownership*, not collider *size*.
+*ownership*; this fixed collider *size*.
 
 ## Part recognition - 2026-08-08
 
@@ -133,10 +151,16 @@ recorded in `Docs/Verification/ITEM_3D_REBUILD_RECORD.md` and
 
 Editor-side only. No Quest hardware run and no human pilot data.
 
-- `Docs/Verification/Scene_Integrity_Tests.txt` - 7/7 PASS. Stable id uniqueness,
-  collider ownership, the required repair object, both task orders resolving to
-  enabled build scenes, information-source localisation, work-order localisation
-  wiring, and English task fallbacks.
+- `Docs/Verification/Scene_Integrity_Tests.txt` - 8 of 9 PASS. Stable id uniqueness,
+  collider ownership, collider size, the required repair object, both task orders
+  resolving to enabled build scenes, information-source localisation, work-order
+  localisation wiring, and English task fallbacks. The ninth,
+  `EveryInteractableAnswersTheRayAimedAtIt`, fails on 11 of 54 aims; every one is a part
+  standing behind other geometry from the pose the check uses, listed in
+  `KNOWN_LIMITATIONS.md`. It is left red deliberately rather than relaxed, so the
+  requirement stays visible.
+- `Docs/Verification/Ray_Aim_Attribution.txt` - 43 of 54 aims resolve to the part aimed
+  at, against 23 of 54 before the collider-size fix.
 - `Docs/Verification/Full_Flow_Walkthrough_ComputerThenFan.txt` and
   `Full_Flow_Walkthrough_FanThenComputer.txt` - both WALKTHROUGH PASSED. Setup,
   training, first task, second task and end of session, driven with

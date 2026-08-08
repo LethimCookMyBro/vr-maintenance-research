@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -194,6 +196,84 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 bound++;
             }
             Debug.Log($"[ResearchBuildKit] bound own colliders on {bound} interactables");
+        }
+
+        /// <summary>
+        /// Gives a task interactable the grab collider its builder asks for.
+        ///
+        /// The other half of the 743b1c3 regression. That one fixed *whose* collider
+        /// answers a ray; this fixes *how big* it is. Every builder had its own copy of
+        /// this method and three of the four looked only for a BoxCollider, returning in
+        /// silence when they found anything else. The placeholder objects were created
+        /// from capsule and sphere primitives, so eleven parts kept the primitive's own
+        /// collider — 1000 x 2000 x 1000 mm on objects 11 to 571 mm across — and two
+        /// status lamps kept a 1 m sphere. A ray aimed at the part a participant can see
+        /// met one of those instead, and the hover, the grab and the inspect were all
+        /// logged against the wrong stableObjectId: 31 of 54 aims across the three
+        /// scenes resolved to a different part.
+        ///
+        /// The rule is now the same for every part: whatever collider the object arrived
+        /// with, it leaves with a BoxCollider of the size the builder asked for. The box
+        /// goes on before the old collider comes off, because ResearchInteractable is
+        /// [RequireComponent(typeof(Collider))] and Unity refuses to remove the last one.
+        /// Nothing here is ever silent — a replacement and a missing collider both name
+        /// the object on the console, so the next primitive that arrives with a surprise
+        /// shape says so instead of shipping a 2 m grab volume.
+        /// </summary>
+        public static void SetCollider(GameObject go, Vector3 size) => SetColliders(go, (Vector3.zero, size));
+
+        /// <summary>
+        /// As <see cref="SetCollider(GameObject,Vector3)"/>, for a part whose pivot is
+        /// not in the middle of what it draws. A plug on the end of a coiled lead and a
+        /// fan standing on its base both have their origin at an edge, and a collider
+        /// pinned to the origin covers the air beside the part instead of the part.
+        /// </summary>
+        public static void SetCollider(GameObject go, Vector3 size, Vector3 center) => SetColliders(go, (center, size));
+
+        /// <summary>
+        /// Gives a part a grab volume made of one or more boxes.
+        ///
+        /// More than one is for a part that is not solid. A tower case with its side
+        /// panel off is a shell around six separately tracked components, and a single
+        /// box filling it puts the case in front of every one of them — the same
+        /// symptom as 743b1c3, drawn in geometry instead of in a collider list.
+        ///
+        /// Existing BoxColliders are reused in place rather than replaced, so running a
+        /// builder twice writes the same scene file: adding and destroying components
+        /// would renumber them and make every rebuild a diff.
+        /// </summary>
+        public static void SetColliders(GameObject go, params (Vector3 Center, Vector3 Size)[] boxes)
+        {
+            if (go == null || boxes.Length == 0)
+                return;
+
+            var boxed = new List<BoxCollider>(go.GetComponents<BoxCollider>());
+            var strays = go.GetComponents<Collider>().Where(collider => collider is not BoxCollider).ToArray();
+
+            if (boxed.Count == 0 && strays.Length == 0)
+                Debug.LogWarning($"[ResearchBuildKit] '{go.name}' had no collider at all; XRI had nothing for a ray to hit.");
+
+            // Added before the strays are destroyed: ResearchInteractable is
+            // [RequireComponent(typeof(Collider))] and Unity refuses to remove the last.
+            while (boxed.Count < boxes.Length)
+                boxed.Add(go.AddComponent<BoxCollider>());
+
+            for (var i = 0; i < boxes.Length; i++)
+            {
+                boxed[i].center = boxes[i].Center;
+                boxed[i].size = boxes[i].Size;
+            }
+
+            for (var i = boxes.Length; i < boxed.Count; i++)
+                Object.DestroyImmediate(boxed[i]);
+
+            foreach (var stray in strays)
+            {
+                Debug.LogWarning($"[ResearchBuildKit] '{go.name}' carried a {stray.GetType().Name} spanning " +
+                                 $"{stray.bounds.size.x * 1000f:0} x {stray.bounds.size.y * 1000f:0} x {stray.bounds.size.z * 1000f:0} mm; " +
+                                 $"replaced with {boxes.Length} BoxCollider(s) of the size the builder asked for.");
+                Object.DestroyImmediate(stray);
+            }
         }
 
         /// <summary>Removes previously generated children so builders stay idempotent.</summary>
