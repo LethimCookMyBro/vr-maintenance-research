@@ -86,6 +86,53 @@
   the answer, but it does narrow the search space to the interactive set and should be
   described as an affordance cue in any write-up.
 
+## Part recognition and remaining graybox - 2026-08-08
+
+- **The two conditions are still not equal in mesh provenance, and the gap is now
+  smaller but not closed.** `ComputerRepairTask` carries six licensed meshes for its
+  components - motherboard, CPU, cooler, memory, drive, supply, case fan - plus the
+  screwdriver. `FanRepairTask` carries the screwdriver and, since this pass, three XRI
+  example control meshes. Everything else on the fan bench is still built from Unity
+  primitives, because no CC0 or Unity-Companion mesh of a desk fan, a 6 x 30 fuse or an
+  appliance fuse carrier exists in the repository and none was found on 2026-08-08 that
+  met the project's licence standard. What changed is that the fan bench's primitives
+  are now at the real parts' dimensions rather than at arbitrary ones. **Any write-up
+  should describe the fan condition as primitive-built and the computer condition as
+  mesh-built**, because that asymmetry sits on the variable the study measures.
+- **Deliberately still graybox:** the room shell, the workbench, the trays, the placards,
+  the walls, the floor and the ceiling. Nothing in the task requires a participant to
+  identify the furniture, and distractor count is a research variable that `de7d5fd`
+  set on purpose.
+- **Colliders are now noticeably larger than several of the visuals they wrap.**
+  `fan.working-fuse` and `fan.faulty-fuse` keep a 110 x 50 x 50 mm box around a 30 mm
+  cartridge; `fan.fuse-holder` keeps the same box around a 44 mm carrier. This was a
+  deliberate choice: the collider is the participant's ray target and the substrate of
+  every recorded hover and grab, so shrinking it to match the new visuals would have
+  changed hit rates between the verified baseline and now. The practical effects are (a)
+  small parts stay easy to hit, which is a usability benefit but not a realism one, and
+  (b) inside the fan's service bay the fuse-holder and internal-wire boxes overlap, as
+  they did before this pass, so a ray at the boundary between them can resolve to either.
+  Neither is new; both should be revisited together if collider geometry is ever
+  re-authored.
+- **The unplugged ATX connector now leans 26° out of vertical, toward the open side
+  panel, where before it leaned 18° the other way.** This makes the twenty-four bores
+  that identify it visible from the participant's approach instead of pointing at the
+  ceiling. It does not shorten the search: the plug is still behind the board's front
+  edge from the standing pose. An advisor should confirm the new hang does not alter
+  intended task difficulty, the same way the 2026-08-02 transform changes were flagged.
+- **The two device-test controls no longer look alike.** Both were the same three
+  stacked cylinders; the computer bench now has a push button and the fan bench a rotary
+  dial, matching what each one's stable id calls it. This is a between-condition visual
+  difference in a control that is functionally identical in both scenes. It was made
+  because an unlabelled flat disc read as an indicator lamp as easily as a control; it
+  should be described, not assumed neutral.
+- **A 6 x 30 mm fuse is small.** At real size the element - the whole diagnostic cue - is
+  a 0.7 mm wire with a 3.4 mm gap when blown. It is legible in Editor captures at
+  inspection range (`Docs/Screenshots/Audit/After_Fan_ElementBlown_Macro.png`) but
+  whether it resolves on a Quest 3 panel at a participant's working distance has not
+  been measured on hardware. If a pilot shows it does not, the element thickness is the
+  knob to turn, and it must be turned on both fuses together.
+
 ## Headset comfort and control boundaries - 2026-08-08
 
 - `ResearcherSetup` has no XR Origin and its `Setup Camera` carries no

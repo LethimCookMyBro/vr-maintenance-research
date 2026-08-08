@@ -78,7 +78,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             PlaceInteriorParts(case_);
             PlaceBenchParts();
             BenchDressing.Build(-0.15f);
-            BenchDressing.PlaceInspectControl("Computer Power Button");
+            BenchDressing.PlaceInspectControl("Computer Power Button", BenchDressing.InspectControlShape.PushButton);
             TaskBriefBuilder.BuildComputer();
 
             // Names the lower shelf, so the panel lying on it reads as a part taken off
@@ -381,24 +381,119 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 k_MemoryFit, k_MemoryEuler);
         }
 
+        // --- the 24-pin ATX connector family -------------------------------------
+        //
+        // Three objects in this scene are the same connector seen three ways: the
+        // header soldered to the board, the plug hanging off the supply's loom, and
+        // the replacement lead in the spares tray. They were three separate hand
+        // builds at three different sizes, so nothing said they belonged together —
+        // and the whole of Task A is noticing that one of them is not in the other.
+        //
+        // They are now one geometry description at the real part's dimensions. A
+        // Molex Mini-Fit Jr. 24-circuit connector is 4.2 mm pitch, twelve circuits
+        // by two rows: 50.4 mm across the rows, 8.4 mm between them, and a body
+        // about 54 x 13 x 15 mm. Everything below is measured from that.
+        //
+        // Canonical local frame for all three: +X runs along the twelve circuits,
+        // +Y separates the two rows, -Z is the mating direction. Callers rotate.
+
+        const float k_AtxPitch = 0.0042f;             // circuit pitch, both axes
+        const float k_AtxSpan = 11f * k_AtxPitch;     // 50.4 mm across twelve circuits
+        const float k_AtxLength = k_AtxSpan + 0.0036f;
+        const float k_AtxHeight = 2f * k_AtxPitch + 0.0048f;
+
+        /// <summary>ATX rail colours in roughly the quantity a real 24-pin loom carries.</summary>
+        static readonly string[] k_AtxWireColours =
+        {
+            "Lab_CableBlack", "Lab_CableOrange", "Lab_CableOrange", "Lab_CableRed",
+            "Lab_CableBlack", "Lab_CableYellow", "Lab_CableBlack", "Lab_CableRed",
+            "Lab_CableOrange", "Lab_CableYellow", "Lab_CableBlack", "Lab_CableRed",
+        };
+
+        static float AtxCircuitX(int column) => -k_AtxSpan * 0.5f + column * k_AtxPitch;
+
         /// <summary>
-        /// The 24-pin ATX header on the board's front edge — the fault site. Two rows
-        /// of twelve gold pins in a keyed white shroud, at the size and place a real
-        /// one sits, so the loose plug on the bench is recognisably its mate.
+        /// The female half: the moulded block on the end of the supply's loom, with
+        /// twenty-four bores, the retention latch down one long face and the 20+4
+        /// split seam every modern lead has.
+        /// </summary>
+        static void BuildAtxPlug(Transform frame)
+        {
+            Box("Body", frame, Vector3.zero, new Vector3(k_AtxLength, k_AtxHeight, 0.0150f), "Lab_ConnectorWhite");
+
+            // Bores, set into the mating face. Square rather than round: at 3 mm a
+            // cylinder costs 240 triangles to draw a hole nobody can resolve as round.
+            for (var i = 0; i < 24; i++)
+                Box($"Bore {i + 1}", frame,
+                    new Vector3(AtxCircuitX(i % 12), (i < 12 ? 0.5f : -0.5f) * k_AtxPitch, -0.0062f),
+                    new Vector3(0.0032f, 0.0032f, 0.0044f), "Lab_PlasticDark");
+
+            // 20 + 4 split: the seam between the tenth and eleventh circuit.
+            Box("Split Seam", frame, new Vector3(AtxCircuitX(10) - k_AtxPitch * 0.5f, 0f, -0.0004f),
+                new Vector3(0.0014f, k_AtxHeight + 0.0004f, 0.0154f), "Lab_PlasticDark");
+
+            // Retention latch: the ramp you squeeze to release the plug.
+            Box("Latch Base", frame, new Vector3(0f, k_AtxHeight * 0.5f + 0.0012f, 0.0010f),
+                new Vector3(0.0150f, 0.0024f, 0.0120f), "Lab_ConnectorWhite");
+            Box("Latch Arm", frame, new Vector3(0f, k_AtxHeight * 0.5f + 0.0034f, -0.0022f),
+                new Vector3(0.0130f, 0.0022f, 0.0092f), "Lab_ConnectorWhite", new Vector3(-9f, 0f, 0f));
+        }
+
+        /// <summary>
+        /// The wires leaving the plug's back face.
+        ///
+        /// Twelve of the twenty-four are drawn individually for the first 30 mm, in the
+        /// four rail colours, and the rest of the run is the sleeved bundle they gather
+        /// into. That first 30 mm is the whole recognition cue: a black stub says
+        /// "cable", a fan of orange, yellow, red and black says "PC power lead".
+        /// </summary>
+        static void BuildAtxWires(Transform frame, float length)
+        {
+            var loom = Group("Loom", frame, new Vector3(0f, 0f, 0.0075f));
+            for (var i = 0; i < 12; i++)
+            {
+                var x = AtxCircuitX(i);
+                // Each wire yaws toward the bundle's centre line, so the fan closes.
+                var yaw = Mathf.Atan2(-x, length) * Mathf.Rad2Deg;
+                Box($"Wire {i + 1}", loom, new Vector3(x * 0.5f, 0f, length * 0.5f),
+                    new Vector3(0.0022f, 0.0022f, length), k_AtxWireColours[i], new Vector3(0f, yaw, 0f));
+            }
+
+            Box("Sleeve", frame, new Vector3(0f, 0f, 0.0075f + length + 0.0060f),
+                new Vector3(0.0180f, 0.0090f, 0.0130f), "Lab_PlasticDark");
+        }
+
+        /// <summary>
+        /// The male half on the board's front edge. Same pitch and the same twelve-by-two
+        /// array as the plug, so the two read as a pair rather than as two white blocks.
         /// </summary>
         static void BuildAtxHeader(Transform board)
         {
             // Front-right edge of the board, where a real 24-pin sits, standing vertical
-            // as it does in a tower.
-            var header = Group("ATX Header", board, OnBoard(0.110f, -0.030f, 0.009f));
+            // as it does in a tower. The frame turns the canonical connector axes into
+            // the board's: circuits run up the board edge, the mouth opens toward the
+            // open side panel.
+            var header = Group("ATX Header", board, OnBoard(0.110f, -0.030f, 0.008f));
+            header.localRotation = Quaternion.LookRotation(Vector3.right, Vector3.forward);
 
-            Box("Shroud", header, Vector3.zero, new Vector3(0.018f, 0.062f, 0.014f), "Lab_ConnectorWhite");
-            Box("Shroud Wall", header, new Vector3(-0.008f, 0f, 0f), new Vector3(0.003f, 0.062f, 0.014f), "Lab_ConnectorWhite");
-            Box("Key Tab", header, new Vector3(-0.002f, 0.033f, 0f), new Vector3(0.014f, 0.006f, 0.010f), "Lab_ConnectorWhite");
+            Box("Shroud Floor", header, new Vector3(0f, 0f, 0.0060f), new Vector3(k_AtxLength, k_AtxHeight, 0.0040f), "Lab_ConnectorWhite");
+            foreach (var side in new[] { -1f, 1f })
+            {
+                Box($"Shroud Wall {(side < 0 ? "A" : "B")}", header, new Vector3(side * (k_AtxLength * 0.5f - 0.0008f), 0f, -0.0010f),
+                    new Vector3(0.0016f, k_AtxHeight, 0.0100f), "Lab_ConnectorWhite");
+                Box($"Shroud Rail {(side < 0 ? "A" : "B")}", header, new Vector3(0f, side * (k_AtxHeight * 0.5f - 0.0008f), -0.0010f),
+                    new Vector3(k_AtxLength, 0.0016f, 0.0100f), "Lab_ConnectorWhite");
+            }
 
+            // Latch window on the wall the plug's latch drops into.
+            Box("Latch Window", header, new Vector3(0f, k_AtxHeight * 0.5f - 0.0008f, -0.0010f),
+                new Vector3(0.0150f, 0.0020f, 0.0102f), "Lab_PlasticDark");
+
+            // Twenty-four gold pins standing in the shroud.
             for (var i = 0; i < 24; i++)
-                Box($"Pin {i + 1}", header, new Vector3(-0.002f, -0.027f + (i / 2) * 0.0049f, (i % 2 == 0 ? -0.0032f : 0.0032f)),
-                    new Vector3(0.010f, 0.0022f, 0.0022f), "Lab_Gold");
+                Box($"Pin {i + 1}", header,
+                    new Vector3(AtxCircuitX(i % 12), (i < 12 ? 0.5f : -0.5f) * k_AtxPitch, 0f),
+                    new Vector3(0.0018f, 0.0018f, 0.0090f), "Lab_Gold");
         }
 
         /// <summary>
@@ -568,20 +663,30 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // The board's front edge faces away to the participant's right from the
             // standing pose, so the plug is not the first thing seen; it is found by
             // stepping in and looking along the board, which is the point of the task.
-            Move("Internal Cable Connector", case_.transform, new Vector3(0.048f, -0.048f, -0.034f), Vector3.one, new Vector3(0f, 0f, -18f));
+            // Leaning 26 degrees out of vertical rather than 18 degrees into the case.
+            // The header opens toward the open panel, so a lead pulled out of it and
+            // left hanging points up at its socket - and at 18 degrees the wrong way it
+            // showed the participant a blank white back. Twenty-six degrees the other
+            // way is the same hanging plug with its bores where someone standing at the
+            // open side can see them. Nothing else about it changed: same white body as
+            // the spare in the tray, same size, same rail colours, no marking.
+            Move("Internal Cable Connector", case_.transform, new Vector3(0.048f, -0.048f, -0.034f), Vector3.one, new Vector3(0f, 0f, 26f));
             var cable = ResetVisual("Internal Cable Connector", out var cableGo);
             if (cable != null)
             {
-                // 24-pin plug: two rows of twelve sockets, keyed shroud, latch on the
-                // spine — the mating half of the header on the board edge.
-                Box("Plug Body", cable, Vector3.zero, new Vector3(0.020f, 0.064f, 0.016f), "Lab_ConnectorWhite");
-                Box("Plug Mouth", cable, new Vector3(-0.011f, 0f, 0f), new Vector3(0.004f, 0.058f, 0.011f), "Lab_PlasticDark");
-                Box("Plug Latch", cable, new Vector3(0.006f, 0.036f, 0f), new Vector3(0.012f, 0.016f, 0.010f), "Lab_ConnectorWhite");
-                for (var i = 0; i < 12; i++)
-                    Box($"Socket {i + 1}", cable, new Vector3(-0.009f, -0.026f + (i / 2) * 0.0095f, (i % 2 == 0 ? -0.003f : 0.003f)), new Vector3(0.004f, 0.004f, 0.004f), "Lab_PlasticDark");
-
-                // Short tail: the rest of the run is the fixed loom.
-                Box("Tail", cable, new Vector3(0.020f, -0.030f, 0.004f), new Vector3(0.026f, 0.044f, 0.022f), "Lab_CableBlack", new Vector3(0f, 0f, 34f));
+                // The same connector as the spare in the tray and as the header above
+                // it, hanging mouth-up on the end of the loom that comes out of the
+                // basement. Its twelve visible rail colours are the spare's colours, so
+                // a participant who has looked at one recognises the other — and the
+                // fault is still only findable by stepping in and looking along the
+                // board, because nothing about this one is brighter or bigger than the
+                // spare lying in the tray.
+                // Mouth up the way a plug on the end of a loom from the basement hangs;
+                // the root's lean is what turns the bores toward the open side.
+                var frame = Group("Connector", cable);
+                frame.localRotation = Quaternion.LookRotation(Vector3.down, Vector3.right);
+                BuildAtxPlug(frame);
+                BuildAtxWires(frame, 0.022f);
                 SetCollider(cableGo, new Vector3(0.06f, 0.09f, 0.05f));
             }
         }
@@ -604,7 +709,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 new Vector3(0.000f, -0.153f, 0.058f),   // out of the supply's gland
                 new Vector3(0.030f, -0.190f, -0.010f),  // down onto the floor
                 new Vector3(0.072f, -0.150f, -0.078f),  // forward along the front corner
-                new Vector3(0.048f, -0.062f, -0.040f)); // up to where the plug hangs
+                new Vector3(0.063f, -0.081f, -0.036f)); // up to the plug's sleeved tail
         }
 
         /// <summary>
@@ -670,17 +775,34 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // had been pushed aside. Not moved further left than this: the task volume
             // these parts define would reach the information dock and the validator
             // fails the scene for a reader that would open over the work area.
-            Move("Main Power Connector", null, new Vector3(-1.10f, tray + 0.013f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
+            // Lies on its long face with the mating end toward the participant, which is
+            // how a loose lead sits when its own loom is behind it. The block was a
+            // 70 x 24 x 22 mm slab with a single row of gold dots on the *top*: neither
+            // the pin array nor the wires said what it was, and the twenty-four bores a
+            // participant has to match against the case were not there to match.
+            Move("Main Power Connector", null, new Vector3(-1.10f, tray + 0.0072f, 0.95f), Vector3.one, new Vector3(0f, 14f, 0f));
             var mpc = ResetVisual("Main Power Connector", out var mpcGo);
             if (mpc != null)
             {
-                Box("Shroud", mpc, Vector3.zero, new Vector3(0.070f, 0.024f, 0.022f), "Lab_ConnectorWhite");
-                Box("Mouth", mpc, new Vector3(0f, -0.011f, 0f), new Vector3(0.064f, 0.004f, 0.017f), "Lab_PlasticDark");
-                Box("Latch", mpc, new Vector3(0f, 0.006f, -0.013f), new Vector3(0.018f, 0.014f, 0.005f), "Lab_ConnectorWhite");
-                for (var i = 0; i < 24; i++)
-                    Box($"Pin {i + 1}", mpc, new Vector3(-0.031f + (i / 2) * 0.0055f, 0.010f, (i % 2 == 0 ? -0.005f : 0.005f)), new Vector3(0.0026f, 0.005f, 0.0026f), "Lab_Gold");
-                Box("Tail A", mpc, new Vector3(0f, 0.006f, 0.032f), new Vector3(0.058f, 0.020f, 0.044f), "Lab_CableBlack");
-                Box("Tail B", mpc, new Vector3(0.020f, 0.006f, 0.070f), new Vector3(0.048f, 0.018f, 0.046f), "Lab_CableBlack", new Vector3(0f, 26f, 0f));
+                BuildAtxPlug(mpc);
+                BuildAtxWires(mpc, 0.030f);
+
+                // The rest of the lead, gathered and looped in the tray so the thing
+                // reads as a cable with a connector on it rather than a connector with
+                // a stub. Nothing here is aimed at the case; it lies where a spare lies.
+                // 8 mm of sleeved loom over twenty segments. At 11 mm over twelve it
+                // rendered as a chain of blocks the thickness of the connector itself -
+                // a rubber gasket lying beside the plug rather than the lead attached
+                // to it. The run ends open at the tray's far corner: a coil closed back
+                // on itself reads as a ring, not as a cable that goes somewhere.
+                CableRun("Lead Run", mpc, 0.0080f, "Lab_CableBlack",
+                    new Vector3(0.000f, -0.0015f, 0.0500f),
+                    new Vector3(0.060f, -0.0025f, 0.0880f),
+                    new Vector3(0.105f, -0.0025f, 0.0140f),
+                    new Vector3(0.075f, -0.0025f, -0.0420f), 20);
+
+                // Collider unchanged: it is the participant's ray target and the study's
+                // hover and grab counts are recorded against it.
                 SetCollider(mpcGo, new Vector3(0.10f, 0.05f, 0.13f));
             }
 

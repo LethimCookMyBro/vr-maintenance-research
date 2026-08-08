@@ -84,8 +84,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// anything parented to it came out at a ninth of its intended size. The
         /// scale is normalised, the collider resized to match, and the pedestal now
         /// carries an INSPECT plate so the control names itself.
+        ///
+        /// Both benches then showed the same three stacked cylinders — a flat disc a
+        /// pilot reader could take for an indicator lamp as easily as for a control. The
+        /// XRI example kit already ships the two shapes that say "press" and "turn"
+        /// without a caption, at the size these pedestals need, so the control now looks
+        /// like what its stable id calls it: a push button on the computer bench, a
+        /// rotary speed selector on the fan bench. Only the meshes are borrowed —
+        /// XRPushButton and XRKnob keep their own interaction state and would fight
+        /// <see cref="ResearchInteractable"/> for the same events.
         /// </summary>
-        public static void PlaceInspectControl(string interactableName)
+        public enum InspectControlShape { PushButton, Dial }
+
+        const string k_XriControls = "Assets/XRI_Examples/UI_3D/Models/";
+
+        public static void PlaceInspectControl(string interactableName, InspectControlShape shape = InspectControlShape.PushButton)
         {
             var go = GameObject.Find(interactableName);
             if (go == null)
@@ -107,9 +120,25 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             var visual = ResetVisual(interactableName, out _);
             if (visual != null)
             {
-                Cyl("Button Bezel", visual, new Vector3(0f, -0.008f, 0f), new Vector3(0.120f, 0.012f, 0.120f), "Lab_MetalDark");
-                Cyl("Button Cap", visual, new Vector3(0f, 0.010f, 0f), new Vector3(0.096f, 0.014f, 0.096f), "Lab_Accent");
-                Cyl("Button Inlay", visual, new Vector3(0f, 0.021f, 0f), new Vector3(0.058f, 0.004f, 0.058f), "Lab_PanelSurface");
+                // Mounting collar under the borrowed plate, so the control sits on the
+                // pedestal rather than floating a centimetre above it.
+                Cyl("Mount Collar", visual, new Vector3(0f, -0.018f, 0f), new Vector3(0.132f, 0.008f, 0.132f), "Lab_MetalDark");
+
+                // Fitted so the model's own height is the binding axis; the plate then
+                // lands on the collar and the moving part stands proud of it.
+                var push = shape == InspectControlShape.PushButton;
+                var model = ImportedVisual(push ? "Push Button" : "Speed Dial", visual,
+                    k_XriControls + (push ? "PushButton.fbx" : "Dial.fbx"),
+                    new Vector3(0f, push ? 0.034f : 0.032f, 0f),
+                    push ? new Vector3(0.140f, 0.096f, 0.140f) : new Vector3(0.140f, 0.088f, 0.140f));
+
+                if (model != null)
+                {
+                    // Plate in the bench's own dark metal, moving part in the accent the
+                    // disc already used, so the control keeps its place in the palette.
+                    PaintNamed(model, push ? "EmergencyStopPlate" : "Dial", "Lab_MetalDark");
+                    PaintNamed(model, push ? "EmergencyStop" : "Knob", "Lab_Accent");
+                }
             }
 
             // Sign sits directly over its own button and says what pressing it does.

@@ -58,6 +58,44 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 renderer.sharedMaterial = mat;
         }
 
+        /// <summary>
+        /// Repaints one named part of an imported model with a lab material.
+        ///
+        /// The XRI control meshes arrive with their own URP materials, which are the
+        /// example scenes' palette rather than this lab's. Painting per child keeps the
+        /// plate and the moving part separable — <see cref="Paint"/> would flatten a
+        /// two-tone control to one colour — and it means a control adds no material to
+        /// the scene's count.
+        /// </summary>
+        public static void PaintNamed(Transform root, string childName, string material)
+        {
+            if (root == null)
+                return;
+            var mat = ResearchMaterialPalette.Load(material);
+            if (mat == null)
+                return;
+            // Only the renderer on the matched object: these meshes nest the moving
+            // part under its plate, so painting the subtree would repaint both.
+            //
+            // Every submesh slot, not just the first. The XRI control meshes are
+            // two-material - a body and a trim ring - so writing sharedMaterial alone
+            // left the second slot on the example scenes' own materials, which both
+            // broke the lab's surface language on half of each control and quietly
+            // added two materials per scene to the draw-call budget.
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name != childName)
+                    continue;
+                var renderer = t.GetComponent<Renderer>();
+                if (renderer == null)
+                    continue;
+                var slots = new Material[renderer.sharedMaterials.Length];
+                for (var i = 0; i < slots.Length; i++)
+                    slots[i] = mat;
+                renderer.sharedMaterials = slots;
+            }
+        }
+
         /// <summary>Engraved-looking bench label. Faces -Z (toward the participant) by default.</summary>
         public static TextMeshPro Label(string name, Transform parent, Vector3 localPos, string text, float size, string colorHex, Vector3 euler = default, float boxWidth = 0.3f)
         {

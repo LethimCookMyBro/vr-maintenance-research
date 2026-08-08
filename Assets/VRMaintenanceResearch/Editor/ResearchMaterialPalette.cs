@@ -90,6 +90,11 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ["Lab_CableBlack"] = new Surface { Color = "#141619", Metallic = 0f, Smoothness = 0.44f },
             ["Lab_CableYellow"] = new Surface { Color = "#D8B22A", Metallic = 0f, Smoothness = 0.44f },
             ["Lab_CableRed"] = new Surface { Color = "#B33A32", Metallic = 0f, Smoothness = 0.44f },
+            // The fourth ATX rail colour. A 24-pin loom is black, red, yellow and
+            // orange in roughly that quantity, and three of the four already existed;
+            // without orange the bundle reads as "some wires" rather than as the one
+            // loom every PC carries.
+            ["Lab_CableOrange"] = new Surface { Color = "#C06A24", Metallic = 0f, Smoothness = 0.44f },
             ["Lab_ConnectorWhite"] = new Surface { Color = "#D5D8DB", Metallic = 0f, Smoothness = 0.50f },
             ["Lab_ToolHandle"] = new Surface { Color = "#B8422E", Metallic = 0f, Smoothness = 0.58f },
             ["Lab_ToolSteel"] = new Surface { Color = "#C8CDD3", Metallic = 0.95f, Smoothness = 0.80f },

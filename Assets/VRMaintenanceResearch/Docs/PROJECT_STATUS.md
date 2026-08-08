@@ -1,5 +1,40 @@
 # VR Maintenance Research - Project Status
 
+## Part recognition - 2026-08-08
+
+The parts a participant has to identify in order to diagnose are now modelled at the
+real parts' dimensions. Before this pass the answer to Task A was a 70 mm white block
+with a row of gold pips on its top face, and the fuse the fan task turns on was 84 mm
+long and 26 mm across - a torch battery. Neither could be named by looking at it, which
+matters because naming a part by looking at it is the step the study measures.
+
+- The 24-pin ATX connector exists three times in `ComputerRepairTask` - the header on
+  the board, the plug hanging off the supply's loom, and the replacement lead in the
+  spares tray. They were three separate hand builds at three different sizes. They are
+  now one geometry description at Molex Mini-Fit Jr. dimensions: 4.2 mm pitch, twelve
+  circuits by two rows, 54 x 13 x 15 mm body, 20+4 split seam, latch, and a loom in the
+  four rail colours a real 24-pin carries.
+- Every fuse in `FanRepairTask` is a 6 x 30 mm glass cartridge built by one function -
+  the spare in the tray, the stowed spare, and the one fitted in the holder. The blown
+  one differs in the element and nothing else: the opaque dark blob that used to sit
+  inside its glass was a distance-visible cue and is gone. The holder came down to a
+  44 mm carrier with sprung clips and two mounting screws, and the service bay it sits
+  in came down with it.
+- The three controls a participant presses or turns now use the XRI example kit's own
+  meshes - `PushButton.fbx` for `computer.power-button`, `Dial.fbx` for
+  `fan.speed-selector`, `Slider.fbx` for `fan.power-switch` - repainted into the lab
+  palette. Mesh only: `XRPushButton`, `XRKnob` and `XRSlider` keep their own state and
+  would compete with `ResearchInteractable`.
+- `fan.body` and `fan.front-cover` were **not** rebuilt. Both already read as a desk fan
+  and a wire guard; captures are in `Docs/Screenshots/Recognition/`.
+
+Telemetry is untouched: all 31 stable ids are byte-identical to the baseline, no
+collider was resized, moved or re-owned, no task definition or CSV column changed, and
+no object was added to or removed from either bench. Triangle cost: `FanRepairTask`
+36,120 → 37,898, `ComputerRepairTask` 118,967 → 120,385. Full numbers, the real-part
+dimensions each piece is sized from, and what was deliberately left alone are in
+`Docs/Verification/PART_RECOGNITION_RECORD.md`.
+
 ## Current phase - 2026-08-08
 
 A session can now be run end to end in the configuration a real participant run uses.

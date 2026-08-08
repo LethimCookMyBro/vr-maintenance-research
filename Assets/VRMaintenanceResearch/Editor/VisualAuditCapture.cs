@@ -111,6 +111,87 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Debug.Log($"[VisualAudit] wrote {count} approach captures to {OutputFolder}");
         }
 
+        // ---------------------------------------------------------------------
+        // Recognition set
+        //
+        // The audit and approach sets answer "is the bench tidy" and "can the
+        // participant reach the work". Neither answers the question this pass is
+        // about: held at the distance a participant actually holds it, can they say
+        // what the part *is*? Each entry below is one part that had to be legible
+        // without opening a manual, shot twice - once from the fixed start pose the
+        // participant arrives at, once at inspection range.
+        //
+        // The output folder is separate so a before/after pair survives a later run
+        // of the audit set, and the prefix is the caller's, so the same poses can be
+        // rendered against a stashed scene.
+        // ---------------------------------------------------------------------
+        public const string RecognitionFolder = "Assets/VRMaintenanceResearch/Docs/Screenshots/Recognition";
+
+        static readonly Vector3 k_StartPose = new Vector3(0f, 1.36f, -1.6f);
+
+        struct Part
+        {
+            public string Name;
+            public Vector3 Target;    // what the participant is looking at
+            public float StartFov;    // narrow field from the start pose: what a participant resolves standing there
+            public Vector3 Close;     // where they stand once they have walked in
+            public float CloseFov;
+        }
+
+        static readonly (string scene, string label, Part[] parts)[] k_RecognitionSets =
+        {
+            ("Assets/VRMaintenanceResearch/Scenes/ComputerRepairTask.unity", "Computer", new[]
+            {
+                new Part { Name = "AtxSpare", Target = new Vector3(-1.084f, 0.955f, 0.985f), StartFov = 13f, Close = new Vector3(-1.02f, 1.24f, 0.66f), CloseFov = 34f },
+                new Part { Name = "AtxFault", Target = new Vector3(-0.102f, 1.090f, 0.818f), StartFov = 11f, Close = new Vector3(-0.34f, 1.16f, 0.50f), CloseFov = 26f },
+                new Part { Name = "AtxHeader", Target = new Vector3(-0.062f, 1.150f, 0.842f), StartFov = 11f, Close = new Vector3(-0.30f, 1.20f, 0.56f), CloseFov = 24f },
+                new Part { Name = "PowerButton", Target = new Vector3(1.500f, 0.985f, 0.200f), StartFov = 20f, Close = new Vector3(1.28f, 1.30f, -0.30f), CloseFov = 40f },
+            }),
+            ("Assets/VRMaintenanceResearch/Scenes/FanRepairTask.unity", "Fan", new[]
+            {
+                new Part { Name = "SpareFuse", Target = new Vector3(-1.100f, 0.952f, 0.950f), StartFov = 11f, Close = new Vector3(-1.08f, 1.14f, 0.76f), CloseFov = 22f },
+                new Part { Name = "FuseHolder", Target = new Vector3(-0.130f, 1.318f, 1.014f), StartFov = 11f, Close = new Vector3(-0.36f, 1.34f, 0.86f), CloseFov = 20f },
+                new Part { Name = "ServiceBay", Target = new Vector3(-0.130f, 1.318f, 1.010f), StartFov = 26f, Close = new Vector3(-0.46f, 1.36f, 0.74f), CloseFov = 40f },
+                new Part { Name = "MainsLead", Target = new Vector3(0.330f, 0.945f, 1.235f), StartFov = 20f, Close = new Vector3(0.36f, 1.24f, 0.82f), CloseFov = 42f },
+                new Part { Name = "PowerSwitch", Target = new Vector3(0.016f, 1.010f, 0.850f), StartFov = 15f, Close = new Vector3(0.02f, 1.20f, 0.56f), CloseFov = 28f },
+                new Part { Name = "SpeedSelector", Target = new Vector3(1.500f, 0.985f, 0.200f), StartFov = 20f, Close = new Vector3(1.28f, 1.30f, -0.30f), CloseFov = 40f },
+                new Part { Name = "FanFront", Target = new Vector3(0.000f, 1.320f, 1.000f), StartFov = 34f, Close = new Vector3(0.30f, 1.30f, 0.34f), CloseFov = 50f },
+                // The removed front guard on the lower shelf. Not rebuilt in this pass -
+                // captured so the claim that it already reads as this fan's cage is
+                // evidence rather than assertion.
+                new Part { Name = "FrontGuard", Target = new Vector3(-0.720f, 0.560f, 0.980f), StartFov = 24f, Close = new Vector3(-0.42f, 0.86f, 0.18f), CloseFov = 40f },
+            }),
+        };
+
+        /// <summary>
+        /// Renders the recognition set. <paramref name="prefix"/> is Before or After;
+        /// both are rendered from identical poses so the pair is a like-for-like
+        /// comparison rather than two different photographs of the same bench.
+        /// </summary>
+        public static void CaptureRecognition(string prefix)
+        {
+            Directory.CreateDirectory(RecognitionFolder);
+            var count = 0;
+            foreach (var (scenePath, label, parts) in k_RecognitionSets)
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                foreach (var part in parts)
+                {
+                    Render(LookAt("Start", k_StartPose, part.Target, part.StartFov), $"{prefix}_{label}_{part.Name}_StartPose", RecognitionFolder);
+                    Render(LookAt("Close", part.Close, part.Target, part.CloseFov), $"{prefix}_{label}_{part.Name}_Inspect", RecognitionFolder);
+                    count += 2;
+                }
+            }
+            AssetDatabase.Refresh();
+            Debug.Log($"[VisualAudit] wrote {count} {prefix} recognition captures to {RecognitionFolder}");
+        }
+
+        [MenuItem("Tools/VR Maintenance Research/Visual Audit/Capture Recognition BEFORE")]
+        public static void CaptureRecognitionBefore() => CaptureRecognition("Before");
+
+        [MenuItem("Tools/VR Maintenance Research/Visual Audit/Capture Recognition AFTER")]
+        public static void CaptureRecognitionAfter() => CaptureRecognition("After");
+
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Capture BEFORE")]
         public static void CaptureBefore() => CaptureAll("Before");
 
@@ -172,13 +253,14 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         public static string Render(string poseName, Vector3 position, Vector3 euler, float fov, string fileName,
             int width = 1600, int height = 900)
         {
-            return Render(new Pose { Name = poseName, Position = position, Euler = euler, Fov = fov }, fileName, width, height);
+            return Render(new Pose { Name = poseName, Position = position, Euler = euler, Fov = fov }, fileName, null, width, height);
         }
 
-        static string Render(Pose pose, string fileName, int width = 1600, int height = 900)
+        static string Render(Pose pose, string fileName, string folder = null, int width = 1600, int height = 900)
         {
-            Directory.CreateDirectory(OutputFolder);
-            var path = $"{OutputFolder}/{fileName}.png";
+            folder ??= OutputFolder;
+            Directory.CreateDirectory(folder);
+            var path = $"{folder}/{fileName}.png";
 
             var holder = new GameObject("~AuditCamera");
             var camera = holder.AddComponent<Camera>();
