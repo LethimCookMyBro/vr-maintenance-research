@@ -1,13 +1,66 @@
 === ray aim attribution ===
-A ray is cast from the eye pose to the centre of what the part actually
-renders, and resolved the way XRRayInteractor resolves one: the nearest
-collider wins, and a collider belonging to no interactable blocks
-everything behind it. MISATTRIBUTED means pointing at this part logs a
-different part's id.
+For every interactable, aim points are spread over the faces of the part
+that turn toward the eye and pulled onto the part's own collider, then a
+ray is cast at each of them and resolved the way XRRayInteractor resolves
+one: the nearest collider wins, and a collider belonging to no interactable
+blocks everything behind it.
+
+  FAIL  not one of the aims resolves to the part, from any of the 5 poses.
+  WARN  it answers, but no single pose reaches 50% of its surface.
+  OK    at least one pose points at it and gets it back.
+
+Poses:
+  start pose (0, 1.361, -1.6)
+  bench pose (0, 1.500, 0.30)
+  crouched at the bench (0, 1.100, -0.60)
+  step left (-0.90, 1.400, -0.30)
+  step right (0.90, 1.400, -0.30)
+
+=== ComputerRepairTask
+computer.case	OK	133 of 135 aims	5 of 5 poses	best pose 100%	1 of 2 missed aims stop at 'Workbench Top', which no interactable owns, nearest 1358 mm
+computer.cooling-fan	OK	112 of 135 aims	5 of 5 poses	best pose 100%	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 472 mm
+computer.external-power-cable	OK	112 of 135 aims	5 of 5 poses	best pose 100%	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 1317 mm
+computer.internal-cable	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
+computer.main-power-connector	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+computer.motherboard	OK	70 of 135 aims	4 of 5 poses	best pose 81%	45 of 65 missed aims stop at 'Desktop Case' (computer.case), nearest 365 mm
+computer.power-button	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+computer.psu	OK	128 of 135 aims	5 of 5 poses	best pose 100%	7 of 7 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
+computer.psu-switch	WARN	13 of 135 aims	1 of 5 poses	best pose 48%	108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
+computer.ram	OK	93 of 135 aims	4 of 5 poses	best pose 100%	42 of 42 missed aims stop at 'Desktop Case' (computer.case), nearest 380 mm
+computer.side-panel	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Workbench Top', which no interactable owns, nearest 814 mm
+computer.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+=== FanRepairTask
+fan.blade	OK	105 of 135 aims	5 of 5 poses	best pose 89%	30 of 30 missed aims stop at 'Electric Fan Body' (fan.body), nearest 563 mm
+fan.body	OK	97 of 135 aims	5 of 5 poses	best pose 93%	35 of 38 missed aims stop at 'Fan Blade' (fan.blade), nearest 576 mm
+fan.fastener	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Fan Blade' (fan.blade), nearest 1499 mm
+fan.front-cover	OK	43 of 135 aims	4 of 5 poses	best pose 67%	92 of 92 missed aims stop at 'Workbench Top', which no interactable owns, nearest 742 mm
+fan.fuse-holder	OK	26 of 135 aims	3 of 5 poses	best pose 59%	98 of 109 missed aims stop at 'Fan Blade' (fan.blade), nearest 564 mm
+fan.internal-wire	OK	30 of 135 aims	3 of 5 poses	best pose 100%	90 of 105 missed aims stop at 'Fan Blade' (fan.blade), nearest 565 mm
+fan.power-cord	OK	49 of 135 aims	4 of 5 poses	best pose 70%	78 of 86 missed aims stop at 'Electric Fan Body' (fan.body), nearest 653 mm
+fan.power-plug	OK	94 of 135 aims	4 of 5 poses	best pose 100%	27 of 41 missed aims stop at 'Electric Fan Body' (fan.body), nearest 1514 mm
+fan.power-switch	OK	88 of 135 aims	5 of 5 poses	best pose 89%	47 of 47 missed aims stop at 'Electric Fan Body' (fan.body), nearest 689 mm
+fan.speed-selector	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+fan.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+fan.working-fuse	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+=== VRTraining
+training.training-cube-a	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+training.training-cube-b	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+training.training-cylinder	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+
+=== summary: 2732 of 3645 aims resolve to the part aimed at
+NO PART IS UNREACHABLE
+1 part(s) reachable but hard to aim at:
+  WARN ComputerRepairTask 'computer.psu-switch': 13 of 135 aims, 1 of 5 poses, best pose 48% — 108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
+
+=== superseded criterion, kept so the two can be compared ===
+One ray per part per pose, at the centre of the part's renderer bounds,
+from the two standing poses only. This is what the file recorded before
+the criterion changed; the counts below are recomputed on the current
+scenes, so it stays a live comparison rather than a stale copy.
 
 === ComputerRepairTask
 --- start pose (0, 1.361, -1.6)
-computer.case	MISATTRIBUTED -> computer.motherboard	blocked at 2471 mm by 'Motherboard Placeholder'
+computer.case	MISATTRIBUTED -> computer.motherboard	'Motherboard Placeholder' (computer.motherboard)
 computer.cooling-fan	OK
 computer.external-power-cable	OK
 computer.internal-cable	OK
@@ -15,12 +68,12 @@ computer.main-power-connector	OK
 computer.motherboard	OK
 computer.power-button	OK
 computer.psu	OK
-computer.psu-switch	MISATTRIBUTED -> computer.psu	blocked at 2411 mm by 'Power Supply Placeholder'
+computer.psu-switch	MISATTRIBUTED -> computer.psu	'Power Supply Placeholder' (computer.psu)
 computer.ram	OK
 computer.side-panel	OK
 computer.tool.screwdriver	OK
 --- bench pose (0, 1.500, 0.30)
-computer.case	MISATTRIBUTED -> computer.motherboard	blocked at 730 mm by 'Motherboard Placeholder'
+computer.case	MISATTRIBUTED -> computer.motherboard	'Motherboard Placeholder' (computer.motherboard)
 computer.cooling-fan	OK
 computer.external-power-cable	OK
 computer.internal-cable	OK
@@ -28,18 +81,19 @@ computer.main-power-connector	OK
 computer.motherboard	OK
 computer.power-button	OK
 computer.psu	OK
-computer.psu-switch	MISATTRIBUTED -> computer.psu	blocked at 791 mm by 'Power Supply Placeholder'
+computer.psu-switch	MISATTRIBUTED -> computer.psu	'Power Supply Placeholder' (computer.psu)
 computer.ram	OK
-computer.side-panel	MISATTRIBUTED -> (nothing)	blocked at 909 mm by 'Workbench Top', which no interactable owns
+computer.side-panel	MISATTRIBUTED -> (nothing)	'Workbench Top', which no interactable owns
 computer.tool.screwdriver	OK
+    5 of 24 centre aims resolve to a different part
 === FanRepairTask
 --- start pose (0, 1.361, -1.6)
 fan.blade	OK
 fan.body	OK
 fan.fastener	OK
 fan.front-cover	OK
-fan.fuse-holder	MISATTRIBUTED -> fan.blade	blocked at 2488 mm by 'Fan Blade'
-fan.internal-wire	MISATTRIBUTED -> fan.fuse-holder	blocked at 2578 mm by 'Fan Fuse Holder'
+fan.fuse-holder	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
+fan.internal-wire	MISATTRIBUTED -> fan.fuse-holder	'Fan Fuse Holder' (fan.fuse-holder)
 fan.power-cord	OK
 fan.power-plug	OK
 fan.power-switch	OK
@@ -50,15 +104,16 @@ fan.working-fuse	OK
 fan.blade	OK
 fan.body	OK
 fan.fastener	OK
-fan.front-cover	MISATTRIBUTED -> (nothing)	blocked at 844 mm by 'Workbench Top', which no interactable owns
-fan.fuse-holder	MISATTRIBUTED -> fan.blade	blocked at 565 mm by 'Fan Blade'
-fan.internal-wire	MISATTRIBUTED -> fan.blade	blocked at 588 mm by 'Fan Blade'
-fan.power-cord	MISATTRIBUTED -> fan.body	blocked at 741 mm by 'Electric Fan Body'
+fan.front-cover	MISATTRIBUTED -> (nothing)	'Workbench Top', which no interactable owns
+fan.fuse-holder	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
+fan.internal-wire	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
+fan.power-cord	MISATTRIBUTED -> fan.body	'Electric Fan Body' (fan.body)
 fan.power-plug	OK
 fan.power-switch	OK
 fan.speed-selector	OK
 fan.tool.screwdriver	OK
 fan.working-fuse	OK
+    6 of 24 centre aims resolve to a different part
 === VRTraining
 --- start pose (0, 1.361, -1.6)
 training.training-cube-a	OK
@@ -68,5 +123,4 @@ training.training-cylinder	OK
 training.training-cube-a	OK
 training.training-cube-b	OK
 training.training-cylinder	OK
-
-11 of 54 aims resolve to a different part
+    0 of 6 centre aims resolve to a different part
