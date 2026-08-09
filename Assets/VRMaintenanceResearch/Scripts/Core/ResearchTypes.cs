@@ -44,6 +44,17 @@ namespace TMUVR.MaintenanceResearch
         public bool firstPersonRecordingConsent;
         public bool firstPersonRecordingEnabled;
         public bool trainingRequired = true;
+
+        // Participant heads-up display. Every one of these three adds feedback the
+        // original protocol did not give, so each is a separate switch and each is
+        // written into session_manifest.csv: a session's data is only interpretable
+        // against the display it was collected under. See KNOWN_LIMITATIONS.md.
+        // showTimer is gated a second time by ResearchTaskDefinition.showTimerToParticipant,
+        // which is per task and already existed; this one is the session-wide off switch.
+        public bool showTimer = true;
+        public bool showProgress = true;
+        public bool showObjectives = true;
+
         [UnityEngine.TextArea] public string technicalNotes = "";
 
         public bool Validate(out string reason)

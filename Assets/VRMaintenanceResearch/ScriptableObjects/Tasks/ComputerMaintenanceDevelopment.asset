@@ -19,10 +19,14 @@ MonoBehaviour:
   layoutId: computer-layout-development-a
   informationSourceLayoutId: sources-layout-development-a
   maximumTimeSeconds: 900
-  showTimerToParticipant: 0
+  showTimerToParticipant: 1
   englishTitle: Computer Maintenance (Development)
   englishParticipantInstructions: Inspect freely, use any information source in any
     order if desired, attempt repairs, and test the device when ready.
+  thaiTitle: 
+  japaneseTitle: 
+  thaiParticipantInstructions: 
+  japaneseParticipantInstructions: 
   availableComponents:
   - computer.case
   - computer.motherboard

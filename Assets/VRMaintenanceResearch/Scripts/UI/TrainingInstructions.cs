@@ -116,15 +116,15 @@ namespace TMUVR.MaintenanceResearch
             canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 3f;
             canvasObject.AddComponent<TrackedDeviceGraphicRaycaster>();
 
-            var background = ResearchUiKit.Panel("Background", canvasObject.transform, ResearchUiKit.Navy);
-            ResearchUiKit.Stretch(background.rectTransform);
+            var background = ResearchUiKit.GlassPanel("Background", canvasObject.transform, 28f);
+            ResearchUiKit.Stretch(background);
 
-            var accent = ResearchUiKit.Panel("Accent", background.transform, ResearchUiKit.Accent);
+            var accent = ResearchUiKit.Rounded("Accent", background.transform, ResearchUiKit.Accent, 4f);
             accent.rectTransform.anchorMin = new Vector2(0f, 1f);
             accent.rectTransform.anchorMax = new Vector2(1f, 1f);
             accent.rectTransform.pivot = new Vector2(0.5f, 1f);
-            accent.rectTransform.sizeDelta = new Vector2(0f, 8f);
-            accent.rectTransform.anchoredPosition = Vector2.zero;
+            accent.rectTransform.sizeDelta = new Vector2(-88f, 8f);
+            accent.rectTransform.anchoredPosition = new Vector2(0f, -14f);
 
             var title = ResearchUiKit.Label("Title", background.transform, "Neutral XR Training", 46f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
             ResearchUiKit.Place(title.rectTransform, 44f, 14f, 900f, 54f);
@@ -160,9 +160,8 @@ namespace TMUVR.MaintenanceResearch
 
         Requirement RequirementRow(RectTransform parent, float y, string caption)
         {
-            var marker = ResearchUiKit.Panel("Marker", parent, ResearchUiKit.SlateSoft);
+            var marker = ResearchUiKit.Rounded("Marker", parent, ResearchUiKit.SlateSoft, 8f);
             ResearchUiKit.Place(marker.rectTransform, 0f, y, 28f, 28f);
-            marker.preserveAspect = true;
 
             var check = ResearchUiKit.Label("Check", marker.transform, string.Empty, 24f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
             ResearchUiKit.Stretch(check.rectTransform);
@@ -197,9 +196,16 @@ namespace TMUVR.MaintenanceResearch
             if (requirement.Marker == null)
                 return;
 
+            // Only override the kit's rounded chip when a real icon is assigned;
+            // writing a null sprite here turned the chip back into a hard square.
             var sprite = satisfied ? satisfiedIcon : outstandingIcon;
-            requirement.Marker.sprite = sprite;
-            requirement.Marker.color = satisfied ? ResearchUiKit.Accent : ResearchUiKit.SlateSoft;
+            if (sprite != null)
+            {
+                requirement.Marker.sprite = sprite;
+                requirement.Marker.type = Image.Type.Simple;
+                requirement.Marker.preserveAspect = true;
+            }
+            requirement.Marker.color = satisfied ? ResearchUiKit.Ok : ResearchUiKit.SlateSoft;
             if (requirement.Check != null)
                 requirement.Check.text = satisfied ? "✓" : string.Empty;
             requirement.Text.color = satisfied ? ResearchUiKit.OnDark : ResearchUiKit.OnDarkMuted;

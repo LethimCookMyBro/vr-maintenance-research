@@ -28,6 +28,17 @@ namespace TMUVR.MaintenanceResearch
         public bool IsActive => State == TaskState.Active;
         public ResearchTaskDefinition Definition => definition;
 
+        // Read-only windows onto state this controller already keeps, for
+        // ParticipantHud. Nothing here writes an event, changes task state or adds a
+        // measurement: the three are exactly the milestones the event stream already
+        // carries as DeviceTestStarted, the correct RepairAction, and TaskCompleted.
+        /// <summary>Seconds this attempt has been Active, the same clock the timeout uses.</summary>
+        public float ActiveElapsed => activeElapsed;
+        /// <summary>True once the participant has run the device test at least once this attempt.</summary>
+        public bool DeviceTested { get; private set; }
+        /// <summary>True once the repair the definition asks for has been performed this attempt.</summary>
+        public bool RepairPerformed => repairActionPerformed;
+
         protected virtual void Start()
         {
             var session = ResearchSessionManager.Instance;
@@ -141,6 +152,7 @@ namespace TMUVR.MaintenanceResearch
                 return;
             RegisterMeaningfulAction();
             var objectId = source == null ? "device.test" : source.StableObjectId;
+            DeviceTested = true;
             Log(ResearchEventType.DeviceTestStarted, objectId, "device", "observed", "device_test_started");
             if (repairActionPerformed)
             {
@@ -257,6 +269,7 @@ namespace TMUVR.MaintenanceResearch
             lastHoverAt = 0f;
             activeHoverPairs.Clear();
             repairActionPerformed = false;
+            DeviceTested = false;
             lowActivityOpen = false;
             openInformationSourceCount = 0;
             videoPlaying = false;

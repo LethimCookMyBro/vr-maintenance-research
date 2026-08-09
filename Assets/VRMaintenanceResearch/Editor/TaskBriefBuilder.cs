@@ -84,7 +84,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             title.fontStyle = TMPro.FontStyles.Bold;
             title.characterSpacing = 6f;
 
-            var text = Label("Body", t, new Vector3(0f, -0.051f, -0.016f), body, 0.30f, "#1E2A3A", Vector3.zero, 0.75f);
+            // Light copy, because the face is now dark glass rather than the pale
+            // plate it was authored against. #DCE4EE over the composited surface is
+            // about 11:1; the 0.30 readability floor the validator holds is unchanged.
+            var text = Label("Body", t, new Vector3(0f, -0.051f, -0.016f), body, 0.30f, "#DCE4EE", Vector3.zero, 0.75f);
             text.alignment = TMPro.TextAlignmentOptions.TopLeft;
             text.textWrappingMode = TMPro.TextWrappingModes.Normal;
             text.rectTransform.sizeDelta = new Vector2(0.748f, 0.410f);

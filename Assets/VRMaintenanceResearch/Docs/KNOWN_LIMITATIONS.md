@@ -257,3 +257,138 @@
   Standalone — Unity's identifier for the example package, not a research application
   id. On Android it also determines where `Application.persistentDataPath` puts session
   data. Changing it is an app-identity decision and was not made here.
+
+## Participant heads-up display - 2026-08-09
+
+The participant now sees a head-referenced display carrying elapsed time, a
+completion percentage and a three-line objectives checklist. **None of the three
+existed in the protocol the earlier data and the earlier task design were built
+around.** The project owner asked for all three, having been told what they cost;
+this section is the record of that cost, not an objection to it.
+
+Each element is a separate switch on `ResearchSessionConfig`
+(`showTimer`, `showProgress`, `showObjectives`), all three default to on, and all
+three are written into `session_manifest.csv` as `show_timer`, `show_progress` and
+`show_objectives`, appended after `manifest_updated_utc`. **A session is only
+interpretable against the display it was collected under, so no analysis should
+pool sessions without first checking those three columns.**
+
+### What each one changes
+
+- **Visible elapsed time changes behaviour under pressure.** A clock the participant
+  can read turns an untimed diagnostic task into a self-paced timed one. The direction
+  is not neutral and not uniform: some participants will hurry and stop searching
+  earlier, others will slow down once they see how much of the 900 s limit is left.
+  Every duration measure in `task_summary.csv` — `completion_time_seconds`,
+  `total_information_viewing_duration_seconds`, the four per-source durations,
+  `total_low_activity_duration_seconds` — is therefore measured under a different
+  task than it was before. `low_activity_period_count` is the most exposed: a visible
+  clock is a reason to keep moving, and the 30 s inactivity threshold was calibrated
+  without one.
+- **Objectives that tick themselves are correctness feedback.** The three rows are
+  states the controller already tracked, but showing them means the participant learns
+  *at the moment they act* that the repair they just performed was the right one. The
+  study measures diagnosis, and diagnosis under confirmation is a different task from
+  diagnosis without it. Concretely: `incorrect_component_interaction_count` and
+  `device_test_failed_count` can no longer be read as a search process, because after
+  the first tick the participant knows the search is over. The wording never names a
+  part, a tool or a procedure — the rows are past-tense states, not instructions — so
+  the display does not shorten the search *before* the first correct action. It removes
+  the uncertainty *after* it.
+- **A completion percentage tells the participant how close they are to done.** 0 / 33 /
+  67 / 100 is a progress signal the task never gave. Seeing 33 % after a first failed
+  device test says "two of three things remain", which is information about the
+  structure of the task that a participant was previously expected to infer. It also
+  interacts with the timer: a participant who can see both will estimate whether they
+  are on schedule, which is a judgement the protocol did not ask them to make.
+- **The three interact.** They are not three independent additions to one baseline.
+  A pilot that turns on all three is not comparable with one that turns on the timer
+  alone, and neither is comparable with data collected before this commit.
+
+### How to turn it off
+
+Three ways, cheapest first.
+
+1. **Per session, no rebuild.** In `ResearcherSetup`, section 3 "Session options" now
+   carries three checkboxes: *Participant display: elapsed time*, *…: completion
+   percentage*, *…: objectives checklist*. Clearing a box before pressing Start Session
+   removes that element for that session, and the manifest records the choice. This is
+   the answer to "the pilot says it is too much".
+2. **The timer only.** `ResearchTaskDefinition.showTimerToParticipant` gates the clock a
+   second time, per task. It was `false` on both maintenance definitions and **was set
+   to `true` in this pass**, because otherwise the session-level `showTimer` could never
+   display anything. Setting it back to `false` on
+   `ComputerMaintenanceDevelopment.asset` and `FanMaintenanceDevelopment.asset` restores
+   the pre-2026-08-09 behaviour for the clock regardless of the session switch. This is
+   the only task-definition field this pass changed; no id, fault, part list, repair
+   object, time limit or content string was touched.
+3. **Permanently, for everyone.** Change the three field initialisers in
+   `ResearchSessionConfig` (`Scripts/Core/ResearchTypes.cs`) from `true` to `false`, or
+   remove the `ParticipantHud` component from the task controller in
+   `ComputerRepairTask` and `FanRepairTask`. With all three switches clear the component
+   builds nothing at all — it returns from `Start` before creating a canvas — so there
+   is no residual cost or occlusion.
+
+### Display limitations
+
+- **It is head-locked, not world-fixed.** The canvas is parented to the main camera at
+  1.15 m, so it follows head rotation exactly. That is what makes the corners behave
+  like screen corners, and it is also the arrangement most likely to cause discomfort
+  over a long session. It has not been worn on hardware; a Quest 3 comfort check is
+  outstanding.
+- **It occludes.** The objectives block sits in the upper right of the participant's
+  view at all times, so it covers whatever is there — including the wall-mounted status
+  board when they turn towards it. At 1.15 m it is also nearer than the workbench, so
+  standing at the bench puts the lower blocks in front of bench geometry.
+- **It carries no raycaster and no control**, deliberately: a controller ray passes
+  straight through it to the bench, and there is nothing on it a participant can press.
+  It writes no research event and changes no task state.
+- The three milestones are read from `MaintenanceTaskController.DeviceTested`,
+  `RepairPerformed` and `State`, which are the same transitions the event stream already
+  records as `DeviceTestStarted`, the correct `RepairAction` and `TaskCompleted`. No new
+  event type, no new column in `session_events.csv`, and no change to the existing
+  manifest columns.
+- It is in the two maintenance scenes only. `VRTraining` has its own board and measures
+  four unrelated skills; `ResearcherSetup` has no participant.
+
+## Panel legibility after the dark-glass restyle - 2026-08-09
+
+- **Every participant-facing panel inverted from dark-on-light to light-on-dark.** The
+  work order, the information reader and its selector cards, the wall notice board, the
+  status board and the training board are now a dark translucent slab at about 88 %
+  opacity with a rounded edge. Copy colours moved with them — `#F2F5F8` for headings,
+  `#DCE4EE` and `#C6D2E0` for body — which is roughly 14:1 and 9-11:1 against the
+  composited surface, so all of it stays past the 4.5:1 floor the notice board was
+  already held to. **The measured contrast is calculated, not measured on a headset.**
+  Reading time is a variable in this study; if a pilot reads more slowly than the
+  earlier white-panel captures suggested, this restyle is the first thing to suspect and
+  the tints in `ResearchUiStyleBuilder.Surfaces()` are the single place to change.
+- The panels are now genuinely transparent, so the lab wall shows through them. That is
+  additional fill-rate on Quest and has not been profiled on hardware.
+- No panel changed position, size or wording. The information dock in particular keeps
+  its authored geometry, because `information_source_layout_id` is a logged variable.
+
+## Industrial room dressing - 2026-08-09
+
+- **The room is no longer visually neutral, and distractor count is a research
+  variable.** `de7d5fd` set the sparse room on purpose; this pass adds 68 background
+  objects to it — racking with crates, guardrails, floor marking, a wall control
+  cabinet with a lit display and three status lamps, wordless safety signage and a
+  two-tone wall. None of it is interactable and none of it can be aimed at, but a
+  busier room is a different search environment from an empty one, and the change was
+  made across all four scenes so at least it is the same busier room everywhere.
+- **The signage carries no text on purpose.** The three wall signs are the ISO shapes —
+  hazard diamond, mandatory disc, safe-condition square — with no glyph on any of them.
+  A legible line of English on a wall in a room read from any angle would be a fifth
+  information source in a study whose information sources are the controlled variable.
+- **Nothing in the dressing has a collider**, so no controller ray can resolve to it.
+  `LabIndustrialDressing.AssertInert` fails the build on the console if one ever
+  appears, and the 54-aim ray check is unchanged at the same 11 pre-existing occlusions.
+- **Cost, measured, not estimated:** +1,904 triangles, +68 renderers, +4 to +6 materials
+  and **+6 estimated draw batches** per scene, the last because every dressing object is
+  marked batching-static and shares the existing palette. `ComputerRepairTask` is
+  117,989 triangles and 96 materials, still under the 120,385 / 97 recorded at `0248328`.
+  These are editor-side counts; **no measurement has been taken on a Quest 3.**
+- The green ESD matting on the bench comes from the `LabEnvironment` prefab and is
+  therefore in all four scenes, including `ResearcherSetup`. The darker per-scene
+  service pad still sits on top of it in the three participant scenes.

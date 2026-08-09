@@ -24,6 +24,20 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             AssetDatabase.Refresh();
         }
 
+        /// <summary>
+        /// Captures whatever is running now, without opening a scene.
+        ///
+        /// The runtime-built interfaces — the status board, the training board and the
+        /// participant heads-up display — exist only in play mode, so an edit-mode
+        /// capture cannot show them. This is how the _Play screenshots are taken.
+        /// </summary>
+        [MenuItem("Tools/VR Maintenance Research/Capture Play Mode View")]
+        public static void CapturePlayModeView()
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            Debug.Log("[SceneCapture] " + CaptureActiveScene(scene + "_Play", "PolishAfter"));
+        }
+
         public static string CaptureScene(string scenePath, string label, string prefix = "After", int width = 1600, int height = 900)
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);

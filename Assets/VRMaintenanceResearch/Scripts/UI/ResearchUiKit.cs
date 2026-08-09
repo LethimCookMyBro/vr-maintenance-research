@@ -26,10 +26,99 @@ namespace TMUVR.MaintenanceResearch
         public static readonly Color OnDarkMuted = Hex("#A8B3C0");
         public static readonly Color Line = Hex("#D3D7DC");
 
+        // --- glass surfaces -------------------------------------------------
+        //
+        // The participant-facing panels moved to the industrial reference look: a
+        // dark, slightly transparent slab with a rounded edge, rather than a flat
+        // opaque rectangle. They live here rather than in each board so that the
+        // status board, the training board and the heads-up display cannot drift
+        // apart. The researcher setup screen deliberately keeps the light Shell /
+        // Surface tokens above: it is a desktop form, not a panel in the room.
+        public static readonly Color Glass = Hex("#0D141FDB");        // ~86 % opaque
+        public static readonly Color GlassRaised = Hex("#18233468");  // inner card over Glass
+        public static readonly Color GlassEdge = Hex("#42536DD9");
+        public static readonly Color Ok = Hex("#3FB27F");
+
+        /// <summary>8-digit hex is accepted, so a token can carry its own alpha.</summary>
         public static Color Hex(string value)
         {
             ColorUtility.TryParseHtmlString(value, out var color);
             return color;
+        }
+
+        // ponytail: one 48 px sprite generated once beats shipping a 9-slice PNG
+        // plus its meta and import settings. Sliced, so the corner radius is the
+        // same on a 1 040 px board and a 200 px chip.
+        const int k_RoundedSize = 48;
+        const int k_RoundedRadius = 14;
+        static Sprite roundedSprite;
+
+        public static Sprite RoundedSprite
+        {
+            get
+            {
+                if (roundedSprite == null)
+                    roundedSprite = BuildRoundedSprite();
+                return roundedSprite;
+            }
+        }
+
+        static Sprite BuildRoundedSprite()
+        {
+            var texture = new Texture2D(k_RoundedSize, k_RoundedSize, TextureFormat.RGBA32, false)
+            {
+                name = "Research Rounded Panel",
+                hideFlags = HideFlags.HideAndDontSave,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+            };
+
+            var pixels = new Color32[k_RoundedSize * k_RoundedSize];
+            for (var y = 0; y < k_RoundedSize; y++)
+            for (var x = 0; x < k_RoundedSize; x++)
+            {
+                // Distance past the corner arc, in pixels; one pixel of feather so
+                // the edge is not stepped at the sizes these panels render at.
+                var dx = Mathf.Max(0f, Mathf.Max(k_RoundedRadius - 0.5f - x, x - (k_RoundedSize - k_RoundedRadius - 0.5f)));
+                var dy = Mathf.Max(0f, Mathf.Max(k_RoundedRadius - 0.5f - y, y - (k_RoundedSize - k_RoundedRadius - 0.5f)));
+                var outside = Mathf.Sqrt(dx * dx + dy * dy) - k_RoundedRadius;
+                var alpha = Mathf.Clamp01(0.5f - outside);
+                pixels[y * k_RoundedSize + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, false);
+
+            var border = Vector4.one * (k_RoundedRadius + 2);
+            var sprite = Sprite.Create(texture, new Rect(0f, 0f, k_RoundedSize, k_RoundedSize), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
+            sprite.name = "Research Rounded Panel";
+            sprite.hideFlags = HideFlags.HideAndDontSave;
+            return sprite;
+        }
+
+        /// <summary>A rounded slab. <paramref name="radius"/> is in canvas units.</summary>
+        public static Image Rounded(string name, Transform parent, Color color, float radius = 16f)
+        {
+            var rect = Rect(name, parent);
+            var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = RoundedSprite;
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = (k_RoundedRadius + 2f) / Mathf.Max(1f, radius);
+            image.color = color;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        /// <summary>
+        /// The standard participant panel: a rounded edge ring with the glass body
+        /// inset inside it. Returns the body, which is what callers parent into.
+        /// </summary>
+        public static RectTransform GlassPanel(string name, Transform parent, float radius = 16f, float edge = 2f)
+        {
+            var ring = Rounded(name, parent, GlassEdge, radius);
+            var body = Rounded("Glass", ring.transform, Glass, Mathf.Max(1f, radius - edge));
+            Stretch(body.rectTransform, edge);
+            return ring.rectTransform;
         }
 
         public static RectTransform Rect(string name, Transform parent)

@@ -88,8 +88,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Face", card, Vector3.zero, new Vector3(0.84f, 0.27f, 0.018f), "Lab_PanelSurface");
             Box("Accent", card, new Vector3(0f, 0.116f, -0.002f), new Vector3(0.84f, 0.038f, 0.020f), "Lab_Accent");
 
-            // #14202E on Lab_PanelSurface (#F4F6F8) is about 15:1 — well past the 4.5:1
-            // floor, which matters because this board is read across the room.
+            // The card face is now dark glass, so the copy inverted with it: #F2F5F8
+            // and #C6D2E0 over that surface are about 14:1 and 9:1, still well past the
+            // 4.5:1 floor, which matters because this board is read across the room.
             // Sized to fill the card rather than to fit it. At 0.20/0.15 the copy
             // occupied about a third of the plate and was unreadable from the
             // participant's start pose 4.8 m away; the card was always this big.
@@ -98,11 +99,11 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // starts below the heading's glyphs: the body is top-aligned in a 0.15-tall
             // rect, so its anchor is its centre and the two will overlap if the anchor
             // is not at least half that box below the heading.
-            var h = Label("Heading", card, new Vector3(0f, 0.062f, -0.014f), heading, 0.34f, "#14202E", Vector3.zero, 0.80f);
+            var h = Label("Heading", card, new Vector3(0f, 0.062f, -0.014f), heading, 0.34f, "#F2F5F8", Vector3.zero, 0.80f);
             h.fontStyle = TMPro.FontStyles.Bold;
             h.characterSpacing = 6f;
 
-            var copy = Label("Body", card, new Vector3(0f, -0.056f, -0.014f), body, 0.30f, "#2B3949", Vector3.zero, 0.78f);
+            var copy = Label("Body", card, new Vector3(0f, -0.056f, -0.014f), body, 0.30f, "#C6D2E0", Vector3.zero, 0.78f);
             copy.alignment = TMPro.TextAlignmentOptions.Top;
             copy.textWrappingMode = TMPro.TextWrappingModes.Normal;
             copy.rectTransform.sizeDelta = new Vector2(0.78f, 0.15f);

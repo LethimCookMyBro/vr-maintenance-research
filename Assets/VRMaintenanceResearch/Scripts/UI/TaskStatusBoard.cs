@@ -57,20 +57,21 @@ namespace TMUVR.MaintenanceResearch
             canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 3f;
             canvasObject.AddComponent<TrackedDeviceGraphicRaycaster>();
 
-            var background = ResearchUiKit.Panel("Background", canvasObject.transform, ResearchUiKit.Navy);
-            ResearchUiKit.Stretch(background.rectTransform);
+            var background = ResearchUiKit.GlassPanel("Background", canvasObject.transform, 26f);
+            ResearchUiKit.Stretch(background);
 
-            var accent = ResearchUiKit.Panel("Accent", background.transform, ResearchUiKit.Accent);
+            // Inset so the rule does not run out past the rounded corners.
+            var accent = ResearchUiKit.Rounded("Accent", background.transform, ResearchUiKit.Accent, 3f);
             accent.rectTransform.anchorMin = new Vector2(0f, 1f);
             accent.rectTransform.anchorMax = new Vector2(1f, 1f);
             accent.rectTransform.pivot = new Vector2(0.5f, 1f);
-            accent.rectTransform.sizeDelta = new Vector2(0f, 6f);
-            accent.rectTransform.anchoredPosition = Vector2.zero;
+            accent.rectTransform.sizeDelta = new Vector2(-88f, 6f);
+            accent.rectTransform.anchoredPosition = new Vector2(0f, -14f);
 
             var title = ResearchUiKit.Label("Title", background.transform, taskTitle, 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
             ResearchUiKit.Place(title.rectTransform, 44f, 24f, 900f, 52f);
 
-            statePip = ResearchUiKit.Panel("Pip", background.transform, ResearchUiKit.Accent);
+            statePip = ResearchUiKit.Rounded("Pip", background.transform, ResearchUiKit.Accent, 9f);
             ResearchUiKit.Place(statePip.rectTransform, 44f, 100f, 18f, 18f);
 
             stateLabel = ResearchUiKit.Label("State", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
@@ -79,7 +80,7 @@ namespace TMUVR.MaintenanceResearch
             attemptLabel = ResearchUiKit.Label("Attempt", background.transform, string.Empty, 32f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Right);
             ResearchUiKit.Place(attemptLabel.rectTransform, 340f, 94f, 656f, 36f);
 
-            var finishedPanel = ResearchUiKit.Panel("Finished", background.transform, ResearchUiKit.Slate);
+            var finishedPanel = ResearchUiKit.Rounded("Finished", background.transform, ResearchUiKit.GlassRaised, 18f);
             ResearchUiKit.Place(finishedPanel.rectTransform, 44f, 160f, 952f, 170f);
             finishedLabel = ResearchUiKit.Label("Finished Text", finishedPanel.transform, string.Empty, 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Center);
             ResearchUiKit.Stretch(finishedLabel.rectTransform, 16f);

@@ -14,6 +14,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         public static void RebuildAll()
         {
             ResearchMaterialPalette.Apply();
+            // Prefab first: the four scenes instance LabEnvironment, so the room has to
+            // be finished before any scene is opened and normalised against it.
+            LabIndustrialDressing.Build();
             LabLayoutBuilder.ApplyToAllScenes();
             ComputerWorkstationBuilder.Build();
             FanWorkstationBuilder.Build();
@@ -21,6 +24,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ResearcherSetupBuilder.Build();
             InformationDockBuilder.BuildAll();
             LabNoticeBoardBuilder.BuildAll();
+            ParticipantHudBuilder.AttachAll();
             ResearchUiStyleBuilder.ApplyAll();
             ResearchLightingRig.ApplyToAllScenes();
             Debug.Log("[VisualPipeline] full rebuild complete");

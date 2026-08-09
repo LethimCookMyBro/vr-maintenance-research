@@ -141,13 +141,27 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>
+        /// The panel surfaces, as dark translucent glass.
+        ///
+        /// The tints carry their own alpha (8-digit hex), which is all the change
+        /// the reference look needed: these materials were already built transparent
+        /// — <c>_Surface 1</c>, alpha blend, no depth write, queue 3000 — and were
+        /// simply being given opaque colours. The Kenney sprites are what supply the
+        /// rounded corner on the world-space panels.
+        ///
+        /// Nothing is taken below about 88 % opacity. A panel a participant has to
+        /// read against a lit lab wall stops being readable well before it stops
+        /// looking like glass, and reading time is a measure in this study.
+        /// Buttons stay fully opaque for the same reason.
+        /// </summary>
         static IEnumerable<(string sprite, string material, string tint)> Surfaces()
         {
-            yield return ("panel_surface", "UI_PanelSurface", "#EEF2F7");
-            yield return ("panel_flat", "UI_CardFace", "#26334A");
-            yield return ("panel_border", "UI_PanelBorder", "#46536A");
+            yield return ("panel_surface", "UI_PanelSurface", "#0D141FEB");
+            yield return ("panel_flat", "UI_CardFace", "#1B2739F2");
+            yield return ("panel_border", "UI_PanelBorder", "#42536DE0");
             yield return ("button_accent", "UI_ButtonPrimary", "#2E7BE6");
-            yield return ("button_neutral", "UI_ButtonSecondary", "#6B788A");
+            yield return ("button_neutral", "UI_ButtonSecondary", "#4E5A6B");
             yield return ("divider", "UI_Divider", "#2E7BE6");
         }
 
@@ -171,10 +185,47 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         static Material Load(string name) =>
             AssetDatabase.LoadAssetAtPath<Material>($"{k_MaterialFolder}/{name}.mat");
 
+        static string TopLevel(Transform t)
+        {
+            while (t.parent != null)
+                t = t.parent;
+            return t.name;
+        }
+
+        /// <summary>
+        /// The information reader's copy was authored dark, for a near-white panel.
+        /// The panel is now dark glass, so the copy has to invert with it or the
+        /// reader goes black on black. The two values are the same pair the status
+        /// board uses on <see cref="ResearchUiKit.Glass"/>: about 14:1 for the title
+        /// and 11:1 for the body against the composited surface, both well past the
+        /// 4.5:1 floor the notice board was already held to.
+        ///
+        /// Only the GEN labels, which arrived with the original panel prefabs and
+        /// have no builder that owns them. Every builder-made label carries its own
+        /// colour and is corrected at its own source.
+        /// </summary>
+        static void RecolourCopyForGlass()
+        {
+            var title = ResearchMaterialPalette.Hex("#F2F5F8");
+            var body = ResearchMaterialPalette.Hex("#DCE4EE");
+
+            foreach (var label in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (label.name == "GEN Title")
+                    label.color = title;
+                else if (label.name == "GEN Body")
+                    label.color = body;
+                else
+                    continue;
+                EditorUtility.SetDirty(label);
+            }
+        }
+
         /// <summary>Retextures the world-space UI in the open scene.</summary>
         static void StyleScene(TMP_FontAsset font)
         {
             var panelSurface = Load("UI_PanelSurface");
+            var panelBorder = Load("UI_PanelBorder");
             var cardFace = Load("UI_CardFace");
             var buttonPrimary = Load("UI_ButtonPrimary");
             var buttonSecondary = Load("UI_ButtonSecondary");
@@ -184,6 +235,36 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             {
                 var go = renderer.gameObject;
                 var name = go.name;
+                var group = TopLevel(go.transform);
+
+                // --- work order board ---
+                // Built as scene geometry, so it is the one panel that has to be
+                // restyled by name rather than through ResearchUiKit. Same three
+                // surfaces as every other panel: glass body, raised header, accent rule.
+                if (group == "Task Brief")
+                {
+                    if (name == "Backing" && panelBorder != null)
+                        renderer.sharedMaterial = panelBorder;
+                    else if (name == "Face" && panelSurface != null)
+                        renderer.sharedMaterial = panelSurface;
+                    else if (name == "Header Band" && cardFace != null)
+                        renderer.sharedMaterial = cardFace;
+                    else if (name == "Header Rule" && divider != null)
+                        renderer.sharedMaterial = divider;
+                    continue;
+                }
+
+                // --- information source dock housing ---
+                if (group == "Information Dock")
+                {
+                    if (name == "Housing" && cardFace != null)
+                        renderer.sharedMaterial = cardFace;
+                    else if (name == "Housing Edge" && divider != null)
+                        renderer.sharedMaterial = divider;
+                    else if (name.StartsWith("Slot ") && panelSurface != null)
+                        renderer.sharedMaterial = panelSurface;
+                    continue;
+                }
 
                 // --- information reader panels ---
                 if (name == "GEN Frame" && panelSurface != null)
@@ -211,12 +292,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 else if (go.transform.parent != null && go.transform.parent.name.StartsWith("Notice ")
                          && name == "Accent" && divider != null)
                     renderer.sharedMaterial = divider;
-
-                // --- dock housing slots ---
-                else if (name.StartsWith("Slot ") && go.transform.parent != null
-                         && go.transform.parent.name == "Information Dock" && cardFace != null)
-                    renderer.sharedMaterial = cardFace;
             }
+
+            RecolourCopyForGlass();
 
             if (font == null)
                 return;

@@ -88,7 +88,7 @@ namespace TMUVR.MaintenanceResearch
             Section(form, 0f, left, "2", "Experimental condition", out var conditionBody, 212f);
             BuildConditionSection(conditionBody);
 
-            var rightY = Section(form, right, 0f, "3", "Session options", out var optionsBody, 156f);
+            var rightY = Section(form, right, 0f, "3", "Session options", out var optionsBody, 246f);
             BuildOptionsSection(optionsBody);
             rightY = Section(form, right, rightY, "4", "Technical notes", out var notesBody, 100f);
             BuildNotesSection(notesBody);
@@ -170,6 +170,17 @@ namespace TMUVR.MaintenanceResearch
             Toggle(body, 120f, "Enable first-person recording (capture pipeline is not implemented)",
                 () => config.firstPersonRecordingConsent && config.firstPersonRecordingEnabled,
                 v => config.firstPersonRecordingEnabled = v);
+
+            // The participant display. Each switch is written into session_manifest.csv,
+            // so a later analysis can tell which sessions ran with which of them; turning
+            // one off here is how a pilot's "too much on screen" is answered without a
+            // rebuild. See KNOWN_LIMITATIONS.md for what each one costs in interpretation.
+            Toggle(body, 150f, "Participant display: elapsed time (also needs the task's own timer flag)",
+                () => config.showTimer, v => config.showTimer = v);
+            Toggle(body, 180f, "Participant display: completion percentage",
+                () => config.showProgress, v => config.showProgress = v);
+            Toggle(body, 210f, "Participant display: objectives checklist",
+                () => config.showObjectives, v => config.showObjectives = v);
         }
 
         void BuildNotesSection(RectTransform body)

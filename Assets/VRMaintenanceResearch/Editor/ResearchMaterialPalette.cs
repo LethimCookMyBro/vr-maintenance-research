@@ -36,7 +36,10 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // --- structure ---
             ["Lab_Navy"] = new Surface { Color = "#1C2838", Metallic = 0.25f, Smoothness = 0.48f },
             ["Lab_Trim"] = new Surface { Color = "#38455C", Metallic = 0.20f, Smoothness = 0.44f },
-            ["Lab_StationBoard"] = new Surface { Color = "#7E8A99", Metallic = 0.05f, Smoothness = 0.26f },
+            // The board the notice panels hang on. It was mid grey, which was fine
+            // behind pale cards and became a bright slab the moment the cards went to
+            // dark glass. Dark slate reads as the mounting plate it is.
+            ["Lab_StationBoard"] = new Surface { Color = "#333C48", Metallic = 0.05f, Smoothness = 0.26f },
             ["Lab_PanelSurface"] = new Surface { Color = "#F4F6F8", Metallic = 0f, Smoothness = 0.24f },
 
             // --- worked surfaces: these carry the specular story ---
@@ -110,6 +113,16 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ["Lab_FuseGlass"] = new Surface { Color = "#C8D2DA", Metallic = 0.10f, Smoothness = 0.95f, Alpha = 0.30f },
             ["Lab_StatusGreen"] = new Surface { Color = "#35C46A", Metallic = 0f, Smoothness = 0.70f, Emission = "#35C46A", EmissionBoost = 1.1f },
             ["Lab_StatusRed"] = new Surface { Color = "#E0524A", Metallic = 0f, Smoothness = 0.70f, Emission = "#E0524A", EmissionBoost = 1.1f },
+
+            // --- industrial dressing -------------------------------------------
+            // One yellow for every safety marking in the room: floor lines, the
+            // guardrail and the wall stripe. Deliberately not emissive and
+            // deliberately not Lab_Warning, which is the amber the UI reserves for a
+            // warning state — a painted line that glows reads as a signal.
+            ["Lab_SafetyYellow"] = new Surface { Color = "#D9A81C", Metallic = 0f, Smoothness = 0.32f },
+            // Stacking crates. A saturated moulded blue, well away from Lab_Accent so
+            // the room's dressing cannot be mistaken for the interface's accent.
+            ["Lab_CrateBlue"] = new Surface { Color = "#1E4E9B", Metallic = 0f, Smoothness = 0.42f },
         };
 
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Apply Material Palette")]
@@ -152,55 +165,102 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Debug.Log($"[Palette] wrote {touched} materials");
         }
 
+        /// <summary>
+        /// Writes a surface, and writes nothing it does not have to.
+        ///
+        /// Re-running this used to dirty all forty-odd materials whether or not a value
+        /// had changed, because URP's legacy `_Color` alias round-trips through a
+        /// colour-space conversion: setting 0.10980392 stores 0.10980389. Every pass
+        /// therefore produced a commit-sized diff of 4e-8 drifts across the palette, and
+        /// a real change was invisible in it. Values are compared before they are
+        /// written, so a run that changes nothing leaves every file byte-identical.
+        /// </summary>
         static void Write(Material material, Surface surface)
         {
             var color = Hex(surface.Color);
+            var changed = false;
             if (surface.Alpha > 0f)
             {
                 color.a = surface.Alpha;
-                SetTransparent(material);
+                changed |= SetTransparent(material);
             }
 
-            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-            if (material.HasProperty("_Color")) material.SetColor("_Color", color);
-            if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", surface.Metallic);
-            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", surface.Smoothness);
-            if (material.HasProperty("_Glossiness")) material.SetFloat("_Glossiness", surface.Smoothness);
+            changed |= SetColor(material, "_BaseColor", color);
+            changed |= SetColor(material, "_Color", color);
+            changed |= SetFloat(material, "_Metallic", surface.Metallic);
+            changed |= SetFloat(material, "_Smoothness", surface.Smoothness);
+            changed |= SetFloat(material, "_Glossiness", surface.Smoothness);
 
             // URP needs the keyword toggled, not just the colour, or emission is ignored.
-            if (surface.Emission != null)
+            var emissive = surface.Emission != null;
+            if (material.IsKeywordEnabled("_EMISSION") != emissive)
             {
-                material.EnableKeyword("_EMISSION");
-                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                if (material.HasProperty("_EmissionColor"))
-                    material.SetColor("_EmissionColor", Hex(surface.Emission) * surface.EmissionBoost);
-            }
-            else
-            {
-                material.DisableKeyword("_EMISSION");
-                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
-                if (material.HasProperty("_EmissionColor"))
-                    material.SetColor("_EmissionColor", Color.black);
+                if (emissive) material.EnableKeyword("_EMISSION");
+                else material.DisableKeyword("_EMISSION");
+                changed = true;
             }
 
-            EditorUtility.SetDirty(material);
+            var flags = emissive ? MaterialGlobalIlluminationFlags.RealtimeEmissive : MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+            if (material.globalIlluminationFlags != flags)
+            {
+                material.globalIlluminationFlags = flags;
+                changed = true;
+            }
+
+            changed |= SetColor(material, "_EmissionColor", emissive ? Hex(surface.Emission) * surface.EmissionBoost : Color.black);
+
+            if (changed)
+                EditorUtility.SetDirty(material);
+        }
+
+        // 1e-4 is two orders below the smallest step an 8-bit colour channel can
+        // express, so it swallows the round-trip noise and nothing else.
+        const float k_Epsilon = 1e-4f;
+
+        static bool SetColor(Material material, string property, Color value)
+        {
+            if (!material.HasProperty(property))
+                return false;
+            var current = material.GetColor(property);
+            if (Mathf.Abs(current.r - value.r) < k_Epsilon && Mathf.Abs(current.g - value.g) < k_Epsilon &&
+                Mathf.Abs(current.b - value.b) < k_Epsilon && Mathf.Abs(current.a - value.a) < k_Epsilon)
+                return false;
+            material.SetColor(property, value);
+            return true;
+        }
+
+        static bool SetFloat(Material material, string property, float value)
+        {
+            if (!material.HasProperty(property) || Mathf.Abs(material.GetFloat(property) - value) < k_Epsilon)
+                return false;
+            material.SetFloat(property, value);
+            return true;
         }
 
         /// <summary>
         /// URP Lit needs all of this to go transparent — setting the colour's alpha
         /// alone leaves the surface fully opaque.
         /// </summary>
-        static void SetTransparent(Material material)
+        static bool SetTransparent(Material material)
         {
-            material.SetFloat("_Surface", 1f);
-            material.SetFloat("_Blend", 0f);
-            material.SetFloat("_ZWrite", 0f);
-            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            var changed = SetFloat(material, "_Surface", 1f);
+            changed |= SetFloat(material, "_Blend", 0f);
+            changed |= SetFloat(material, "_ZWrite", 0f);
+            changed |= SetFloat(material, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            changed |= SetFloat(material, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             material.SetOverrideTag("RenderType", "Transparent");
-            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            if (!material.IsKeywordEnabled("_SURFACE_TYPE_TRANSPARENT"))
+            {
+                material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                changed = true;
+            }
             material.DisableKeyword("_ALPHATEST_ON");
-            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            if (material.renderQueue != (int)UnityEngine.Rendering.RenderQueue.Transparent)
+            {
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                changed = true;
+            }
+            return changed;
         }
 
         public static Color Hex(string value)

@@ -3,7 +3,7 @@ participant-style: no Inspector edits and no desktop researcher panel between st
 PASS session manager exists
 PASS session accepts a non-development configuration
 PASS session starts
-      data folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Sessions\20260808T154734Z_b53e72c5
+      data folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Sessions\20260809T073658Z_371111bd
 PASS real sessions write outside the Development folder
 PASS training scene loads
 PASS training board exists
