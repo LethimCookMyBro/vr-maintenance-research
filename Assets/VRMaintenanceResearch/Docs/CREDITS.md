@@ -31,7 +31,7 @@ table, are the record.
 |---|---|---|
 | Kenney UI Pack 2.0 (panel sprites, Future Narrow typeface) | CC0 1.0 | `ThirdParty/Kenney/UIPack/LICENSE.txt` |
 | Kenney Game Icons | CC0 1.0 | `ThirdParty/Kenney/GameIcons/LICENSE.txt` |
-| Poly Haven textures and models (concrete floor, beige wall, screwdriver, power box, ceiling fan) | CC0 1.0 | `ThirdParty/PolyHaven/LICENSE.txt` |
+| Poly Haven textures and models (concrete floor, beige wall, screwdriver) | CC0 1.0 | `ThirdParty/PolyHaven/LICENSE.txt` |
 | Noto Sans Thai, Noto Sans JP | SIL Open Font License 1.1 | `ThirdParty/Fonts/NotoSansThai-OFL.txt`, `ThirdParty/Fonts/NotoSansJP-OFL.txt` |
 | Component meshes — motherboard, CPU, cooler, memory, drive, supply, case fan, screwdriver | **CC BY 4.0**, one of them **CC BY-NC 4.0** | `ThirdParty/ITEM_3D/ATTRIBUTION.md` |
 
@@ -46,6 +46,60 @@ memory model is CC BY-NC 4.0, which limits redistribution of the whole project
 to non-commercial use.
 
 ## What was deliberately not used
+
+### Poly Haven `power_box_01` — tried on the wall cabinet, rejected on the numbers
+
+The wall control cabinet is nine Unity primitives, and `power_box_01` is
+literally a wall-mounted electrical box, so it was built into
+`Prefabs/Environment/LabEnvironment.prefab` in place of them and measured from
+the participant's start pose against the version that was already there.
+`Docs/Screenshots/Review/PowerBoxTrial_*.png` are those two frames.
+
+| ComputerRepairTask, participant start pose | nine primitives | `power_box_01` |
+|---|---|---|
+| Triangles in the scene | 120,093 | 141,065 (**+20,972**) |
+| Triangles submitted per frame | 335,810 | 367,093 (**+31,283**) |
+| Vertices per frame | 445,519 | 469,281 |
+| Batches | 1,441 | 1,445 |
+| Static-batched draw calls | 351 in 11 batches | 334 in 10 batches |
+| Visible skinned meshes | 2 | 4 |
+| Materials in the scene | 97 | 98, plus a 1024 × 1024 texture |
+
+The static-batch line is the one that decides it. The nine primitives are
+`BatchingStatic` and fold into the room's static batch; `power_box_01` ships as
+two `SkinnedMeshRenderer`s on a hundred-bone rig for its door and cable runs,
+and a skinned mesh is never static-batched, so the swap *removed* a batch's
+worth of merged geometry and added a per-frame skinning cost for a
+19,196-vertex mesh that never moves.
+
+The picture agrees with the numbers. The asset is a 500 mm domestic meter box
+where a 1.08 m industrial cabinet stood; at the participant's six metres the
+photoscanned detail the 21,272 triangles pay for resolves to a grey rectangle,
+while what the primitives bought — a lit green display and three status lamps
+that say the room is live — is gone. Scaling it 2.2× to fill the same wall
+would have been a photoscan stretched past the size of the real object, which
+is worse than a primitive, not better. It also lands on the wrong side of the
+rule below: it is a photographic scan standing next to graybox furniture, in a
+room whose whole point is that the *task parts* are the real-looking things.
+
+The nine primitives stay. `power_box_01` and its material are removed from the
+project along with their rows in `ThirdParty/PolyHaven/DOWNLOAD_VERIFICATION.csv`
+— an unreferenced third-party asset is a provenance obligation with nothing on
+the other side of it. The measurements above are the record; the files are one
+`git revert` away if the wall ever wants them.
+
+### Poly Haven `ceiling_fan` — removed, no honest place for it
+
+The fan bench repairs a desk fan. A ceiling fan is not a part of it, not a
+spare for it and not a tool for it, and the only place it could have gone is
+the ceiling as dressing — which is the one thing this particular study must not
+do. The fan task asks a participant to name the parts of a fan; a second fan
+hanging over the bench is a distractor from the same object category as the
+device under test, and that is a confound in the measurement, not a decoration.
+16,356 triangles for it besides. Removed with its material and its
+`DOWNLOAD_VERIFICATION.csv` rows.
+
+### Stylised CC0 model packs
 
 Kenney and Quaternius CC0 model packs were considered for the racking, crates
 and wall fittings and rejected. They are genuinely CC0 and genuinely good, but
