@@ -217,6 +217,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         /// the wall is another information source in a task whose sources are the
         /// controlled variable.
         /// </summary>
+        /// <summary>
+        /// Three wall signs in the ISO colour-and-shape convention, each carrying a
+        /// pictogram built from the same primitives as everything else: a yellow hazard
+        /// plate with a black exclamation, a blue mandatory disc with white eye
+        /// protection, a green safe-condition square with a white first-aid cross.
+        ///
+        /// Still wordless, and that is the point. The room is read from any angle and
+        /// this study's information sources are the controlled variable, so a legible
+        /// line of English on a wall would be a fifth source. A pictogram carries
+        /// "this is safety signage" without carrying a sentence.
+        ///
+        /// The first pass had the colour and the shape and no pictogram at all, which
+        /// read as three coloured decals rather than as signs. The plates are also dark
+        /// backed: a white sign plate on a white wall has an invisible border.
+        /// </summary>
         static void SafetySigns(Transform root)
         {
             var t = Group("Safety Signs", root);
@@ -224,20 +239,38 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
             // High on the middle band of the far wall — the one stretch neither the
             // work order nor the notice board casts a shadow across from the
-            // participant pose, and a metre above the sight line to the bench.
+            // participant pose, and a metre above the sight line to the bench. The x
+            // positions are bounded by both: the hazard plate's rotated corner may not
+            // reach past -0.53, and the green square may not reach past 1.21.
             const float y = 2.400f;
+            const float plate = 0.420f;
 
-            Box("Hazard Backing", t, new Vector3(-0.25f, y, z), new Vector3(0.400f, 0.400f, 0.010f), "Lab_PlasticDark", new Vector3(0f, 0f, 45f));
-            Box("Hazard Face", t, new Vector3(-0.25f, y, z - 0.006f), new Vector3(0.300f, 0.300f, 0.012f), "Lab_Warning", new Vector3(0f, 0f, 45f));
+            var hazard = Group("Sign Hazard", t, new Vector3(-0.22f, y, z));
+            Box("Backing", hazard, Vector3.zero, new Vector3(plate, plate, 0.010f), "Lab_PlasticDark", new Vector3(0f, 0f, 45f));
+            Box("Face", hazard, new Vector3(0f, 0f, -0.006f), new Vector3(0.320f, 0.320f, 0.012f), "Lab_Warning", new Vector3(0f, 0f, 45f));
+            Box("Mark Bar", hazard, new Vector3(0f, 0.038f, -0.014f), new Vector3(0.036f, 0.150f, 0.008f), "Lab_PlasticDark");
+            Box("Mark Dot", hazard, new Vector3(0f, -0.076f, -0.014f), new Vector3(0.040f, 0.040f, 0.008f), "Lab_PlasticDark");
 
-            // Dark backings on all three: a white sign plate on a white wall is an
-            // invisible border, which left the first pass looking like coloured decals.
-            Cyl("Mandatory Backing", t, new Vector3(0.38f, y, z), new Vector3(0.420f, 0.005f, 0.420f), "Lab_PlasticDark", new Vector3(90f, 0f, 0f));
-            Cyl("Mandatory Face", t, new Vector3(0.38f, y, z - 0.006f), new Vector3(0.330f, 0.006f, 0.330f), "Lab_Accent", new Vector3(90f, 0f, 0f));
+            var mandatory = Group("Sign Mandatory", t, new Vector3(0.40f, y, z));
+            Cyl("Backing", mandatory, Vector3.zero, new Vector3(plate, 0.005f, plate), "Lab_PlasticDark", new Vector3(90f, 0f, 0f));
+            Cyl("Face", mandatory, new Vector3(0f, 0f, -0.006f), new Vector3(0.330f, 0.006f, 0.330f), "Lab_Accent", new Vector3(90f, 0f, 0f));
+            // Eye protection: a strap across the disc, two lenses on it, a short bridge
+            // between them. The first attempt used small lenses on a 60 mm bridge as
+            // thick as they were, which read as a dumbbell; the lenses have to be the
+            // largest thing on the sign and the bridge has to nearly disappear.
+            // Wider than the pair of lenses, or its ends hide behind them and the
+            // pictogram loses the one line that says the lenses are worn.
+            Box("Strap", mandatory, new Vector3(0f, 0.012f, -0.012f), new Vector3(0.320f, 0.024f, 0.006f), "Lab_LabelPlate");
+            Cyl("Lens L", mandatory, new Vector3(-0.074f, 0.008f, -0.016f), new Vector3(0.145f, 0.005f, 0.105f), "Lab_LabelPlate", new Vector3(90f, 0f, 0f));
+            Cyl("Lens R", mandatory, new Vector3(0.074f, 0.008f, -0.016f), new Vector3(0.145f, 0.005f, 0.105f), "Lab_LabelPlate", new Vector3(90f, 0f, 0f));
+            Box("Bridge", mandatory, new Vector3(0f, 0.008f, -0.016f), new Vector3(0.038f, 0.016f, 0.008f), "Lab_LabelPlate");
 
-            // 1.00 and no further right: the notice board's left edge is at 1.21.
-            Box("Condition Backing", t, new Vector3(1.00f, y, z), new Vector3(0.400f, 0.400f, 0.010f), "Lab_PlasticDark");
-            Box("Condition Face", t, new Vector3(1.00f, y, z - 0.006f), new Vector3(0.310f, 0.310f, 0.012f), "Lab_StatusGreen");
+            var condition = Group("Sign Condition", t, new Vector3(0.99f, y, z));
+            Box("Backing", condition, Vector3.zero, new Vector3(plate, plate, 0.010f), "Lab_PlasticDark");
+            Box("Face", condition, new Vector3(0f, 0f, -0.006f), new Vector3(0.330f, 0.330f, 0.012f), "Lab_StatusGreen");
+            // First aid: the one safe-condition pictogram nobody has to be taught.
+            Box("Cross Vertical", condition, new Vector3(0f, 0f, -0.014f), new Vector3(0.070f, 0.220f, 0.008f), "Lab_LabelPlate");
+            Box("Cross Horizontal", condition, new Vector3(0f, 0f, -0.014f), new Vector3(0.220f, 0.070f, 0.008f), "Lab_LabelPlate");
         }
 
         /// <summary>

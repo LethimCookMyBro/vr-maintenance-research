@@ -377,17 +377,23 @@ Three ways, cheapest first.
   two-tone wall. None of it is interactable and none of it can be aimed at, but a
   busier room is a different search environment from an empty one, and the change was
   made across all four scenes so at least it is the same busier room everywhere.
-- **The signage carries no text on purpose.** The three wall signs are the ISO shapes —
-  hazard diamond, mandatory disc, safe-condition square — with no glyph on any of them.
-  A legible line of English on a wall in a room read from any angle would be a fifth
-  information source in a study whose information sources are the controlled variable.
+- **The signage carries no text on purpose.** The three wall signs are the ISO shapes and
+  colours — hazard diamond, mandatory disc, safe-condition square — each with a
+  pictogram built from the same primitives as the rest of the room: a black exclamation,
+  white eye protection, a white first-aid cross. **No glyph on any of them.** A legible
+  line of English on a wall in a room read from any angle would be a fifth information
+  source in a study whose information sources are the controlled variable. The
+  pictograms were added after a first pass shipped the colour and the shape alone, which
+  read as three coloured decals rather than as signage.
 - **Nothing in the dressing has a collider**, so no controller ray can resolve to it.
   `LabIndustrialDressing.AssertInert` fails the build on the console if one ever
   appears, and the 54-aim ray check is unchanged at the same 11 pre-existing occlusions.
-- **Cost, measured, not estimated:** +1,904 triangles, +68 renderers, +4 to +6 materials
+- **Cost, measured, not estimated:** +2,136 triangles, +76 renderers, +4 to +6 materials
   and **+6 estimated draw batches** per scene, the last because every dressing object is
-  marked batching-static and shares the existing palette. `ComputerRepairTask` is
-  117,989 triangles and 96 materials, still under the 120,385 / 97 recorded at `0248328`.
+  marked batching-static and shares the existing palette. The sign pictograms added 8 of
+  those renderers and **no batches at all**, because they reuse `Lab_LabelPlate` and
+  `Lab_PlasticDark`, which the static set already carried. `ComputerRepairTask` is
+  118,221 triangles and 96 materials, still under the 120,385 / 97 recorded at `0248328`.
   These are editor-side counts; **no measurement has been taken on a Quest 3.**
 - The green ESD matting on the bench comes from the `LabEnvironment` prefab and is
   therefore in all four scenes, including `ResearcherSetup`. The darker per-scene
