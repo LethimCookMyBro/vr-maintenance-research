@@ -5,6 +5,30 @@
 **Status:** awaiting supervisor decision. Nothing here has been approved, merged or
 pushed to `main`. No participant data has been collected.
 
+> ## ⚠ Partly superseded on 2026-08-11 by Round 6
+>
+> This package describes the build as it stood at `0248328`. **Round 6 aligned the build
+> to Research Proposal 1.0 (18 June 2569) and changed four things this document asserts.**
+> It has not been rewritten — read it with these corrections, and read
+> [`PROTOCOL_CHANGE_LOG.md`](PROTOCOL_CHANGE_LOG.md) Round 6 for the full argument.
+>
+> | This document says | Now |
+> |---|---|
+> | `fan.faulty-fuse`, `fan.motor-module` and `fan.non-target-module` are **stowed** (§3, §4, and the part tables) | All three are **switched back on**. The two fuses sit in the spares tray 120 mm apart; the motor and the sealed module are on the service mat. The reason is proposal 9.3.2, which requires Task B to offer several possible causes. |
+> | The fan task **cannot** record an incorrect component interaction (§ the failure-opportunity table) | It can, through `fan.faulty-fuse`. **Open item ค is closed** and the asymmetry is equalised. |
+> | Both benches ask the participant to *find the cause and repair it* | Only the **fan** does. The computer work order now says *follow the manual and fit the correct replacement component*, per proposal 9.3.1. This is the study's task variable and it had been set to a constant. |
+> | The maximum time is 900 s per task | **600 s**, against the proposal's 960 and 1200. This is the round's largest deviation and it **needs a signature** — see Round 6.2. |
+>
+> Three questions this package poses are answered by Round 6 and no longer need a
+> decision: whether to switch the fan parts back on (**done**), whether the fan bench
+> needs a second repair action (**it has one**), and whether the work order should
+> distinguish the two tasks (**it does**). Everything else here still stands, including
+> every open item about the information dock, the collider sizes and the licensed models.
+>
+> Two **new** decisions were added by Round 6 and are not discussed anywhere in this
+> document: the 600 s limit, and the work order panel, which grew 23 per cent in area
+> because Thai and Japanese did not fit inside it.
+
 ---
 
 ## 0. Why this document was rewritten
