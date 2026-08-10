@@ -33,21 +33,24 @@ computer.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
 fan.blade	OK	105 of 135 aims	5 of 5 poses	best pose 89%	30 of 30 missed aims stop at 'Electric Fan Body' (fan.body), nearest 563 mm
 fan.body	OK	97 of 135 aims	5 of 5 poses	best pose 93%	35 of 38 missed aims stop at 'Fan Blade' (fan.blade), nearest 576 mm
 fan.fastener	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Fan Blade' (fan.blade), nearest 1499 mm
-fan.front-cover	OK	43 of 135 aims	4 of 5 poses	best pose 67%	92 of 92 missed aims stop at 'Workbench Top', which no interactable owns, nearest 742 mm
+fan.faulty-fuse	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+fan.front-cover	OK	43 of 135 aims	4 of 5 poses	best pose 67%	85 of 92 missed aims stop at 'Workbench Top', which no interactable owns, nearest 742 mm
 fan.fuse-holder	OK	26 of 135 aims	3 of 5 poses	best pose 59%	98 of 109 missed aims stop at 'Fan Blade' (fan.blade), nearest 564 mm
 fan.internal-wire	OK	30 of 135 aims	3 of 5 poses	best pose 100%	90 of 105 missed aims stop at 'Fan Blade' (fan.blade), nearest 565 mm
+fan.motor-module	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+fan.non-target-module	OK	42 of 135 aims	5 of 5 poses	best pose 52%	68 of 93 missed aims stop at 'Electric Fan Body' (fan.body), nearest 716 mm
 fan.power-cord	OK	49 of 135 aims	4 of 5 poses	best pose 70%	78 of 86 missed aims stop at 'Electric Fan Body' (fan.body), nearest 653 mm
 fan.power-plug	OK	94 of 135 aims	4 of 5 poses	best pose 100%	27 of 41 missed aims stop at 'Electric Fan Body' (fan.body), nearest 1514 mm
 fan.power-switch	OK	88 of 135 aims	5 of 5 poses	best pose 89%	47 of 47 missed aims stop at 'Electric Fan Body' (fan.body), nearest 689 mm
 fan.speed-selector	OK	135 of 135 aims	5 of 5 poses	best pose 100%
 fan.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-fan.working-fuse	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+fan.working-fuse	OK	130 of 135 aims	5 of 5 poses	best pose 100%	5 of 5 missed aims stop at 'Faulty Fuse' (fan.faulty-fuse), nearest 1358 mm
 === VRTraining
 training.training-cube-a	OK	135 of 135 aims	5 of 5 poses	best pose 100%
 training.training-cube-b	OK	135 of 135 aims	5 of 5 poses	best pose 100%
 training.training-cylinder	OK	135 of 135 aims	5 of 5 poses	best pose 100%
 
-=== summary: 2732 of 3645 aims resolve to the part aimed at
+=== summary: 3039 of 4050 aims resolve to the part aimed at
 NO PART IS UNREACHABLE
 1 part(s) reachable but hard to aim at:
   WARN ComputerRepairTask 'computer.psu-switch': 13 of 135 aims, 1 of 5 poses, best pose 48% — 108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
@@ -91,9 +94,12 @@ computer.tool.screwdriver	OK
 fan.blade	OK
 fan.body	OK
 fan.fastener	OK
+fan.faulty-fuse	OK
 fan.front-cover	OK
 fan.fuse-holder	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
 fan.internal-wire	MISATTRIBUTED -> fan.fuse-holder	'Fan Fuse Holder' (fan.fuse-holder)
+fan.motor-module	OK
+fan.non-target-module	OK
 fan.power-cord	OK
 fan.power-plug	OK
 fan.power-switch	OK
@@ -104,16 +110,19 @@ fan.working-fuse	OK
 fan.blade	OK
 fan.body	OK
 fan.fastener	OK
+fan.faulty-fuse	OK
 fan.front-cover	MISATTRIBUTED -> (nothing)	'Workbench Top', which no interactable owns
 fan.fuse-holder	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
 fan.internal-wire	MISATTRIBUTED -> fan.blade	'Fan Blade' (fan.blade)
+fan.motor-module	OK
+fan.non-target-module	OK
 fan.power-cord	MISATTRIBUTED -> fan.body	'Electric Fan Body' (fan.body)
 fan.power-plug	OK
 fan.power-switch	OK
 fan.speed-selector	OK
 fan.tool.screwdriver	OK
 fan.working-fuse	OK
-    6 of 24 centre aims resolve to a different part
+    6 of 30 centre aims resolve to a different part
 === VRTraining
 --- start pose (0, 1.361, -1.6)
 training.training-cube-a	OK

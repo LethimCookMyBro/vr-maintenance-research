@@ -59,31 +59,40 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // antistatic blue rather than white — a glass-and-nickel cartridge on a
             // white card is the same value as the card and disappears into it. Added
             // after BenchDressing.Build, which rebuilds the root it hangs from.
+            // One pad per cartridge, at the two seated positions, so the tray reads as
+            // two places a fuse belongs rather than as loose stock. The pads are
+            // identical: neither cartridge may be marked out by what it rests on.
             var dressing = GameObject.Find("Workstation Dressing");
             if (dressing != null)
-                Box("Fuse Pad", dressing.transform, new Vector3(-1.10f, BenchDressing.TrayFloor + 0.003f, 0.95f),
+            {
+                Box("Fuse Pad A", dressing.transform, new Vector3(-1.16f, BenchDressing.TrayFloor + 0.003f, 0.95f),
                     new Vector3(0.072f, 0.006f, 0.044f), "Lab_AntiStatic");
+                Box("Fuse Pad B", dressing.transform, new Vector3(-1.04f, BenchDressing.TrayFloor + 0.003f, 0.95f),
+                    new Vector3(0.072f, 0.006f, 0.044f), "Lab_AntiStatic");
+            }
 
-            // Stowed last, so a rebuild refreshes each part before putting it away and
-            // a second run finds them again through FindAny.
+            // Nothing is stowed on this bench any more.
             //
-            // The bench is now one assembled fan, one open service bay with one fuse
-            // fitted in it, one spare fuse, and one screwdriver. What is stowed:
+            // The three parts that were switched off in the framing pass are back, and
+            // the reason is the proposal rather than the picture: 9.3.2 defines Task B
+            // as identifying a fault *from several possible causes*, and 9.3 requires it
+            // to carry more diagnostic decision-making than Task A. A bench with one
+            // fitted fuse and one spare offers one candidate, which is a replacement
+            // task wearing a diagnosis label.
             //
-            //  - the second loose fuse. Two identical cartridges in the tray, one of
-            //    them blown, was a second diagnosis stacked on top of the first, and
-            //    from the bench it read as a box of fuses to fit rather than a fault to
-            //    find.
-            //  - the spare motor. It is the largest object on the bench, it is not the
-            //    fault, no information source mentions it, and a motor sitting beside a
-            //    part-stripped fan says "assemble this".
-            //  - the sealed module, for the same reason as the computer bench.
+            // What the framing pass was right about is that a spare motor lying in the
+            // parts tray says "assemble this". So none of the three went back where it
+            // came from. They are placed **on the unit and on its service mat**, each at
+            // its own separate check position, and the SPARE PARTS tray still holds
+            // exactly one item — the replacement fuse. One part to fit, several points
+            // to check. See PlaceFanParts for where each one landed and why.
             //
-            // All three keep their StableObjectId, their ResearchInteractable and their
-            // collider; reactivating the object restores it exactly.
-            Stow("Faulty Fuse");
-            Stow("Fan Motor Module");
-            Stow("Fan Non Target Module");
+            // Restoring `fan.faulty-fuse` also gives this bench back the only wrong
+            // repair action it has: selecting the cartridge already fitted in the unit
+            // is reusing a failed part, which is a real misdiagnosis and the fan's
+            // counterpart to `computer.ram`. KNOWN_LIMITATIONS recorded the missing
+            // IncorrectComponentInteraction as an unequalised asymmetry; it is equalised
+            // now.
 
             // The blade, fuse holder, wiring, fastener and switch are children of
             // Electric Fan Body, so the body's interactable was claiming their colliders
@@ -376,10 +385,23 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         static void PlaceFanParts()
         {
-            // --- spares tray: the one replacement the repair needs ---
-            // Centred in the tray now that it is the only thing in it; it used to sit
-            // at the tray's left end with a twin beside it.
-            Move("Working Replacement Fuse", new Vector3(-1.10f, BenchDressing.TrayFloor + 0.0092f, 0.95f), new Vector3(0f, 10f, 0f));
+            // --- spares tray: two cartridges, and the choice between them ---
+            //
+            // Both fuses are in the tray, in two seated positions 120 mm apart rather
+            // than heaped. This is the decision proposal 9.3.2 asks Task B to carry: the
+            // two cartridges are the same glass, the same ferrules and the same printed
+            // rating, so from the participant's start pose there is nothing to choose
+            // between them, and which one is sound can only be settled by picking each
+            // up and looking at the element. Fitting the wrong one is a repair action
+            // that fails the device test — the fan's counterpart to `computer.ram`, and
+            // the only IncorrectComponentInteraction this bench can record.
+            //
+            // The framing pass took the second cartridge out because two loose fuses in
+            // a tray read as a box of parts to fit. Two is not a box. What made that
+            // bench read as assembly was a spare motor and a sealed module lying beside
+            // a part-stripped fan; those two are back on the service mat as points on
+            // the unit instead — see below.
+            Move("Working Replacement Fuse", new Vector3(-1.16f, BenchDressing.TrayFloor + 0.0092f, 0.95f), new Vector3(0f, 10f, 0f));
             var good = ResetVisual("Working Replacement Fuse", out var goodGo);
             if (good != null)
             {
@@ -387,7 +409,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(goodGo, new Vector3(0.11f, 0.05f, 0.05f));
             }
 
-            Move("Faulty Fuse", new Vector3(-0.86f, k_BenchTop + 0.0062f, 0.95f), new Vector3(0f, -8f, 0f));
+            Move("Faulty Fuse", new Vector3(-1.04f, BenchDressing.TrayFloor + 0.0092f, 0.95f), new Vector3(0f, -8f, 0f));
             var bad = ResetVisual("Faulty Fuse", out var badGo);
             if (bad != null)
             {
@@ -407,8 +429,25 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 SetCollider(coverGo, new Vector3(0.38f, 0.38f, 0.06f));
             }
 
-            // --- motor module in the spares zone ---
-            Move("Fan Motor Module", new Vector3(-1.01f, k_BenchTop + 0.062f, 1.15f), new Vector3(0f, -16f, 0f));
+            // --- motor: on the service mat, out of the unit, not in the parts tray ---
+            //
+            // Same object as before, moved off the spares zone and onto the mat. On the
+            // mat it is the motor that came out of this unit and can be checked; in the
+            // tray it was a spare motor waiting to go into something, which is the
+            // reading that got it switched off. It is a Component, not a RepairAction, so
+            // pointing at it records a look and never a wrong repair — a candidate to
+            // rule out, at the cost of the seconds it takes to rule it out.
+            //
+            // It sits on the **left**, the same side as the open service bay, and the
+            // right half of the mat is deliberately left empty. The first attempt put it
+            // front-right at (0.27, 0.83), which is directly between the participant and
+            // the mains lead: measured with Report Ray Aim Attribution, that dropped
+            // `fan.power-plug` from 94 of 135 aims and 4 poses to 49 and 2, and
+            // `fan.power-cord` from 49 and 4 to 20 and 2. Two parts a participant may
+            // want to check in a diagnosis task became much harder to point at, and the
+            // scene-integrity check did not catch it because both still answered from
+            // *some* pose. The lead owns the right side of this bench.
+            Move("Fan Motor Module", new Vector3(-0.34f, k_BenchTop + 0.062f, 0.78f), new Vector3(0f, 22f, 0f));
             var motor = ResetVisual("Fan Motor Module", out var motorGo);
             if (motor != null)
             {
@@ -536,7 +575,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             }
 
             // --- sealed spare, deliberately not part of this repair ---
-            Move("Fan Non Target Module", new Vector3(1.58f, k_BenchTop + 0.052f, 0.98f), new Vector3(0f, -12f, 0f));
+            // --- sealed module: the third check point ---
+            //
+            // A sealed appliance module with a factory seal over its joint: something a
+            // participant can reach, read and reject, and cannot open. Also a Component,
+            // so pointing at it costs time and records a look, nothing more.
+            //
+            // Behind and inboard of the motor rather than beside it. Directly behind it
+            // they would have been in one line from the start pose and the nearer would
+            // have hidden the further; staggered by 100 mm in x and 320 mm in z, each has
+            // its own approach. It stops 10 mm clear of the fan body's grab volume.
+            Move("Fan Non Target Module", new Vector3(-0.24f, k_BenchTop + 0.052f, 1.10f), new Vector3(0f, -12f, 0f));
             var nonTarget = ResetVisual("Fan Non Target Module", out var nonTargetGo);
             if (nonTarget != null)
             {

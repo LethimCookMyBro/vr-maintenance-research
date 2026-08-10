@@ -141,6 +141,55 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 yield return "Task Brief body text is below the participant readability floor";
             if (brief.GetComponent<LocalizedTaskBrief>() == null)
                 yield return "Task Brief has no Thai/Japanese runtime localization";
+
+            // The panel has to hold the longest of the three languages, not the one it
+            // was authored in. English fitted at 0.400 against a 0.410 box while Thai
+            // ran to 0.490 and Japanese to 0.570, so the closing INSPECT line was cut
+            // off by the plate in both of the languages this study is about, and no
+            // check could see it: every measurement had been taken in English.
+            //
+            // Measured by putting each language through the real label and asking TMP,
+            // rather than by counting characters — Thai has no spaces to wrap on and
+            // Japanese is double width, so a character count predicts neither.
+            //
+            // The findings are collected before any of them is yielded, so the label is
+            // always put back: a caller that stops reading this sequence early would
+            // otherwise leave Japanese copy sitting in an open scene, one Ctrl-S away
+            // from being saved into the build.
+            foreach (var overflow in BriefOverflows(bodyLabel, taskId))
+                yield return overflow;
+        }
+
+        static List<string> BriefOverflows(TMPro.TMP_Text bodyLabel, ResearchTaskId taskId)
+        {
+            var findings = new List<string>();
+            if (bodyLabel == null)
+                return findings;
+
+            // Without the fallback the Thai and Japanese glyphs are all missing, and a
+            // row of missing-glyph boxes measures nothing like the text it stands in
+            // for — so the measurement would be of the wrong thing entirely.
+            InformationSourceController.EnsureLocalizedFontFallbacks();
+
+            var restore = bodyLabel.text;
+            try
+            {
+                foreach (var language in new[] { ResearchLanguage.English, ResearchLanguage.Thai, ResearchLanguage.Japanese })
+                {
+                    bodyLabel.text = LocalizedTaskBrief.Body(taskId == ResearchTaskId.Computer, language);
+                    bodyLabel.ForceMeshUpdate();
+                    var box = bodyLabel.rectTransform.sizeDelta.y;
+                    if (bodyLabel.preferredHeight > box)
+                        findings.Add($"Task Brief overflows in {language}: copy is {bodyLabel.preferredHeight:F3} m in a {box:F3} m box, so the last line is cut off");
+                }
+            }
+            finally
+            {
+                bodyLabel.text = restore;
+                bodyLabel.ForceMeshUpdate();
+            }
+
+            return findings;
         }
 
         /// <summary>
