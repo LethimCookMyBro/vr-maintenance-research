@@ -158,6 +158,99 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>
+        /// First-person capture, both ways round: with consent there is a real file with
+        /// real bytes in it, and without consent there is no file at all.
+        ///
+        /// This has to be a play-mode check on a timer rather than a unit test, because
+        /// what could plausibly break is not the gate — that is covered by
+        /// <c>FirstPersonRecordingIsRefusedWithoutConsentAndOutsideTheTwoMaintenanceTasks</c>
+        /// — but everything after it: a camera that renders nothing under URP, a
+        /// readback that throws, a stream that is opened and never written. All three
+        /// would leave `first_person_recording_enabled` reading TRUE in
+        /// session_manifest.csv beside a folder with no footage in it, which is the one
+        /// failure this feature must not have. So the check runs the recorder for real
+        /// and then looks on disk.
+        ///
+        /// Run it with a maintenance scene playing. It flips consent on, restarts the
+        /// attempt so the recorder is created, waits for capture to accumulate, and
+        /// reports.
+        /// </summary>
+        [MenuItem("Tools/VR Maintenance Research/Visual Audit/Run Recording Checks (Play Mode)", priority = 5)]
+        public static void RunRecording()
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            var session = ResearchSessionManager.Instance;
+            var controller = Object.FindFirstObjectByType<MaintenanceTaskController>();
+            if (!Application.isPlaying || session == null || controller == null)
+            {
+                var early = new StringBuilder();
+                early.AppendLine("=== first-person recording check ===");
+                early.AppendLine("FAIL not in play mode in a maintenance scene");
+                Write(early, scene + "_Recording");
+                return;
+            }
+
+            var folder = session.Logger.CurrentDataFolder;
+            var config = session.Configuration;
+
+            // Half one, and it is already true when this runs: development sessions
+            // start with consent off, so whatever the current attempt wrote is the
+            // consent-off case.
+            var beforeCount = CaptureFiles(folder).Length;
+
+            config.firstPersonRecordingConsent = true;
+            config.firstPersonRecordingEnabled = true;
+            controller.ResetDevelopmentTask();
+
+            // Six seconds is thirty frames at the capture rate: enough that a stream
+            // which opens and then writes nothing is distinguishable from one that is
+            // working, and short enough to sit through.
+            var finishAt = EditorApplication.timeSinceStartup + 6d;
+            void Poll()
+            {
+                if (EditorApplication.timeSinceStartup < finishAt && Application.isPlaying)
+                    return;
+
+                EditorApplication.update -= Poll;
+
+                var report = new StringBuilder();
+                report.AppendLine("=== first-person recording check ===");
+                report.AppendLine($"scene: {scene}");
+                report.AppendLine($"session folder: {folder}");
+                report.AppendLine($"consent OFF, before enabling: {beforeCount} capture file(s) " +
+                                  $"{(beforeCount == 0 ? "PASS nothing was written without consent" : "FAIL footage exists without recorded consent")}");
+
+                var files = CaptureFiles(folder);
+                report.AppendLine($"consent ON, after {6} s: {files.Length} capture file(s)");
+                foreach (var file in files)
+                {
+                    var info = new System.IO.FileInfo(file);
+                    report.AppendLine($"  {info.Name}: {info.Length / 1024} KB " +
+                                      $"{(info.Length > 0 ? "PASS non-empty" : "FAIL opened but never written")}");
+                }
+
+                if (files.Length == 0)
+                    report.AppendLine("FAIL consent and enable were both on and no file was produced");
+
+                // The name has to carry participant code, task and attempt, because that
+                // is what ties a recording back to a row in the CSVs. A file that cannot
+                // be attributed is a confidentiality problem as much as a data one.
+                var expected = ResearchIdentifiers.SanitizeForPath(config.participantCode) + "_" + controller.TaskId + "_attempt" + controller.AttemptId + ".mjpeg";
+                report.AppendLine($"expected name for the current attempt: {expected} " +
+                                  $"{(files.Any(f => System.IO.Path.GetFileName(f) == expected) ? "PASS present" : "FAIL not found")}");
+
+                Write(report, scene + "_Recording");
+            }
+
+            EditorApplication.update += Poll;
+        }
+
+        static string[] CaptureFiles(string folder) =>
+            string.IsNullOrEmpty(folder) || !System.IO.Directory.Exists(folder)
+                ? System.Array.Empty<string>()
+                : System.IO.Directory.GetFiles(folder, "*.mjpeg");
+
+        /// <summary>
         /// The training board has no "ready" property: it unlocks by enabling its
         /// Continue button, so that button's own state is the thing to assert.
         /// </summary>

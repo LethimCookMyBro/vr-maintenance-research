@@ -1,0 +1,7 @@
+=== first-person recording check ===
+scene: FanRepairTask
+session folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Development\20260810T185227Z_a3809a91
+consent OFF, before enabling: 0 capture file(s) PASS nothing was written without consent
+consent ON, after 6 s: 1 capture file(s)
+  DEVELOPMENT_TEST_Fan_attempt3.mjpeg: 1070 KB PASS non-empty
+expected name for the current attempt: DEVELOPMENT_TEST_Fan_attempt3.mjpeg PASS present

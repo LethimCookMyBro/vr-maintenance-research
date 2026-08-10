@@ -1,0 +1,7 @@
+=== first-person recording check ===
+scene: ComputerRepairTask
+session folder: C:/Users/User/AppData/LocalLow/Unity Technologies/XRI Examples\VRMaintenanceResearchData\Development\20260810T182448Z_3bfd0592
+consent OFF, before enabling: 0 capture file(s) PASS nothing was written without consent
+consent ON, after 6 s: 1 capture file(s)
+  DEVELOPMENT_TEST_Computer_attempt3.mjpeg: 1071 KB PASS non-empty
+expected name for the current attempt: DEVELOPMENT_TEST_Computer_attempt3.mjpeg PASS present

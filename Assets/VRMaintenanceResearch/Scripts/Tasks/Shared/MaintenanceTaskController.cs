@@ -13,6 +13,7 @@ namespace TMUVR.MaintenanceResearch
         [SerializeField] TaskCoordinateRoot coordinateRoot;
         [SerializeField, Min(1f)] float lowActivityThresholdSeconds = 30f;
         ResearchLogService logger;
+        FirstPersonRecorder firstPersonRecorder;
         float activeElapsed;
         float lastMeaningfulActionAt;
         float lastHoverAt;
@@ -259,6 +260,13 @@ namespace TMUVR.MaintenanceResearch
             }
             State = terminalState;
             Log(eventType, "task." + TaskId.ToString().ToLowerInvariant(), "task", terminalState == TaskState.Completed ? "success" : "stopped", detail);
+
+            // Stopped before EndTask, not after. EndTask drops the task's event writer,
+            // so a capture failure reported on the way out - a file that will not close,
+            // for instance - would otherwise land in technical_log.txt as a dropped
+            // event and never reach the event stream it belongs to.
+            if (firstPersonRecorder != null)
+                firstPersonRecorder.StopRecording();
             logger.EndTask(TaskId, terminalState);
         }
 
@@ -282,6 +290,18 @@ namespace TMUVR.MaintenanceResearch
             if (movementLogger == null)
                 movementLogger = gameObject.GetComponent<ResearchMovementLogger>() ?? gameObject.AddComponent<ResearchMovementLogger>();
             movementLogger.Begin(this, definition.movementSamplingHz > 0 ? definition.movementSamplingHz : ResearchSessionManager.Instance.Configuration.movementSamplingHz);
+
+            // First-person capture is authorised for the two maintenance tasks only, and
+            // only against recorded consent, so the recorder is added on the first
+            // attempt that qualifies and never exists at all in training. The whole gate
+            // is FirstPersonRecorder.ShouldRecord and it is asked here, once: Begin
+            // trusts the answer rather than keeping a second copy of the rule that could
+            // drift from this one.
+            var sessionConfig = ResearchSessionManager.Instance.Configuration;
+            if (firstPersonRecorder == null && FirstPersonRecorder.ShouldRecord(TaskId, sessionConfig))
+                firstPersonRecorder = gameObject.AddComponent<FirstPersonRecorder>();
+            if (firstPersonRecorder != null)
+                firstPersonRecorder.Begin(logger, sessionConfig, definition, AttemptId);
         }
 
         void RegisterMeaningfulAction()
