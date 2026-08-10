@@ -180,9 +180,15 @@ namespace TMUVR.MaintenanceResearch
             return panel;
         }
 
+        /// <summary>
+        /// The three block headings. Localised here rather than at the three call
+        /// sites so a fourth block cannot be added in English by accident: the
+        /// objective lines beneath them were already translated, which left a display
+        /// that read TIME and PROGRESS in English over Thai body text.
+        /// </summary>
         static void Caption(RectTransform panel, string text)
         {
-            var caption = ResearchUiKit.Label("Caption", panel, text, 24f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left, FontStyles.Bold);
+            var caption = ResearchUiKit.Label("Caption", panel, ResearchStrings.T(text), 24f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left, FontStyles.Bold);
             caption.characterSpacing = 8f;
             ResearchUiKit.Place(caption.rectTransform, 26f, 18f, 480f, 28f);
         }

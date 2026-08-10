@@ -14,6 +14,8 @@ namespace TMUVR.MaintenanceResearch
             var cases = new List<KeyValuePair<string, Action>>
             {
                 new KeyValuePair<string, Action>(nameof(tests.SessionConfigRejectsRecordingWithoutConsent), tests.SessionConfigRejectsRecordingWithoutConsent),
+                new KeyValuePair<string, Action>(nameof(tests.FirstPersonRecordingIsRefusedWithoutConsentAndOutsideTheTwoMaintenanceTasks), tests.FirstPersonRecordingIsRefusedWithoutConsentAndOutsideTheTwoMaintenanceTasks),
+                new KeyValuePair<string, Action>(nameof(tests.EveryTranslationIsPresentAndKeepsTheEnglishNumerals), tests.EveryTranslationIsPresentAndKeepsTheEnglishNumerals),
                 new KeyValuePair<string, Action>(nameof(tests.CsvUsesInvariantNumbersAndEscapesInternationalText), tests.CsvUsesInvariantNumbersAndEscapesInternationalText),
                 new KeyValuePair<string, Action>(nameof(tests.DevelopmentLoggerCreatesSeparateSessionFiles), tests.DevelopmentLoggerCreatesSeparateSessionFiles),
                 new KeyValuePair<string, Action>(nameof(tests.LoggerCanStartAnotherSessionAfterClosing), tests.LoggerCanStartAnotherSessionAfterClosing),

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using NUnit.Framework;
 using UnityEngine;
@@ -15,6 +16,64 @@ namespace TMUVR.MaintenanceResearch
             var config = new ResearchSessionConfig { firstPersonRecordingEnabled = true, firstPersonRecordingConsent = false };
             Assert.That(config.Validate(out var error), Is.False);
             Assert.That(error, Does.Contain("consent"));
+        }
+
+        /// <summary>
+        /// The capture pipeline itself needs a camera, a GPU and a disk, so what is
+        /// checked here is the rule that decides whether any of it runs: consent, the
+        /// enable switch, and the two tasks the proposal (9.11) authorises. Training is
+        /// the one that is easy to break by accident, because it shares
+        /// MaintenanceTaskController with the two maintenance benches.
+        /// </summary>
+        [Test]
+        public void FirstPersonRecordingIsRefusedWithoutConsentAndOutsideTheTwoMaintenanceTasks()
+        {
+            var permitted = new ResearchSessionConfig { firstPersonRecordingConsent = true, firstPersonRecordingEnabled = true };
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Computer, permitted), Is.True);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Fan, permitted), Is.True);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Training, permitted), Is.False);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Session, permitted), Is.False);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Computer, new ResearchSessionConfig { firstPersonRecordingConsent = false, firstPersonRecordingEnabled = true }), Is.False);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Computer, new ResearchSessionConfig { firstPersonRecordingConsent = true, firstPersonRecordingEnabled = false }), Is.False);
+            Assert.That(FirstPersonRecorder.ShouldRecord(ResearchTaskId.Computer, null), Is.False);
+        }
+
+        /// <summary>
+        /// Proposal 9.5 requires the Thai and Japanese materials to carry the same
+        /// meaning, format and numeric data as each other. Meaning is a reviewer's
+        /// job (9.13) and no test can do it. The two mechanical halves can be tested,
+        /// and they are the two that break silently:
+        ///
+        ///  - a string that has an entry but an empty translation renders in English
+        ///    inside an otherwise translated room, which looks like a missing sign
+        ///    rather than a missing translation;
+        ///  - a numeral that survives in one language and not the other. "Complete all
+        ///    four skills" carries a 4 in all three languages, the training placards
+        ///    carry 1, 2 and 3, and the notice board carries bay numbers. A translation
+        ///    that spells a digit out in words, or drops it, changes what the
+        ///    participant is asked to count.
+        /// </summary>
+        [Test]
+        public void EveryTranslationIsPresentAndKeepsTheEnglishNumerals()
+        {
+            foreach (var english in ResearchStrings.Keys)
+            {
+                var thai = ResearchStrings.T(english, ResearchLanguage.Thai);
+                var japanese = ResearchStrings.T(english, ResearchLanguage.Japanese);
+
+                Assert.That(thai, Is.Not.Null.And.Not.Empty, "no Thai for '" + english + "'");
+                Assert.That(japanese, Is.Not.Null.And.Not.Empty, "no Japanese for '" + english + "'");
+                Assert.That(thai, Is.Not.EqualTo(english), "Thai for '" + english + "' is still the English string");
+                Assert.That(japanese, Is.Not.EqualTo(english), "Japanese for '" + english + "' is still the English string");
+
+                foreach (Match number in Regex.Matches(english, "[0-9]+"))
+                {
+                    Assert.That(thai, Does.Contain(number.Value),
+                        "Thai for '" + english + "' drops the numeral " + number.Value);
+                    Assert.That(japanese, Does.Contain(number.Value),
+                        "Japanese for '" + english + "' drops the numeral " + number.Value);
+                }
+            }
         }
 
         [Test]

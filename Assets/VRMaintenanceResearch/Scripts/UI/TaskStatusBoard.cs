@@ -68,7 +68,13 @@ namespace TMUVR.MaintenanceResearch
             accent.rectTransform.sizeDelta = new Vector2(-88f, 6f);
             accent.rectTransform.anchoredPosition = new Vector2(0f, -14f);
 
-            var title = ResearchUiKit.Label("Title", background.transform, taskTitle, 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
+            // Registered here rather than only in the finished branch: the board shows
+            // a translated title and a translated status from the first frame, so
+            // waiting until the task ends left the whole board in missing-glyph boxes
+            // for the length of the task and then fixed itself at the end.
+            InformationSourceController.EnsureLocalizedFontFallbacks();
+
+            var title = ResearchUiKit.Label("Title", background.transform, ResearchStrings.T(taskTitle), 40f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
             ResearchUiKit.Place(title.rectTransform, 44f, 24f, 900f, 52f);
 
             statePip = ResearchUiKit.Rounded("Pip", background.transform, ResearchUiKit.Accent, 9f);
@@ -115,7 +121,7 @@ namespace TMUVR.MaintenanceResearch
 
             if (task == null)
             {
-                stateLabel.text = "Status: unavailable";
+                stateLabel.text = ResearchStrings.T("Status: unavailable");
                 return;
             }
 
@@ -124,8 +130,12 @@ namespace TMUVR.MaintenanceResearch
 
             lastState = task.State;
             lastAttempt = task.AttemptId;
-            stateLabel.text = "Status: " + Readable(task.State);
-            attemptLabel.text = "Attempt " + task.AttemptId;
+            // Translated as a whole line, not as a prefix plus a word: what a reviewer
+            // signs off in TRANSLATION_REVIEW.md is the sentence the participant reads.
+            // The attempt number is a placeholder because Japanese puts the counter
+            // after the digit and Thai before it.
+            stateLabel.text = ResearchStrings.T("Status: " + Readable(task.State));
+            attemptLabel.text = string.Format(ResearchStrings.T("Attempt {0}"), task.AttemptId);
             statePip.color = PipColor(task.State);
 
             if (finishedLabel == null)

@@ -17,6 +17,8 @@ MonoBehaviour:
   sourceSlot: A
   englishTitle: Neutral Training Manual
   englishContent: Development training content only; no maintenance solution is included.
-  thaiTitle: 
-  japaneseTitle: 
+  thaiTitle: คู่มือฝึกแบบเป็นกลาง
+  japaneseTitle: 中立トレーニングマニュアル
+  thaiContent: เนื้อหาสำหรับการฝึกในขั้นพัฒนาเท่านั้น ไม่มีวิธีแก้ของงานซ่อมบำรุง
+  japaneseContent: 開発中のトレーニング用内容のみです。保守作業の答えは含まれていません。
   developmentPlaceholder: 1

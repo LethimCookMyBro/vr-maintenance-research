@@ -85,7 +85,7 @@ namespace TMUVR.MaintenanceResearch
 
             var left = Section(form, 0f, 0f, "1", "Session", out var sessionBody, 200f);
             BuildSessionSection(sessionBody);
-            Section(form, 0f, left, "2", "Experimental condition", out var conditionBody, 212f);
+            Section(form, 0f, left, "2", "Experimental condition", out var conditionBody, 226f);
             BuildConditionSection(conditionBody);
 
             var rightY = Section(form, right, 0f, "3", "Session options", out var optionsBody, 246f);
@@ -151,11 +151,52 @@ namespace TMUVR.MaintenanceResearch
         {
             Choice(body, 0f, "Participant group", new[] { "Thai group", "Japanese group" },
                 () => (int)config.participantGroup, v => config.participantGroup = (ParticipantGroup)v);
+
+            // Language is a condition of the group, not a preference, so it is set once
+            // here and then frozen. Two things follow from that:
+            //
+            //  - The participant is never given a way to change it. There is no language
+            //    control anywhere inside the headset, and this screen is the
+            //    researcher's — since a32041c a participant never sees it at all.
+            //  - The researcher cannot change it either, once the session is writing.
+            //    The route that made this possible was ReturnToSetup, which brings the
+            //    researcher back here between the two tasks; changing the language there
+            //    would have run Task A in one language and Task B in another under a
+            //    single participant code, and session_manifest.csv records one language
+            //    per session, so the file would not even show it had happened.
+            //
+            // English is the default because it is the language the build is authored
+            // in and the one string set that needs no reviewer sign-off; a session that
+            // starts before anyone touches this control starts in a known state.
             Choice(body, 70f, "Instruction language", new[] { "Thai", "Japanese", "English" },
-                () => (int)config.language, v => config.language = (ResearchLanguage)v);
-            Choice(body, 140f, "Task order", new[] { "Computer → Fan", "Fan → Computer" },
+                () => (int)config.language,
+                v =>
+                {
+                    if (SessionIsWriting)
+                    {
+                        SetStatus("Instruction language is locked: a session is already recording. It is a between-group condition and cannot change mid-session. End the session to change it.", true);
+                        return;
+                    }
+
+                    config.language = (ResearchLanguage)v;
+                    SetStatus("Instruction language set to " + config.language + ". This is fixed once the first task starts and is recorded in session_manifest.csv.", false);
+                });
+
+            var languageHint = ResearchUiKit.Label("Language Hint", body,
+                "Default English. Set before starting; locked for the whole session.",
+                13f, ResearchUiKit.InkMuted, TextAlignmentOptions.Left);
+            ResearchUiKit.Place(languageHint.rectTransform, 0f, 134f, Content, 18f);
+
+            Choice(body, 160f, "Task order", new[] { "Computer → Fan", "Fan → Computer" },
                 () => (int)config.taskOrder, v => config.taskOrder = (TaskOrder)v);
         }
+
+        /// <summary>
+        /// True once the log service has opened a session folder, which is the point
+        /// after which a condition change would split one participant's data across two
+        /// values of that condition.
+        /// </summary>
+        bool SessionIsWriting => session != null && session.Logger != null && session.Logger.IsStarted;
 
         void BuildOptionsSection(RectTransform body)
         {
@@ -167,7 +208,7 @@ namespace TMUVR.MaintenanceResearch
                 () => config.simulatorMode, v => config.simulatorMode = v);
             Toggle(body, 90f, "First-person recording consent recorded",
                 () => config.firstPersonRecordingConsent, v => config.firstPersonRecordingConsent = v);
-            Toggle(body, 120f, "Enable first-person recording (capture pipeline is not implemented)",
+            Toggle(body, 120f, "Enable first-person recording (Computer and Fan tasks only)",
                 () => config.firstPersonRecordingConsent && config.firstPersonRecordingEnabled,
                 v => config.firstPersonRecordingEnabled = v);
 

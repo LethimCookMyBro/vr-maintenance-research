@@ -126,33 +126,40 @@ namespace TMUVR.MaintenanceResearch
             accent.rectTransform.sizeDelta = new Vector2(-88f, 8f);
             accent.rectTransform.anchoredPosition = new Vector2(0f, -14f);
 
-            var title = ResearchUiKit.Label("Title", background.transform, "Neutral XR Training", 46f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
+            // The training room is where a participant meets the headset, and it runs
+            // before either task, so it is the first thing that has to be readable in
+            // their language. It used to be the largest block of English left in the
+            // build: the four skill requirements, the control legend and the notice
+            // that this room holds no answer.
+            InformationSourceController.EnsureLocalizedFontFallbacks();
+
+            var title = ResearchUiKit.Label("Title", background.transform, ResearchStrings.T("Neutral XR Training"), 46f, ResearchUiKit.OnDark, TextAlignmentOptions.Left, FontStyles.Bold);
             ResearchUiKit.Place(title.rectTransform, 44f, 14f, 900f, 54f);
 
             var controls = ResearchUiKit.Label("Controls", background.transform,
-                "<b>Look</b> headset   <b>Point</b> controller ray   <b>Grip</b> grab and release   <b>Trigger</b> select",
+                ResearchStrings.T("<b>Look</b> headset   <b>Point</b> controller ray   <b>Grip</b> grab and release   <b>Trigger</b> select"),
                 22f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
             ResearchUiKit.Place(controls.rectTransform, 44f, 66f, 1000f, 28f);
 
             var subtitle = ResearchUiKit.Label("Subtitle", background.transform,
-                "This scene contains no Computer or Fan maintenance solution.",
+                ResearchStrings.T("This scene contains no Computer or Fan maintenance solution."),
                 22f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
             ResearchUiKit.Place(subtitle.rectTransform, 44f, 94f, 1000f, 28f);
 
             var column = ResearchUiKit.Rect("Requirements", background.transform);
             ResearchUiKit.Place(column, 44f, 132f, 880f, 156f);
 
-            grabRequirement = RequirementRow(column, 0f, "Pick up a training object");
-            socketRequirement = RequirementRow(column, 36f, "Place an object in the comparison tray");
-            knobRequirement = RequirementRow(column, 72f, "Turn the training dial");
-            informationRequirement = RequirementRow(column, 108f, "Open the neutral information panel");
+            grabRequirement = RequirementRow(column, 0f, ResearchStrings.T("Pick up a training object"));
+            socketRequirement = RequirementRow(column, 36f, ResearchStrings.T("Place an object in the comparison tray"));
+            knobRequirement = RequirementRow(column, 72f, ResearchStrings.T("Turn the training dial"));
+            informationRequirement = RequirementRow(column, 108f, ResearchStrings.T("Open the neutral information panel"));
 
             hintLabel = ResearchUiKit.Label("Reset Hint", background.transform,
-                "Complete all four skills. <b>RESET</b> returns the training objects.",
+                ResearchStrings.T("Complete all four skills. <b>RESET</b> returns the training objects."),
                 21f, ResearchUiKit.OnDarkMuted, TextAlignmentOptions.Left);
             ResearchUiKit.Place(hintLabel.rectTransform, 44f, 292f, 880f, 28f);
 
-            continueButton = ResearchUiKit.TextButton("Continue", background.transform, "Continue", 28f, ResearchUiKit.SlateSoft, ResearchUiKit.OnDarkMuted, out continueLabel);
+            continueButton = ResearchUiKit.TextButton("Continue", background.transform, ResearchStrings.T("Continue"), 28f, ResearchUiKit.SlateSoft, ResearchUiKit.OnDarkMuted, out continueLabel);
             continueBody = continueButton.image;
             ResearchUiKit.Place(continueBody.rectTransform, 960f, 266f, 276f, 62f);
             continueButton.onClick.AddListener(Continue);
@@ -187,8 +194,10 @@ namespace TMUVR.MaintenanceResearch
             continueButton.gameObject.SetActive(ready);
             continueBody.color = ready ? ResearchUiKit.Accent : ResearchUiKit.SlateSoft;
             continueLabel.color = ready ? Color.white : ResearchUiKit.OnDarkMuted;
-            continueLabel.text = "Continue";
-            hintLabel.text = ready ? "All four skills complete." : "Complete all four skills. <b>RESET</b> returns the training objects.";
+            continueLabel.text = ResearchStrings.T("Continue");
+            hintLabel.text = ready
+                ? ResearchStrings.T("All four skills complete.")
+                : ResearchStrings.T("Complete all four skills. <b>RESET</b> returns the training objects.");
         }
 
         void Apply(Requirement requirement, bool satisfied)
