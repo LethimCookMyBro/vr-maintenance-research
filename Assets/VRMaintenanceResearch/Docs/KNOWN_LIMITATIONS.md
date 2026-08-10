@@ -87,17 +87,17 @@
   `IncorrectComponentInteraction`, `DeviceTestFailed` and `UnsuccessfulAction` together.
   The four per-type counts appended to `task_summary.csv` at `derivation_version` 1.1
   are the columns to compare; the sum is retained for continuity.
-- The two benches do not offer the same failure opportunities. The computer bench can
-  record an incorrect component interaction through `computer.ram`, seated in the
-  board's fourth memory slot; the fan bench cannot, because `fan.faulty-fuse` was stowed
-  during the diagnostic framing pass and was that scene's only other `RepairAction`.
-  Neither bench offers an incorrect tool: both tool trays hold one screwdriver. So in
-  practice the fan's failure count can only come from failed device tests, while the
-  computer's has two sources. **This asymmetry was not equalised.** Manufacturing a
-  second wrong part on the fan bench to balance a count would reintroduce the assembly
-  reading that the framing pass removed. `fan.faulty-fuse` is deactivated, not deleted;
-  reactivating the GameObject restores it exactly, and the builders refresh a stowed
-  part before putting it back.
+- ~~The two benches do not offer the same failure opportunities.~~ **Equalised on
+  2026-08-11.** For a week the computer bench could record an incorrect component
+  interaction through `computer.ram` and the fan bench could not, because
+  `fan.faulty-fuse` had been stowed during the diagnostic framing pass and was that
+  scene's only other `RepairAction`. `fan.faulty-fuse` is switched back on and sits in
+  the spares tray beside the working one, so both benches now offer exactly one wrong
+  repair and one failed device test as failure routes. Neither offers an incorrect tool:
+  both tool trays still hold one screwdriver, so `incorrect_tool_selected_count` remains
+  structurally zero in both conditions and should not be read as a behavioural result.
+  Verified in play mode on 2026-08-11: acting on `fan.faulty-fuse` does not complete the
+  task, and acting on `fan.working-fuse` does.
 - Every interactable lifts its own colour while an interactor is on it, with one tint
   for all of them. It marks which objects respond to the controller, not which one is
   the answer, but it does narrow the search space to the interactive set and should be
@@ -398,3 +398,126 @@ Three ways, cheapest first.
 - The green ESD matting on the bench comes from the `LabEnvironment` prefab and is
   therefore in all four scenes, including `ResearcherSetup`. The darker per-scene
   service pad still sits on top of it in the three participant scenes.
+
+## First-person recording - 2026-08-11
+
+First-person capture now exists (`Scripts/Logging/FirstPersonRecorder.cs`) and runs
+during `ComputerRepairTask` and `FanRepairTask` only, one file per attempt, in the same
+session folder as the CSVs. It is off unless both `firstPersonRecordingConsent` and
+`firstPersonRecordingEnabled` are set; with either clear no file is created at all.
+`VRTraining` is never recorded, because the proposal (9.11) authorises Task A and Task B
+and nothing else.
+
+- **The output is motion-JPEG, not a container format.** Unity ships no runtime video
+  encoder and this project may not add a package, so each frame is encoded with
+  `ImageConversion.EncodeToJPG` and appended to one open `FileStream`. The result is a
+  bare sequence of concatenated JPEGs with the extension `.mjpeg`. It has **no header, no
+  frame index, no duration and no timestamps** — a player infers the rate from whatever
+  you tell it. VLC opens it directly; to get an MP4:
+
+  ```
+  ffmpeg -f mjpeg -framerate 5 -i P001_Computer_attempt1.mjpeg -c:v libx264 -pix_fmt yuv420p -r 5 P001_Computer_attempt1.mp4
+  ```
+
+  The `-framerate 5` before `-i` is not optional: without it ffmpeg assumes 25 fps and
+  the result plays five times too fast with a five-times-short duration.
+- **Storage cost, measured in the Editor.** The four constants at the top of
+  `FirstPersonRecorder.cs` are 848 x 480, 5 fps, JPEG quality 50. A capture of
+  `ComputerRepairTask` taken on 2026-08-11 ran to 4,388,051 bytes over 120 frames —
+  confirmed by `ffprobe` as `mjpeg 848x480, nb_read_frames=120` — which is **36,567 bytes,
+  35.7 KB, per frame**. With 1 MB = 1024 KB:
+
+  - per second: 35.7 KB x 5 = **178 KB/s**
+  - per minute: **10.5 MB/min**
+  - a six-minute attempt, which is what the tasks are designed to take: **63 MB**
+  - an attempt that runs to the 600 s timeout: 3,000 frames = **105 MB**
+  - a session, which records two attempts and never the training: **126 MB** at six
+    minutes each, **209 MB** if both run to the timeout
+
+  Budget **about 210 MB per participant** and 3.4 GB for all sixteen. The figure is a
+  desktop Editor measurement of this scene at this quality; a headset capture of the same
+  scene should land close, because the frame content is what sets JPEG size and the
+  content is the same, but it has not been confirmed on hardware. If it is materially off,
+  the four constants are the single place to change and they are all at the top of the
+  file.
+- **The capture camera renders the scene a second time, and that cost has not been
+  measured on Quest 3.** The recorder creates its own disabled `Camera`, copies the
+  participant camera's settings and pose into it, and calls `Render()` into a
+  `RenderTexture` five times a second. It never touches the XR camera, which is the point
+  — pointing the participant's own camera at a render texture reaches into the display's
+  render loop — but it does mean the whole scene is drawn again on every capture frame,
+  plus a synchronous `ReadPixels` stall and a JPEG encode on the main thread. On this
+  desktop that is invisible; on a Quest 3, at 118,221 triangles and 96 materials for
+  `ComputerRepairTask`, **it is unquantified and could plausibly cost frames**. If a pilot
+  shows dropped frames, lowering `CaptureFramesPerSecond` is the first knob and it costs
+  storage nothing.
+- **The recording is not a clock.** Frames are captured on an unscaled-time timer at
+  *at most* 5 fps; a hitch drops captures rather than delaying them, and nothing in the
+  file records when any frame was taken. Played back at a fixed 5 fps the video therefore
+  drifts against wall time whenever the application misses the interval.
+  **`session_events.csv` and `movement.csv` remain the timing record**, and the video
+  should be treated as illustrative footage aligned to them only approximately, by the
+  events visible in it.
+- **No audio is recorded.** There is no microphone capture and no scene audio in the
+  file. Think-aloud protocol, if it is ever used, needs a separate recorder.
+- **Recording continues through a researcher pause.** `PauseTask` is not a terminal
+  state, so the file keeps growing while a session is paused. Only Completed, TimedOut,
+  Aborted and SafetyStopped close it; a development reset closes the current file and
+  opens the next attempt's.
+- **A failure stops the recording and is recorded once.** No camera, a render-texture or
+  readback fault, an encode that returns nothing, a file that will not open or will not
+  close: each writes a single `TechnicalError` event carrying `recording.first-person`
+  and a reason, then ends the capture for that attempt. It is one event and not one per
+  frame on purpose — at 5 fps a repeating fault would otherwise bury the event stream it
+  is meant to annotate. **A missing or truncated `.mjpeg` is therefore always explained in
+  the event stream**, and a session whose video is short is not silently a session whose
+  participant was fast.
+
+## Language and translation - 2026-08-11
+
+Thai and Japanese now cover every participant-facing string in the build, except six that
+are deliberately left in English. Before this pass, 69 of 94 strings were English only.
+`TRANSLATION_REVIEW.md` carries all of them for the reviewer.
+
+- **Every translation in the build is a DRAFT and none has been reviewed.** Proposal 9.13
+  requires an expert from outside the research team to check the instruments for
+  suitability, clarity of language and fit with the research objectives before real
+  collection. That has not happened. The strings are in the build so that the reviewer can
+  read them in place and so that the panels can be measured against them — **not** because
+  they are approved. **No participant data may be collected against this wording.**
+- **The equivalence check is mechanical and shallow.** An automated test asserts that every
+  string has a non-empty Thai and Japanese, that neither is still the English, and that
+  every numeral in the English survives into both. It cannot check that the meaning
+  survived, that the register is consistent, or that a Thai sentence carries the same
+  weight as its Japanese counterpart — which is the half of proposal 9.5 that matters and
+  the half that only a human reviewer can do.
+- **Six strings stay English on purpose:** `INSPECT`, `RESET`, `Grip`, `Trigger`, `+10 s`
+  and the fan's `O F F 1 2 3` legend. The first four are words printed on physical objects
+  in the room or on the controller, so a translated sentence pointing at an untranslated
+  object would break the reference; the last two are numerals and unit symbols held
+  identical across languages by 9.5. A Thai or Japanese participant therefore still reads
+  a handful of English words, and the post-task interview should establish that this
+  caused no difficulty.
+- **Glyph rendering has never been checked on a Meta Quest 3.** Thai and Japanese render
+  correctly in the Editor through `TMP_Settings.fallbackFontAssets`, and the fallback is
+  now registered by the status board, the training board and the scene sweep as well as by
+  the information reader, so no surface can render as missing-glyph boxes because it woke
+  first. None of that is a hardware result. `QUEST3_NEXT_STEPS.md`, check 5.
+- **Panel fit is checked in the Editor, for all three languages, and it caught a real
+  defect.** The work order overflowed its plate in Thai by 80 mm and in Japanese by
+  160 mm while fitting in English, so the closing *Press INSPECT* line was cut off in
+  both. The panel was enlarged and the validator now measures every language on every run.
+  Only the work order is measured this way. Every other panel is checked by eye, so a
+  translation longer than its plate elsewhere would still ship unnoticed.
+- **Language cannot change once a session is writing, and that is enforced in one place
+  only** — the setup screen's own control. Nothing stops code from assigning
+  `configuration.language` mid-session; what is closed is the route a researcher could
+  actually take. `session_manifest.csv` records one language per session, so a mid-session
+  change would not be visible in the data if one were ever introduced.
+- **Mid-session language switching produces mixed output, by design and untested beyond
+  that.** Scene signage re-translates from a remembered English original, so it can move
+  between languages freely; run-time panels built at scene load do not rebuild themselves.
+  Switching language with a task already running therefore leaves run-time text in the
+  previous language until the scene reloads. This cannot happen in a session and is
+  recorded only so that anyone stepping through the languages to check the build knows
+  what they are looking at.
