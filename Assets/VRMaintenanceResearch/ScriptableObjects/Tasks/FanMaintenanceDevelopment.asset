@@ -18,7 +18,7 @@ MonoBehaviour:
   activeFaultId: fan.faulty-replaceable-fuse
   layoutId: fan-layout-development-a
   informationSourceLayoutId: sources-layout-development-a
-  maximumTimeSeconds: 900
+  maximumTimeSeconds: 600
   showTimerToParticipant: 1
   englishTitle: Fan Maintenance (Development)
   englishParticipantInstructions: Inspect freely, use any information source in any
