@@ -132,10 +132,20 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
                 if (model != null)
                 {
-                    // Plate in the bench's own dark metal, moving part in the accent the
-                    // disc already used, so the control keeps its place in the palette.
+                    // Plate in the bench's own dark metal, moving part in the palette's
+                    // structural slate.
+                    //
+                    // The moving part used to be Lab_Accent, which is emissive. That
+                    // made the one control a participant has to press the brightest
+                    // saturated object in the room, and the study's first outcome is
+                    // where a participant goes first (proposal 10.2.2). A glowing pad
+                    // does not reveal the fault, but it does say "start here", and an
+                    // instrument may not answer its own first question. Everything the
+                    // room uses Lab_Accent for is a rule a few millimetres wide — the
+                    // notice board header, the station strip, this station's own sign
+                    // rule — never a filled face, and the control now follows that.
                     PaintNamed(model, push ? "EmergencyStopPlate" : "Dial", "Lab_MetalDark");
-                    PaintNamed(model, push ? "EmergencyStop" : "Knob", "Lab_Accent");
+                    PaintNamed(model, push ? "EmergencyStop" : "Knob", "Lab_Trim");
                 }
             }
 
