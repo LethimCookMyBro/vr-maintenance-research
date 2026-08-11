@@ -16,44 +16,47 @@ Poses:
   step left (-0.90, 1.400, -0.30)
   step right (0.90, 1.400, -0.30)
 
+Compared against the committed baseline recorded 2026-08-10T19:50:31Z.
+
 === ComputerRepairTask
-computer.case	OK	133 of 135 aims	5 of 5 poses	best pose 100%	1 of 2 missed aims stop at 'Workbench Top', which no interactable owns, nearest 1358 mm
-computer.cooling-fan	OK	112 of 135 aims	5 of 5 poses	best pose 100%	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 472 mm
-computer.external-power-cable	OK	112 of 135 aims	5 of 5 poses	best pose 100%	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 1317 mm
-computer.internal-cable	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
-computer.main-power-connector	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-computer.motherboard	OK	70 of 135 aims	4 of 5 poses	best pose 81%	45 of 65 missed aims stop at 'Desktop Case' (computer.case), nearest 365 mm
-computer.power-button	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-computer.psu	OK	128 of 135 aims	5 of 5 poses	best pose 100%	7 of 7 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
-computer.psu-switch	WARN	13 of 135 aims	1 of 5 poses	best pose 48%	108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
-computer.ram	OK	93 of 135 aims	4 of 5 poses	best pose 100%	42 of 42 missed aims stop at 'Desktop Case' (computer.case), nearest 380 mm
-computer.side-panel	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Workbench Top', which no interactable owns, nearest 814 mm
-computer.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+computer.case	OK	133 of 135 aims	5 of 5 poses	best pose 100%	same as baseline	1 of 2 missed aims stop at 'Workbench Top', which no interactable owns, nearest 1358 mm
+computer.cooling-fan	OK	112 of 135 aims	5 of 5 poses	best pose 100%	same as baseline	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 472 mm
+computer.external-power-cable	OK	112 of 135 aims	5 of 5 poses	best pose 100%	same as baseline	23 of 23 missed aims stop at 'Desktop Case' (computer.case), nearest 1317 mm
+computer.internal-cable	OK	108 of 135 aims	4 of 5 poses	best pose 100%	same as baseline	27 of 27 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
+computer.main-power-connector	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+computer.motherboard	OK	70 of 135 aims	4 of 5 poses	best pose 81%	same as baseline	45 of 65 missed aims stop at 'Desktop Case' (computer.case), nearest 365 mm
+computer.power-button	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+computer.psu	OK	128 of 135 aims	5 of 5 poses	best pose 100%	same as baseline	7 of 7 missed aims stop at 'Desktop Case' (computer.case), nearest 1295 mm
+computer.psu-switch	WARN	13 of 135 aims	1 of 5 poses	best pose 48%	same as baseline	108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
+computer.ram	OK	93 of 135 aims	4 of 5 poses	best pose 100%	same as baseline	42 of 42 missed aims stop at 'Desktop Case' (computer.case), nearest 380 mm
+computer.side-panel	OK	108 of 135 aims	4 of 5 poses	best pose 100%	same as baseline	27 of 27 missed aims stop at 'Workbench Top', which no interactable owns, nearest 814 mm
+computer.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
 === FanRepairTask
-fan.blade	OK	105 of 135 aims	5 of 5 poses	best pose 89%	30 of 30 missed aims stop at 'Electric Fan Body' (fan.body), nearest 563 mm
-fan.body	OK	97 of 135 aims	5 of 5 poses	best pose 93%	35 of 38 missed aims stop at 'Fan Blade' (fan.blade), nearest 576 mm
-fan.fastener	OK	108 of 135 aims	4 of 5 poses	best pose 100%	27 of 27 missed aims stop at 'Fan Blade' (fan.blade), nearest 1499 mm
-fan.faulty-fuse	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-fan.front-cover	OK	43 of 135 aims	4 of 5 poses	best pose 67%	85 of 92 missed aims stop at 'Workbench Top', which no interactable owns, nearest 742 mm
-fan.fuse-holder	OK	26 of 135 aims	3 of 5 poses	best pose 59%	98 of 109 missed aims stop at 'Fan Blade' (fan.blade), nearest 564 mm
-fan.internal-wire	OK	30 of 135 aims	3 of 5 poses	best pose 100%	90 of 105 missed aims stop at 'Fan Blade' (fan.blade), nearest 565 mm
-fan.motor-module	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-fan.non-target-module	OK	42 of 135 aims	5 of 5 poses	best pose 52%	68 of 93 missed aims stop at 'Electric Fan Body' (fan.body), nearest 716 mm
-fan.power-cord	OK	49 of 135 aims	4 of 5 poses	best pose 70%	78 of 86 missed aims stop at 'Electric Fan Body' (fan.body), nearest 653 mm
-fan.power-plug	OK	94 of 135 aims	4 of 5 poses	best pose 100%	27 of 41 missed aims stop at 'Electric Fan Body' (fan.body), nearest 1514 mm
-fan.power-switch	OK	88 of 135 aims	5 of 5 poses	best pose 89%	47 of 47 missed aims stop at 'Electric Fan Body' (fan.body), nearest 689 mm
-fan.speed-selector	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-fan.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-fan.working-fuse	OK	130 of 135 aims	5 of 5 poses	best pose 100%	5 of 5 missed aims stop at 'Faulty Fuse' (fan.faulty-fuse), nearest 1358 mm
+fan.blade	OK	105 of 135 aims	5 of 5 poses	best pose 89%	same as baseline	30 of 30 missed aims stop at 'Electric Fan Body' (fan.body), nearest 563 mm
+fan.body	OK	97 of 135 aims	5 of 5 poses	best pose 93%	same as baseline	35 of 38 missed aims stop at 'Fan Blade' (fan.blade), nearest 576 mm
+fan.fastener	OK	108 of 135 aims	4 of 5 poses	best pose 100%	same as baseline	27 of 27 missed aims stop at 'Fan Blade' (fan.blade), nearest 1499 mm
+fan.faulty-fuse	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+fan.front-cover	OK	43 of 135 aims	4 of 5 poses	best pose 67%	same as baseline	85 of 92 missed aims stop at 'Workbench Top', which no interactable owns, nearest 742 mm
+fan.fuse-holder	OK	26 of 135 aims	3 of 5 poses	best pose 59%	same as baseline	98 of 109 missed aims stop at 'Fan Blade' (fan.blade), nearest 564 mm
+fan.internal-wire	OK	30 of 135 aims	3 of 5 poses	best pose 100%	same as baseline	90 of 105 missed aims stop at 'Fan Blade' (fan.blade), nearest 565 mm
+fan.motor-module	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+fan.non-target-module	OK	42 of 135 aims	5 of 5 poses	best pose 52%	same as baseline	68 of 93 missed aims stop at 'Electric Fan Body' (fan.body), nearest 716 mm
+fan.power-cord	OK	49 of 135 aims	4 of 5 poses	best pose 70%	same as baseline	78 of 86 missed aims stop at 'Electric Fan Body' (fan.body), nearest 653 mm
+fan.power-plug	OK	94 of 135 aims	4 of 5 poses	best pose 100%	same as baseline	27 of 41 missed aims stop at 'Electric Fan Body' (fan.body), nearest 1514 mm
+fan.power-switch	OK	88 of 135 aims	5 of 5 poses	best pose 89%	same as baseline	47 of 47 missed aims stop at 'Electric Fan Body' (fan.body), nearest 689 mm
+fan.speed-selector	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+fan.tool.screwdriver	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+fan.working-fuse	OK	130 of 135 aims	5 of 5 poses	best pose 100%	same as baseline	5 of 5 missed aims stop at 'Faulty Fuse' (fan.faulty-fuse), nearest 1358 mm
 === VRTraining
-training.training-cube-a	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-training.training-cube-b	OK	135 of 135 aims	5 of 5 poses	best pose 100%
-training.training-cylinder	OK	135 of 135 aims	5 of 5 poses	best pose 100%
+training.training-cube-a	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+training.training-cube-b	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
+training.training-cylinder	OK	135 of 135 aims	5 of 5 poses	best pose 100%	same as baseline
 
 === summary: 3039 of 4050 aims resolve to the part aimed at
 NO PART IS UNREACHABLE
 1 part(s) reachable but hard to aim at:
   WARN ComputerRepairTask 'computer.psu-switch': 13 of 135 aims, 1 of 5 poses, best pose 48% — 108 of 122 missed aims stop at 'Power Supply Placeholder' (computer.psu), nearest 774 mm
+no part has fallen away from its baseline
 
 === superseded criterion, kept so the two can be compared ===
 One ray per part per pose, at the centre of the part's renderer bounds,

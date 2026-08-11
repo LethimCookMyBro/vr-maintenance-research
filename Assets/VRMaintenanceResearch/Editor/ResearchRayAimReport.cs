@@ -104,6 +104,43 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
         public static readonly string[] Scenes = { ResearchSceneSet.Computer, ResearchSceneSet.Fan, ResearchSceneSet.Training };
 
+        /// <summary>
+        /// The criterion in one line, recorded into the baseline file and checked against
+        /// it on every run.
+        ///
+        /// Aim counts only mean something relative to the criterion that produced them.
+        /// Add a sixth pose and every part's count jumps; widen the inset and the corner
+        /// samples slide off the part and every count falls. Either would look exactly
+        /// like a scene regression to a comparison against yesterday's numbers, so the
+        /// baseline carries this string and
+        /// <see cref="ResearchRayAimBaseline"/> refuses to compare across a change to it.
+        /// </summary>
+        public static string Criterion =>
+            $"poses={Poses.Length};inset={k_Inset:0.00};reliable={k_Reliable:0.00};grid=3x3;faces=3";
+
+        /// <summary>
+        /// Every part in every task scene, evaluated once. The report, the baseline
+        /// recorder and the scene integrity gate all walk the scenes through here, so
+        /// none of the three can be measuring something the others are not.
+        ///
+        /// The verdicts outlive the scenes they came from. Only their value fields are
+        /// safe to read afterwards — <see cref="AimVerdict.Part"/> is destroyed with its
+        /// scene, and nothing downstream of this method touches it.
+        /// </summary>
+        public static List<(string Scene, AimVerdict Verdict)> EvaluateAllScenes()
+        {
+            var all = new List<(string, AimVerdict)>();
+            foreach (var scenePath in Scenes)
+            {
+                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                using var probe = new AimProbe();
+                foreach (var verdict in Evaluate(probe))
+                    all.Add((scene.name, verdict));
+            }
+
+            return all;
+        }
+
         [MenuItem("Tools/VR Maintenance Research/Visual Audit/Report Ray Aim Attribution", priority = 8)]
         public static void Run()
         {
@@ -123,11 +160,21 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 report.AppendLine("  " + poseName);
             report.AppendLine();
 
+            var baseline = ResearchRayAimBaseline.Load();
+            report.AppendLine(baseline.Exists
+                ? $"Compared against the committed baseline recorded {baseline.Recorded}."
+                : "NO BASELINE FILE — every part below is unmeasured against anything.");
+            if (baseline.Exists && !ResearchRayAimBaseline.CriterionMatches(baseline))
+                report.AppendLine("WARNING: " + ResearchRayAimBaseline.CriterionComplaint(baseline));
+            report.AppendLine();
+
             var failed = new List<string>();
             var warned = new List<string>();
+            var regressed = new List<string>();
             var hits = 0;
             var aims = 0;
             var legacy = new StringBuilder();
+            var evaluated = new List<(string Scene, AimVerdict Verdict)>();
 
             foreach (var scenePath in Scenes)
             {
@@ -140,10 +187,16 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 {
                     hits += verdict.Hits;
                     aims += verdict.Aims;
+                    evaluated.Add((scene.name, verdict));
+
+                    var against = ResearchRayAimBaseline.Compare(baseline, scene.name, verdict);
                     report.AppendLine($"{verdict.Id}\t{verdict.Tier}\t{verdict.Hits} of {verdict.Aims} aims\t" +
-                                      $"{verdict.PosesAnswering} of {Poses.Length} poses\tbest pose {verdict.BestReach * 100f:0}%" +
+                                      $"{verdict.PosesAnswering} of {Poses.Length} poses\tbest pose {verdict.BestReach * 100f:0}%\t" +
+                                      against.What +
                                       (verdict.Obstruction.Length == 0 ? "" : "\t" + verdict.Obstruction));
 
+                    if (against.IsRegression)
+                        regressed.Add($"{scene.name} '{verdict.Id}': {verdict.Hits} of {verdict.Aims} aims — {against.What}");
                     if (verdict.Unreachable)
                         failed.Add($"{scene.name} '{verdict.Id}': {verdict.Obstruction}");
                     else if (verdict.HardToAim)
@@ -153,6 +206,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 
                 AppendLegacy(legacy, aim);
             }
+
+            regressed.AddRange(ResearchRayAimBaseline.Missing(baseline, evaluated));
 
             report.AppendLine();
             report.AppendLine($"=== summary: {hits} of {aims} aims resolve to the part aimed at");
@@ -166,6 +221,12 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 : $"{warned.Count} part(s) reachable but hard to aim at:");
             foreach (var line in warned)
                 report.AppendLine("  WARN " + line);
+
+            report.AppendLine(regressed.Count == 0
+                ? "no part has fallen away from its baseline"
+                : $"{regressed.Count} PART(S) WORSE THAN BASELINE:");
+            foreach (var line in regressed)
+                report.AppendLine("  REGRESSION " + line);
 
             report.AppendLine();
             report.AppendLine("=== superseded criterion, kept so the two can be compared ===");

@@ -106,39 +106,63 @@ namespace TMUVR.MaintenanceResearch
         /// participant actually holds, and resolves each hit the way XRRayInteractor
         /// resolves one.
         ///
-        /// It fails on one thing only: a part that answers none of its aims from any
-        /// pose, because that part can never appear in the event stream at all. A part
-        /// that answers but is fiddly to point at is reported and does not fail — a
-        /// screwdriver lying half under a cable is a bench, not a defect, and a gate
-        /// that cannot tell the two apart gets muted rather than fixed. The proportions
-        /// behind both tiers are in Docs/Verification/Ray_Aim_Attribution.txt.
+        /// It fails on three things, and the second is the one that took longest to get
+        /// right.
+        ///
+        /// * A part that answers none of its aims from any pose, because that part can
+        ///   never appear in the event stream at all.
+        /// * A part that has fallen more than a quarter below the aim count committed in
+        ///   Docs/Verification/Ray_Aim_Baseline.tsv. Until that file existed this check
+        ///   only had the first tier, and a part could lose most of its pointable
+        ///   surface while staying green: putting the fan's motor module in the wrong
+        ///   place took `fan.power-plug` from 94 of 135 aims to 49 and `fan.power-cord`
+        ///   from 49 to 20, and Scene Integrity passed. See
+        ///   <see cref="EditorTools.ResearchRayAimBaseline"/> for why that file is never
+        ///   written automatically.
+        /// * A part list that no longer matches the baseline's, in either direction.
+        ///
+        /// A part that answers but is fiddly to point at is still only reported — a
+        /// screwdriver lying half under a cable is a bench, not a defect, and a gate that
+        /// cannot tell the two apart gets muted rather than fixed. What the baseline adds
+        /// is that "fiddly" now has to stay as fiddly as it was.
         /// </summary>
         [Test]
         public void EveryInteractableAnswersTheRayAimedAtIt()
         {
             var unreachable = new List<string>();
+            var regressed = new List<string>();
             var hard = new List<string>();
             var hits = 0;
             var aims = 0;
 
-            foreach (var scenePath in EditorTools.ResearchRayAimReport.Scenes)
+            var baseline = EditorTools.ResearchRayAimBaseline.Load();
+            Assert.That(baseline.Exists, Is.True,
+                "no ray aim baseline is committed, so no part can be compared with anything. " +
+                "Record one: Tools > VR Maintenance Research > Visual Audit > " +
+                EditorTools.ResearchRayAimBaseline.k_MenuLeaf);
+            Assert.That(EditorTools.ResearchRayAimBaseline.CriterionMatches(baseline), Is.True,
+                EditorTools.ResearchRayAimBaseline.CriterionComplaint(baseline));
+
+            var evaluated = EditorTools.ResearchRayAimReport.EvaluateAllScenes();
+            foreach (var (scene, verdict) in evaluated)
             {
-                var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-                using var probe = new EditorTools.ResearchRayAimReport.AimProbe();
+                hits += verdict.Hits;
+                aims += verdict.Aims;
 
-                foreach (var verdict in EditorTools.ResearchRayAimReport.Evaluate(probe))
-                {
-                    hits += verdict.Hits;
-                    aims += verdict.Aims;
+                var where = $"{scene}: '{verdict.Id}' answers {verdict.Hits} of {verdict.Aims} aims " +
+                            $"from {verdict.PosesAnswering} of {EditorTools.ResearchRayAimReport.Poses.Length} poses";
 
-                    var where = $"{scene.name}: '{verdict.Id}' answers {verdict.Hits} of {verdict.Aims} aims " +
-                                $"from {verdict.PosesAnswering} of {EditorTools.ResearchRayAimReport.Poses.Length} poses";
-                    if (verdict.Unreachable)
-                        unreachable.Add($"{where} — {verdict.Obstruction}");
-                    else if (verdict.HardToAim)
-                        hard.Add($"{where}, best pose {verdict.BestReach * 100f:0}% — {verdict.Obstruction}");
-                }
+                var against = EditorTools.ResearchRayAimBaseline.Compare(baseline, scene, verdict);
+                if (against.IsRegression)
+                    regressed.Add($"{where} — {against.What}");
+
+                if (verdict.Unreachable)
+                    unreachable.Add($"{where} — {verdict.Obstruction}");
+                else if (verdict.HardToAim)
+                    hard.Add($"{where}, best pose {verdict.BestReach * 100f:0}% — {verdict.Obstruction}");
             }
+
+            regressed.AddRange(EditorTools.ResearchRayAimBaseline.Missing(baseline, evaluated));
 
             if (hard.Count > 0)
                 Debug.Log($"[RayAim] {hard.Count} part(s) reachable but hard to aim at:\n  " + string.Join("\n  ", hard));
@@ -146,6 +170,13 @@ namespace TMUVR.MaintenanceResearch
             Assert.That(unreachable, Is.Empty,
                 $"{unreachable.Count} part(s) cannot be selected at all ({hits} of {aims} aims resolve to the part aimed at):\n  " +
                 string.Join("\n  ", unreachable));
+
+            Assert.That(regressed, Is.Empty,
+                $"{regressed.Count} part(s) got harder to point at than the committed baseline allows.\n" +
+                "Fix the scene, or — if the change was deliberate and the new numbers have been looked at —\n" +
+                "re-record: Tools > VR Maintenance Research > Visual Audit > " +
+                EditorTools.ResearchRayAimBaseline.k_MenuLeaf + "\n  " +
+                string.Join("\n  ", regressed));
         }
 
         /// <summary>

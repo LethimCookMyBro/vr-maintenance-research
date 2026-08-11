@@ -1,0 +1,45 @@
+# Ray aim baseline — THIS FILE IS AN INPUT TO A TEST, NOT A REPORT.
+#
+# How many of its aim points each part answers, recorded on purpose. The scene
+# integrity gate fails a part that answers no aim at all, or that answers fewer
+# than 75% of the aims it answers here, or that is not listed here at all.
+#
+# Do not regenerate this to make a red run go green. A drop is either a scene
+# regression to fix, or a deliberate change to the benches whose new numbers a
+# person has looked at and accepted. Rewrite it only from the menu item named
+# in the line below, and say why in the commit message.
+#
+# rewritten by: Tools > VR Maintenance Research > Visual Audit > UPDATE Ray Aim Baseline (overwrites the committed file)
+# criterion: poses=5;inset=0.60;reliable=0.50;grid=3x3;faces=3
+# recorded: 2026-08-10T19:50:31Z
+scene	stable_object_id	hits	aims
+ComputerRepairTask	computer.case	133	135
+ComputerRepairTask	computer.cooling-fan	112	135
+ComputerRepairTask	computer.external-power-cable	112	135
+ComputerRepairTask	computer.internal-cable	108	135
+ComputerRepairTask	computer.main-power-connector	135	135
+ComputerRepairTask	computer.motherboard	70	135
+ComputerRepairTask	computer.power-button	135	135
+ComputerRepairTask	computer.psu	128	135
+ComputerRepairTask	computer.psu-switch	13	135
+ComputerRepairTask	computer.ram	93	135
+ComputerRepairTask	computer.side-panel	108	135
+ComputerRepairTask	computer.tool.screwdriver	135	135
+FanRepairTask	fan.blade	105	135
+FanRepairTask	fan.body	97	135
+FanRepairTask	fan.fastener	108	135
+FanRepairTask	fan.faulty-fuse	135	135
+FanRepairTask	fan.front-cover	43	135
+FanRepairTask	fan.fuse-holder	26	135
+FanRepairTask	fan.internal-wire	30	135
+FanRepairTask	fan.motor-module	135	135
+FanRepairTask	fan.non-target-module	42	135
+FanRepairTask	fan.power-cord	49	135
+FanRepairTask	fan.power-plug	94	135
+FanRepairTask	fan.power-switch	88	135
+FanRepairTask	fan.speed-selector	135	135
+FanRepairTask	fan.tool.screwdriver	135	135
+FanRepairTask	fan.working-fuse	130	135
+VRTraining	training.training-cube-a	135	135
+VRTraining	training.training-cube-b	135	135
+VRTraining	training.training-cylinder	135	135
