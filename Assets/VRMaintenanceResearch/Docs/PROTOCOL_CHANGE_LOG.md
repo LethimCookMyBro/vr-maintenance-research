@@ -462,6 +462,169 @@ languages instead.
 
 ---
 
+## 2026-08-11 — Round 7: the room stops pointing at the answer
+
+Round 6 read the build against the proposal. This round reads the *room* against it: two
+things in it were telling a participant where to look, and one check could not see a
+regression it was supposed to catch.
+
+### 7.1 The guardrails and the bench matting came out
+
+Neither was load-bearing for the study, and neither could exist without standing inside
+something else. A new check, *Tools → VR Maintenance Research → Visual Audit → Report
+Prop Intersections*, tests every visible non-selectable solid against every other as an
+oriented box and reports interpenetration deeper than 2 mm. It found **87 clashes across
+the four scenes**; there are now **none**.
+
+| Prop | Was | Now | Why |
+|---|---|---|---|
+| Guardrail West / East | 3 m yellow barrier down each side aisle, at x = ±3.88 | **Removed** | A guardrail separates people from a fall, a machine or a vehicle lane. This room is a flat floor with a bench on it and has none of the three. What the rails actually did was fence off the storage — 107 mm in front of the storage unit on the west, 62 mm in front of the racking on the east — so they read as barriers penning in shelves a participant is meant to walk up to. The painted aisle lines already say "keep this lane clear". |
+| ESD Bench Matting | 2.6 m green sheet along the bench, y = 0.9205–0.9245 | **Removed** | An ESD mat is a bench's bottom layer. Both trays and the service pad start at the bench top (y = 0.920), so any mat on that surface passes through all three — and it did, 4 mm into each. Stacking it correctly would mean lifting the trays 4 mm, which moves `BenchDressing.TrayFloor` and every part resting in a tray: a change to where task apparatus sits, made for a decoration. The dark service pad and the ESD CONTROL notice already say the bench is ESD-controlled. |
+| Racking North | x = 4.05, shelves reaching x = 4.51 | x = **3.99** | Its 0.92 m shelves ran past the skirting's inner face at 4.4625 and into the east wall, by 10 mm at the wall and 36 mm at the dado stripe. It now ends 12 mm clear of the skirting. |
+| Aisle lines | z = −3.40 to 4.40 | z = −3.40 to **3.90** | They ran to the end wall and under the racking bay, clearing it by 5 mm before Racking North moved and clashing after. A painted lane that disappears under a shelf marks a lane nobody can walk. |
+| Storage Unit | Shelf boards at x = −4.4650 | shifted 12 mm east | The boards sat 2.5 mm inside the west skirting. |
+
+**Research effect: none intended, and one worth stating.** Nothing removed or moved is
+selectable, carries a collider, or is an information source; no `stableObjectId`,
+collider, task definition, event type or CSV column changed, and the count of parts on
+both benches is unchanged. The one honest caveat is that the room is now slightly
+**barer** on the participant's right and along both side aisles, and scene richness is
+not a variable this study controls or measures. It is identical in both tasks and both
+language conditions, so it cannot differ between the conditions being compared.
+
+Before and after from the start pose, all three participant scenes:
+`Docs/Screenshots/Audit/Round7Before_*` and `Round7After_*`.
+Measurement: `Verification/Prop_Intersections.txt`.
+
+**Status:** no decision needed — this is a defect fix. Recorded because it changes what
+the room looks like.
+
+### 7.2 The INSPECT control no longer glows
+
+**The problem.** The one control a participant must press to end a task was the brightest
+saturated object in the room: a 190 mm emissive disc on the pedestal cap plus an emissive
+button cap, both in `Lab_Accent`, lit from inside. It does not reveal the fault — but it
+says *press this first*, and **where a participant goes first is a primary outcome under
+proposal 10.2.2** (frequency and timing of manual use, action sequence, and transitions
+between manual, tools, target component and Inspect). An instrument may not answer its
+own first question.
+
+Everything else the room uses `Lab_Accent` for is a rule a few millimetres wide — the
+notice board header rule, the information station strip, this station's own sign rule.
+Only the control used it as a filled face. Measured:
+
+| Surface | Colour | Saturation | Value | Emission (linear luminance) |
+|---|---|---|---|---|
+| Pedestal `Cap Accent`, **before** | `Lab_Accent` #2E7BE6 | 0.80 | 0.90 | 0.0184 |
+| Button cap, **before** | `Lab_Accent` #2E7BE6 | 0.80 | 0.90 | 0.0184 |
+| Pedestal `Cap Accent`, **now** | `Lab_MetalDark` #79808A | **0.12** | 0.54 | **0** |
+| Button cap, **now** | `Lab_Trim` #38455C | **0.39** | **0.36** | **0** |
+| *Reference — dock cards* | `Lab_Navy` #1C2838 | 0.50 | 0.22 | 0 |
+| *Reference — notice board* | `Lab_StationBoard` #333C48 | 0.29 | 0.28 | 0 |
+
+The button cap now sits inside the range the room's other panels occupy, and nothing at
+the station emits light. **The sign is kept** — the plate still reads *INSPECT* over
+*PRESS TO CHECK THE UNIT*, and its 290 × 11 mm accent rule is the same element the notice
+board carries at 1780 × 10 mm. The control is found by reading, which is the behaviour
+10.2.2 is about, rather than by being the only lit thing in the room.
+
+Applies to both benches: the computer bench's push button and the fan bench's dial go
+through one code path. No collider, position, scale or id changed — this is paint only.
+
+Pictures: `Docs/Screenshots/Audit/Round7Before_Computer_GuardrailEast.png` (the glowing
+disc, bottom left) against `Round7After_Computer_StartPose.png`.
+
+**Status:** open — a supervisor may judge that a discoverable control matters more than
+first-action purity, in which case the value to change is the `PaintNamed` colour in
+`BenchDressing.PlaceInspectControl` and nothing else.
+
+### 7.3 The ray aim check can now see a part getting worse
+
+**This was a hole in a check, not a change to the study.** The ray aim gate failed on
+one thing: a part that answers *none* of its 135 aim points. That is the far end of a
+slope, and the slope had already been walked once — putting the fan's motor module in
+the wrong place took `fan.power-plug` from **94 of 135 aims to 49** and `fan.power-cord`
+from **49 to 20**. Both still answered *some* aims, so neither failed; the WARN tier
+printed the new numbers with nothing to compare them against, and Scene Integrity stayed
+green. It was caught because a person read the numbers, which is not a check.
+
+The aim counts are now committed to `Verification/Ray_Aim_Baseline.tsv` and the gate
+compares against them. It fails when a part answers no aim at all, when a part answers
+fewer than **75%** of its baseline aims, or when the part list stops matching the
+baseline in either direction. The report prints each part's delta, so a drop that is
+within allowance is still visible rather than invisible.
+
+**The baseline is never written automatically.** A gate that re-records its own baseline
+passes forever — each regression becomes the new normal and the next is measured from
+it. Only the menu item *UPDATE Ray Aim Baseline* writes the file, and it logs every row
+it changes. When a bench legitimately changes, the run goes red, a person reads what
+moved, and re-records deliberately.
+
+Verified by reproducing the original defect: with the motor module moved into the lead's
+sight line, the gate reports `fan.power-plug` −97.9% and `fan.power-cord` −53.1% as
+regressions. Before this change the same scene passed.
+
+The baseline also records the aim criterion (`poses=5;inset=0.60;…`) and the gate refuses
+to compare across a change to it, because adding a pose or widening the inset moves every
+count and would read as a scene regression.
+
+**Research effect: none.** No scene, part, collider, id or column changed — this is a
+test and a data file. What changes is that a silent loss of pointability can no longer
+reach a participant.
+
+**Status:** closed, no decision needed.
+
+### 7.4 Source-order counterbalancing is built, and switched off
+
+**Built to be decided on, not switched on.**
+
+The dock sorts its four cards by source type, so the row is manual → troubleshooting →
+video → visual guide, left to right, in both tasks, for every participant, always.
+**Position in the row is perfectly confounded with source type**, and *which source a
+participant chooses* is a primary outcome under proposal 10.2.2. With one layout in the
+build there is nothing to model the bias out with afterwards. This was recorded as open
+item ซ on 2026-08-03 and has been open since.
+
+| | |
+|---|---|
+| What exists now | Four orders, a cyclic Latin square on the four types, each with its own `information_source_layout_id` (`sources-layout-counterbalanced-1` … `-4`). Each type appears exactly once in each of the four slots across the four layouts. |
+| How a participant gets one | Deterministically from the participant code: FNV-1a over the uppercased code, modulo four. Reproducible from the recorded data alone — no separate schedule file to keep in step. Deliberately **not** `string.GetHashCode()`, which is unstable between runtimes and would make the assignment unauditable. |
+| Where it is recorded | `information_source_layout_id`, resolved once at session start, in `session_manifest.csv` and on **every** event row. Both columns already existed and were verified to carry the resolved value. |
+| The switch | `ResearchSessionConfig.counterbalanceInformationSourceOrder`, **default false**. There is deliberately no control for it on the researcher setup screen, so it cannot be turned on by mistake during a session. |
+| What does not move | Nothing. The dock's position, angle, card size, spacing and distance are untouched; the four slot poses are whatever the builder authored, and all the layout does is decide which card occupies which of them. The 1.8% distance spread and 2% apparent-size spread the dock was built for are unaffected. |
+
+With the switch off — which is how it ships — the row keeps the fixed order, the recorded
+id stays `sources-layout-development-a`, and `Apply()` returns before touching a
+transform. Verified: with the switch off it moves **0 cards**; with each of the four
+layouts driven by hand, every card lands on an authored pose and all four poses are used.
+
+**How to read the results if it is left off.** This is the part that needs a decision,
+because leaving it off is itself a choice with consequences:
+
+- Any difference between sources — in how often each is opened, how long it is read, or
+  which is opened first — **cannot be attributed to source type**. Leftmost-and-nearest
+  and "the manual" are the same thing in this build, and no statistical control can
+  separate them after the fact, because there is no variation to model.
+- What the data *can* still support is a within-source comparison between the two
+  participant groups: if Thai and Japanese participants differ in how they use the
+  leftmost card, that difference is not explained by its position, because its position
+  is identical for both groups. **Objective 5.1 and hypothesis 7.1 survive; the parts of
+  5.2 and 10.2.2 that concern choice among sources do not.**
+- It should then be stated as a design limitation, not left implicit — a reader who sees
+  four source types and one layout id will otherwise assume the order was varied.
+
+**The design itself is not settled here.** Four orders divide the 8 participants per
+group evenly where twenty-four cannot, and a cyclic square balances position but
+preserves relative adjacency; a Williams square would balance adjacency too. Which to use
+is a research decision. Changing it means editing one table in
+`InformationSourceLayouts` and nothing else.
+
+**Status: open. Ready, and awaiting a decision that has not been given.** Turning it on
+requires setting one boolean, and it changes what the study measures, so it is not being
+turned on here.
+
+---
+
 ## Still open from 2026-08-02, unchanged since
 
 - The first-action metric fires about 14 ms into every task, from an incidental pointer

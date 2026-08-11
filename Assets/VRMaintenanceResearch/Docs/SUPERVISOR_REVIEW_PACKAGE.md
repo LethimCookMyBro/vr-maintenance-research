@@ -1,884 +1,642 @@
 # Supervisor Review Package
 
-**Branch:** `visual-polish-claude` · **Head commit at time of writing:** `0248328`
-**Prepared:** 2026-08-08 · **Supersedes** the package dated 2026-08-02
-**Status:** awaiting supervisor decision. Nothing here has been approved, merged or
-pushed to `main`. No participant data has been collected.
+**Branch:** `visual-polish-claude` · **Prepared:** 2026-08-11 (Round 7)
+**Replaces** the package dated 2026-08-08 in full. That version described the build at
+commit `0248328` and carried a correction banner on top of it; three of its questions
+asked about things that no longer exist, and a reader following it would have been told
+the opposite of what the build now does. It has been rewritten rather than annotated.
 
-> ## ⚠ Partly superseded on 2026-08-11 by Round 6
->
-> This package describes the build as it stood at `0248328`. **Round 6 aligned the build
-> to Research Proposal 1.0 (18 June 2569) and changed four things this document asserts.**
-> It has not been rewritten — read it with these corrections, and read
-> [`PROTOCOL_CHANGE_LOG.md`](PROTOCOL_CHANGE_LOG.md) Round 6 for the full argument.
->
-> | This document says | Now |
-> |---|---|
-> | `fan.faulty-fuse`, `fan.motor-module` and `fan.non-target-module` are **stowed** (§3, §4, and the part tables) | All three are **switched back on**. The two fuses sit in the spares tray 120 mm apart; the motor and the sealed module are on the service mat. The reason is proposal 9.3.2, which requires Task B to offer several possible causes. |
-> | The fan task **cannot** record an incorrect component interaction (§ the failure-opportunity table) | It can, through `fan.faulty-fuse`. **Open item ค is closed** and the asymmetry is equalised. |
-> | Both benches ask the participant to *find the cause and repair it* | Only the **fan** does. The computer work order now says *follow the manual and fit the correct replacement component*, per proposal 9.3.1. This is the study's task variable and it had been set to a constant. |
-> | The maximum time is 900 s per task | **600 s**, against the proposal's 960 and 1200. This is the round's largest deviation and it **needs a signature** — see Round 6.2. |
->
-> Three questions this package poses are answered by Round 6 and no longer need a
-> decision: whether to switch the fan parts back on (**done**), whether the fan bench
-> needs a second repair action (**it has one**), and whether the work order should
-> distinguish the two tasks (**it does**). Everything else here still stands, including
-> every open item about the information dock, the collider sizes and the licensed models.
->
-> Two **new** decisions were added by Round 6 and are not discussed anywhere in this
-> document: the 600 s limit, and the work order panel, which grew 23 per cent in area
-> because Thai and Japanese did not fit inside it.
+**Status:** every question below is open. Nothing here has been signed. No participant
+data has been collected, and nothing on this branch has been merged to `main`.
 
 ---
 
-## 0. Why this document was rewritten
+## How to use this document
 
-The previous version of this package was written on **2026-08-02**. The companion
-`PROTOCOL_CHANGE_LOG.md` was last revised on **2026-08-02**. Since then there have been
-**five rounds of work plus a comprehension pass**, all of them on this branch and none of
-them reviewed:
+Each numbered section describes one decision, states what the build does now, states what
+it costs either way, and ends with a single question you can answer **yes** or **no**.
+The answer sheet in [§20](#20-answer-sheet) has a row, a yes box, a no box and a
+signature line for every one of them.
 
-| Round | Date | Commits | What it did |
-|---|---|---|---|
-| 0 | 2026-08-03 | `501bc01`, `4f4e452`, `22c7158` | Comprehension and readability pass. Added the Thai and Japanese work order; rewrote the training board; **moved all four information sources off the back wall onto a single dock at the participant's left** (§9 below) |
-| 1 | 2026-08-04 | `b6b5777`, `79cc5e6` | Replaced hand-built stand-in shapes with licensed 3-D models, then reverted the part of that integration that was rejected |
-| 2 | 2026-08-04 | `e7cd4d4`, `298a538`, `c02bb64` | Rebuilt the inside of the computer in five stages — board, processor, cooler, memory, card, supply, drive, power loom, bench |
-| 3 | 2026-08-04 | `de7d5fd`, `743b1c3` | Re-framed both benches as *diagnosis* rather than *assembly*; fixed the wall notice board; stopped each machine claiming its own internal parts' click targets |
-| 4 | 2026-08-08 | `6683949`, `24c5399`, `6845fec`, `efe4e0a`, `b152597` | Gave the participant a way out of a finished task; added scene-regression checks; drove a full session with development mode off; produced a real Quest 3 build |
-| 5 | 2026-08-08 | `50ad6fa`, `a32041c`, `43e1708`, `230ddfe`, `0248328` | Stopped the researcher's mouse writing into the participant's data; moved "advance to next task" off the participant's board; rebuilt the parts a participant must be able to name |
+Nothing in this document is filled in on your behalf. Where a section says what happens
+if you answer no, that is a statement of consequence, not a suggestion.
 
-Every one of those rounds either moved something the participant looks at, or changed
-what the recorded data means. This package collects **all of it** into decisions you can
-answer yes or no.
-
-### A note on words
-
-Only seven technical words are unavoidable. They are used in exactly these senses:
+**The words that carry weight**
 
 | Word | What it means here |
 |---|---|
 | **scene** | One loadable room. There are four: the researcher's setup screen, the training room, the computer bench and the fan bench. |
-| **object id** (`computer.ram`) | The permanent name a part carries in the recorded data. It never changes, so data from different sessions can be compared. |
+| **object id** (`computer.ram`) | The permanent name a part carries in the recorded data. It never changes, so sessions can be compared. |
 | **click target** | An invisible shape wrapped round a part. The software decides what you pointed at by testing the pointer against these shapes, **not** against the part you can see. |
-| **stowed** | The part still exists in the room and keeps its id, but is switched off — invisible and unpointable. Switching it back on restores it exactly. |
 | **event** | One line in the recorded data: a time, an object id, and what happened. |
-| **`task_summary.csv`** | The one-row-per-task results file, the file the analysis actually reads. |
-| **builder** | A script that constructs a bench from scratch, so the bench can be rebuilt identically at any time. |
+| **`task_summary.csv`** | The one-row-per-task results file the analysis reads. |
+| **builder** | A script that constructs a bench from scratch, so it can be rebuilt identically at any time. |
+| **the proposal** | Research Proposal version 1.0, dated 18 June 2569, the document this build is measured against. |
 
 ---
 
 ## 1. The decisions, in one page
 
-Each is written so **yes** or **no** is a complete answer. Detail follows in §2–§8.
-Write your answer in the last column of the sheet in [§10](#10-answer-sheet).
-
-| # | Item | The question |
+| # | Section | The question |
 |---|---|---|
-| **ก** | Every part has moved since you last saw a position table (§2) | *Do you accept the current positions of all 31 parts as the layout used for data collection?* |
-| **ข** | Both benches were re-framed from "assemble this" to "diagnose this", which removed parts from the bench (§3) | *Do you accept diagnosis, with fewer parts on the bench, as the task both conditions present?* |
-| **ค** | The fan bench can no longer record a wrong-part action at all; the computer bench can (§4) | *Do you accept that `incorrect_component_interaction_count` can only ever be non-zero on the computer task?* |
-| **ง** | The part that is the answer to the computer task was rotated 44° (§5) | *Do you accept the answer being visible from the participant's approach rather than facing away?* |
-| **จ** | The two device-test controls no longer look alike — one is a button, one is a dial (§6) | *Do you accept two different-looking controls for the same step in the two conditions?* |
-| **ฉ** | Data recorded before `743b1c3` filed internal parts under the machine's name (§7) | *Do you accept that no session recorded before `743b1c3` can be pooled with later sessions?* |
-| **ช** | **New, found while preparing this package.** Pointing at a part often selects a different part (§8) | *Should the click targets be resized to match the parts, before any participant session?* |
-| **ซ** | All four information sources moved to one row at the participant's left, always in the same order (§9) | *Do you accept a fixed left-to-right order — manual, troubleshooting, video, visual guide — identical in both tasks and for every participant?* |
-
-> **§8 is the one to read first.** It is the only item that can make the recorded data
-> say something that did not happen, and it is the only item where the recommended
-> answer is "change it". It has **not** been changed, because changing a click target
-> changes which part gets recorded, and that is a research decision, not a repair.
-
----
-
-## 2. ก — Every part has moved, and no table of the current positions has been reviewed
-
-### What changed
-
-The last position table you were given (the 2026-08-02 package, §4) described a bench
-laid out on **2026-08-02**. Rounds 1, 2, 3 and 5 each re-authored positions. **All 31
-parts — 13 computer, 15 fan, 3 training — are now somewhere other than that table says.**
-Sizes changed too, in both directions.
-
-### Which commits
-
-`b6b5777` (licensed models) → `e7cd4d4` + `298a538` (computer interior rebuilt in five
-stages) → `de7d5fd` (diagnostic framing) → `0248328` (parts rebuilt to real dimensions).
-
-### Why
-
-Three separate reasons stacked up. Licensed models replaced hand-made shapes, so parts
-took the models' true proportions. The diagnostic re-framing moved parts **into** the
-machines, because a machine with its insides on the bench beside it reads as a machine
-being built. And the recognition pass sized parts from the real components they
-represent, which made most of them much smaller.
-
-### What was not chosen
-
-Keeping the 2026-08-02 positions and only re-skinning the parts. Rejected because the
-licensed board, cooler and supply do not fit the old spacing — the old layout was built
-around a 2.4 m computer case, and the parts inside it are now at hand size.
-
-### The current table — computer bench
-
-`d` is how far the part is from where the participant starts standing. **Apparent width**
-is how wide the part looks from there, in degrees: your thumbnail held at arm's length is
-about 1.5°.
-
-| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width | Note |
-|---|---|---|---|---|---|---|
-| `computer.case` | (0, 1.20, 1.15) | (−0.15, 1.145, 0.78) | 498 mm | 2.38 m | 11.9° | Tower, open side toward the participant |
-| `computer.side-panel` | (−1.72, 0.945, 1.15) | (−1.25, 0.345, 0.90) | 507 mm | 2.80 m | 9.8° | Moved down onto the lower shelf |
-| `computer.motherboard` | (−0.45, 0.935, 1.05) | (−0.20, 1.195, 0.885) | 307 mm | 2.49 m | 7.0° | **Now inside the machine**, not on the bench |
-| `computer.psu` | (0.45, 1.00, 1.10) | (−0.272, 0.982, 0.824) | 163 mm | 2.44 m | 3.8° | **Now inside the machine** |
-| `computer.psu-switch` | (0.45, 1.02, 0.965) | (−0.341, 0.982, 0.905) | 31 mm | 2.53 m | 0.7° | **Now inside**; smallest computer target |
-| `computer.cooling-fan` | (0.12, 0.945, 0.70) | (−0.334, 1.275, 0.847) | 122 mm | 2.47 m | 2.8° | **Now inside** |
-| `computer.internal-cable` | (−0.12, 0.945, 0.70) | (−0.102, 1.097, 0.813) | 53 mm | 2.42 m | 1.3° | **The fault.** Now inside — see §5 |
-| `computer.external-power-cable` | (0.82, 0.935, 0.70) | (0.52, 0.95, 1.24) | 211 mm | 2.89 m | 4.1° | Behind the machine |
-| `computer.main-power-connector` | (−1.28, 0.975, 0.95) | (−1.10, 0.947, 0.95) | 119 mm | 2.78 m | 2.4° | **The correct repair**, in the spares tray |
-| `computer.ram` | (−0.92, 0.975, 0.95) | (−0.129, 1.268, 0.828) | 132 mm | 2.43 m | 3.1° | **Moved out of the tray and seated on the board** — see §3 and §4 |
-| `computer.tool.screwdriver` | (1.10, 0.962, 0.95) | (1.02, 0.965, 0.95) | 200 mm | 2.75 m | 4.1° | Tool tray |
-| `computer.power-button` | (1.95, 0.95, 0.20) | (1.50, 0.95, 0.20) | 132 mm | 2.34 m | 3.2° | Device test — see §6 |
-| `computer.non-target-module` | (1.70, 0.99, 1.15) | (−0.79, 0.985, 0.95) | 170 mm | 2.67 m | — | **Stowed** — see §3 |
-
-### The current table — fan bench
-
-| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width | Note |
-|---|---|---|---|---|---|---|
-| `fan.body` | (0, 1.28, 1.02) | (0, 0.92, 1.00) | 571 mm | 2.60 m | 12.4° | Assembled fan on the bench |
-| `fan.blade` | (0, 1.28, 0.88) | (0.029, 1.32, 0.945) | 324 mm | 2.55 m | 7.3° | Behind the guard |
-| `fan.front-cover` | (−0.55, 0.95, 0.70) | (−0.72, 0.56, 0.98) | 375 mm | 2.68 m | 7.7° | Guard, now on the lower shelf |
-| `fan.fuse-holder` | (0.20, 1.24, 1.02) | (−0.128, 1.318, 1.016) | 51 mm | 2.62 m | 1.1° | In the service bay |
-| `fan.internal-wire` | (0.12, 1.13, 1.02) | (−0.139, 1.292, 1.035) | 39 mm | 2.64 m | 0.9° | In the service bay |
-| `fan.fastener` | (−0.16, 1.20, 0.94) | (−0.17, 1.35, 1.036) | **11 mm** | 2.64 m | **0.24°** | Smallest object in the project |
-| `fan.power-switch` | (0, 0.972, 0.88) | (0.016, 1.006, 0.85) | 70 mm | 2.45 m | 1.6° | On the fan base |
-| `fan.power-cord` | (−0.50, 0.942, 1.26) | (0.30, 0.932, 1.24) | 270 mm | 2.86 m | 5.4° | Coiled behind the fan |
-| `fan.power-plug` | (−0.86, 0.962, 1.26) | (0.404, 0.942, 1.236) | 89 mm | 2.86 m | 1.8° | On the coil's edge |
-| `fan.working-fuse` | (−1.28, 0.975, 0.95) | (−1.10, 0.949, 0.95) | **31 mm** | 2.78 m | **0.63°** | **The correct repair**, in the spares tray |
-| `fan.tool.screwdriver` | (1.10, 0.962, 0.95) | (1.02, 0.955, 0.95) | 200 mm | 2.75 m | 4.1° | Tool tray |
-| `fan.speed-selector` | (1.95, 0.95, 0.20) | (1.50, 0.95, 0.20) | 132 mm | 2.34 m | 3.2° | Device test — see §6 |
-| `fan.motor-module` | (0.55, 0.97, 0.70) | (−1.01, 0.982, 1.15) | 186 mm | 2.93 m | — | **Stowed** |
-| `fan.faulty-fuse` | (−0.92, 0.975, 0.95) | (−0.86, 0.926, 0.95) | 31 mm | 2.69 m | — | **Stowed** — see §4 |
-| `fan.non-target-module` | (1.70, 0.99, 1.15) | (1.58, 0.972, 0.98) | 170 mm | 3.03 m | — | **Stowed** |
-
-### The current table — training room
-
-| Object id | 2026-08-02 position | Position now | Widest side now | d | Apparent width |
-|---|---|---|---|---|---|
-| `training.training-cube-a` | (−0.45, 1.00, 0.95) | (−0.42, 0.972, 0.95) | 131 mm | 2.58 m | 2.9° |
-| `training.training-cube-b` | (0, 1.00, 0.95) | (0, 0.972, 0.95) | 126 mm | 2.55 m | 2.8° |
-| `training.training-cylinder` | (0.45, 1.00, 0.95) | (0.42, 0.966, 0.95) | 110 mm | 2.58 m | 2.4° |
-
-### What this does to the research
-
-* **Target size is now the dominant difficulty variable and it is not equal across the
-  two conditions.** The correct repair on the fan bench is a 31 mm glass cartridge
-  (0.63° wide from the start pose). The correct repair on the computer bench is a
-  119 mm connector (2.4°). One is nearly **four times** the apparent width of the other.
-  Pointing accuracy, hover counts and time-to-repair are all sensitive to this.
-* Ten of the twenty-eight task parts are now **inside** their machine rather than on the
-  bench, which is what makes the task a diagnosis (§3) but also means they cannot be
-  reached without stepping in and looking along the machine.
-* All the participant-relative distances in the 2026-08-02 package's §4 are superseded
-  by the tables above.
-
-### Pictures
-
-What the participant sees on arriving at each bench. Everything in the tables above is
-somewhere in these two views.
-
-![Computer bench from the participant's starting position](Screenshots/Audit/After_Computer_ParticipantEye.png)
-*Computer bench, from where the participant starts. The tower is open toward them; the
-spares tray is on the left and holds one part.*
-
-![Fan bench from the participant's starting position](Screenshots/Audit/After_Fan_ParticipantEye.png)
-*Fan bench, from the same standing position. The 31 mm spare fuse is in the left-hand
-tray — at 0.63° wide it is close to invisible at this distance, which is the point ก is
-asking about.*
-
-Plan views of the same two benches: `Screenshots/Audit/After_Computer_Overview.png` and
-`Screenshots/Audit/After_Fan_Overview.png`.
-
-### Closed question ก
-
-> **Do you accept the current positions and sizes of all 31 parts, as tabled above, as
-> the layout used for data collection?**
-> If **no**, name which parts must move or change size and the review will be re-run.
+| **ก** | [§2](#2--every-part-has-moved-since-you-last-saw-a-position-table) | Do you accept the current positions and sizes of all 31 parts as the layout used for data collection? |
+| **ฌ** | [§3](#3--task-a-is-a-replacement-task-again-and-task-b-has-several-candidate-causes) | Do you accept the two work-order goal sentences, and the three parts restored to the fan bench? |
+| **ญ** | [§4](#4--both-tasks-stop-at-600-s-the-proposal-says-960-and-1200) | Do you accept 600 s on both tasks in place of the proposal's 960 s and 1200 s? |
+| **ฏ** | [§5](#5--the-retry-sentence-is-in-neither-work-order) | Do you accept that neither work order mentions retrying, even though the proposal mentions it for Task B only? |
+| **ฐ** | [§6](#6--the-participant-sees-a-clock-a-percentage-and-a-checklist) | Do you accept the three heads-up display elements being on during data collection? |
+| **ฎ** | [§7](#7--the-work-order-panel-is-23-per-cent-larger-than-the-one-that-was-cut-back) | Do you accept the enlarged work-order panel? |
+| **ซ** | [§8](#8--the-four-information-sources-are-always-in-the-same-order-and-a-way-to-vary-it-now-exists) | Do you accept a fixed source order, leaving position confounded with source type — or should the counterbalancing be switched on? |
+| **ฑ** | [§9](#9--every-thai-and-japanese-string-is-a-draft) | Do you accept that no session may run until a Thai and a Japanese reader have signed the translation sheet? |
+| **ฒ** | [§10](#10--first-person-recording-now-exists-and-the-consent-wording-has-not-caught-up) | Do you accept that the ethics and consent materials must be updated before any session, to describe a capability that now exists? |
+| **ง** | [§11](#11--the-part-that-is-the-answer-to-task-a-was-turned-to-face-the-participant) | Do you accept the fault plug turned toward the participant's approach rather than away from it? |
+| **จ** | [§12](#12--the-two-device-test-controls-do-not-look-alike) | Do you accept a push button in one condition and a dial in the other? |
+| **ณ** | [§13](#13--the-inspect-control-no-longer-glows) | Do you accept the INSPECT control being paint-matched to the room's other panels? |
+| **ด** | [§14](#14--two-pieces-of-room-dressing-were-removed) | Do you accept the room without the guardrails and the bench matting? |
+| **ช** | [§15](#15--the-click-targets-were-resized-and-a-gate-now-holds-them-there) | Do you accept the resized click targets as the ones data will be recorded through? |
+| **ฉ** | [§16](#16--data-recorded-before-743b1c3-filed-internal-parts-under-the-machines-name) | Do you accept that no session recorded before `743b1c3` can be pooled with later ones? |
+| **—** | [§17](#17--four-standing-questions-unchanged-since-2026-08-02) | Four standing questions, unchanged and still unanswered. |
 
 ---
 
-## 3. ข — Both benches were re-framed from "assemble this" to "diagnose this"
+## 2. ก — Every part has moved since you last saw a position table
 
-### What changed
+**What changed.** Between Round 1 and Round 5 every part on both benches was rebuilt from
+licensed models or from real dimensions, and Round 6 moved three fan parts back onto the
+bench. No table of the current positions has been through a review.
 
-Before `de7d5fd`, both benches presented a machine with its parts spread out around it.
-Fresh readers looking at that consistently described the task as *build this machine*.
-The re-framing put the machines back together, opened them for service, and **took the
-surplus parts off the bench**:
+Most parts are now **much smaller** than the shapes they replaced, because they are at the
+sizes the real objects are: a 6 × 30 mm fuse cartridge is a 6 × 30 mm fuse cartridge.
 
-**Computer bench.** `computer.ram` — a spare memory module that had been lying in the
-spares tray on an antistatic pad — is now **seated in the board's fourth memory slot**.
-The tray keeps exactly one part, the replacement 24-pin power lead. The tool tray keeps
-one screwdriver. `computer.non-target-module` is **stowed**. The antistatic pad is gone.
-The lower shelf is captioned, so the removed side panel reads as *removed* rather than
-*not yet fitted*. The work order gained one sentence, in all three languages: *the unit
-is assembled and open for service*.
+**What this does to the research.** Apparent size and reach distance both changed for
+nearly every part, and both affect how long a participant takes to find and select
+something. The two benches were re-measured against each other so that neither is
+systematically harder to work at, but that balance has not been checked by a person in a
+headset.
 
-**Fan bench.** One assembled fan, one open service bay, one fuse fitted in the holder,
-one spare fuse in the tray, one tool. **Stowed:** the second loose fuse
-(`fan.faulty-fuse`), the spare motor (`fan.motor-module`), and `fan.non-target-module`.
-The mains plug used to stand 0.32 m clear of its own coil, reading as two more parts
-waiting to be fitted; it now sits at the coil's edge. The bench mat caption used to read
-*INSTALLED COMPONENT*, which named the whole machine a component.
+**What is not in question.** All 31 object ids are byte-identical to the baseline, no part
+was added to or removed from either bench, and no click target was re-owned.
 
-Nothing was deleted. A stowed part keeps its object id and its settings; switching it
-back on restores it exactly, and re-running the builder refreshes it first.
+Positions: `Verification/PART_RECOGNITION_RECORD.md` and
+`Verification/ITEM_3D_REBUILD_RECORD.md`. Pictures:
+`Screenshots/Audit/Round7After_Computer_StartPose.png` and `…_Fan_StartPose.png`.
 
-### Which commit
-
-`de7d5fd`, "Frame both benches as diagnosis, and fix the invisible wall board".
-
-The same commit fixed a separate defect found while measuring: the four notice cards on
-the lab wall had always rendered as **blank white rectangles**. Their text was present
-and correctly referenced, but each card's opaque front face sat 9 mm nearer the eye than
-its own lettering, so the lettering was discarded. The cards also only ever carried a
-heading, with no body text underneath. Both are fixed; the copy is lab procedure only
-and names neither fault, because the board can be read from anywhere in the room.
-
-### Why
-
-The measured variable is *how a person diagnoses a fault*. A bench that reads as an
-assembly job asks a different question, and it asks it of both conditions at once.
-
-### What was not chosen
-
-1. **Leaving both benches as they were and correcting the framing in the spoken
-   briefing.** Rejected: the briefing is read once and the bench is looked at for the
-   whole task; where the two disagree, the bench wins.
-2. **Deleting the surplus parts outright.** Rejected: stowing keeps the object ids in the
-   scene, so the change is reversible in one step and the data schema is untouched.
-3. **Keeping `computer.ram` in the tray and adding a second distractor to the fan bench
-   to match.** Rejected here because adding a part to the fan bench changes the number of
-   objects the participant sees, which is a protocol change and yours to make — see §4,
-   which is exactly this question put to you directly.
-
-### What this does to the research
-
-* Both conditions now pose the same kind of question, which is the point.
-* The number of parts on each bench dropped. Fewer parts means fewer things to
-  investigate, which shortens the search and reduces the number of recorded interactions
-  per task in both conditions.
-* `computer.ram` changed meaning without changing its id or its recorded event type.
-  Selecting it still records an incorrect-component action — but that now means *pulling
-  the memory out of a machine that will not power on*, which is a real misdiagnosis,
-  rather than *picking the wrong spare off a tray*. This makes the event more meaningful,
-  and it also makes it the **only** such event available on either bench (§4).
-
-### Pictures
-
-![Memory seated in the board's fourth slot](Screenshots/Audit/Approach_Computer_BoardDetail.png)
-*`computer.ram` is now seated in the board's fourth memory slot instead of lying in the
-spares tray. Same object, same id, same recorded event — but selecting it now means
-pulling the memory out of a machine that will not power on.*
-
-![Fan service bay with one fuse fitted](Screenshots/Audit/Approach_Fan_ServiceBay.png)
-*The fan's service bay: one fuse fitted in the holder. The second loose fuse is stowed,
-which is what §4 is about.*
-
-Both benches after re-framing: `Screenshots/Audit/After_Computer_Workstation.png`,
-`Screenshots/Audit/After_Fan_Workstation.png`. The repaired wall notice board:
-`Screenshots/Audit/After_Training_Workstation.png`. Full measurements:
-`Verification/DIAGNOSTIC_FRAMING_RECORD.md`.
-
-### Closed question ข
-
-> **Do you accept diagnosis — an assembled, opened machine with only one spare and one
-> tool on the bench — as the task both conditions present?**
-> If **no**, the stowed parts can be switched back on in one step and the previous
-> arrangement restored.
+> ### Question ก
+> **Do you accept the current positions and sizes of all 31 parts as the layout that data
+> will be collected on?**
+> If **no**, name the parts to change; every one is a value in a bench builder, and the
+> bench is rebuilt from that value.
 
 ---
 
-## 4. ค — The fan bench cannot record a wrong-part action at all; the computer bench can
+## 3. ฌ — Task A is a replacement task again, and Task B has several candidate causes
 
-This is the most consequential asymmetry in the current build, and it is a direct and
-acknowledged cost of §3.
+**Why this came up.** Proposal 9.3.1 makes Task A a component-replacement task and 9.3.2
+makes Task B a fault-diagnosis task with **several possible causes**; 9.3 then says
+plainly that Task B must involve more diagnostic decision-making than Task A.
 
-### The mechanism, precisely
+An earlier round had set both work orders to the same sentence — *find the cause and
+repair it* — and had switched three parts off the fan bench. With both benches asking for
+a diagnosis and the fan bench reduced to a single candidate part, **the study's task
+variable had become a constant.** Round 6 undid that.
 
-The software records a wrong-part action — event type `IncorrectComponentInteraction` —
-in exactly one circumstance: the participant selects a part that is marked as a *repair
-action* and is **not** the repair the task requires. That is the only route to that
-event. It is not produced by grabbing, hovering, or touching anything else.
-
-Each bench's repair-action parts, as they stand today:
-
-| Bench | Repair-action parts present | Correct one | Wrong one available? |
-|---|---|---|---|
-| Computer | `computer.main-power-connector`, `computer.ram` | `computer.main-power-connector` | **Yes** — `computer.ram`, active and on the board |
-| Fan | `fan.working-fuse` only | `fan.working-fuse` | **No** — `fan.faulty-fuse` is stowed |
-
-There is a second, separate asymmetry that goes the other way and cancels nothing:
-
-| Bench | Tools present | Any wrong tool? |
+| | Task A — Computer | Task B — Fan |
 |---|---|---|
-| Computer | one screwdriver, marked correct | **No** |
-| Fan | one screwdriver, marked correct | **No** |
+| Work order goal now | *Follow the manual and fit the correct replacement component.* | *Several parts could be responsible. Find the cause and repair it.* |
+| The word "cause" | absent | present |
+| Candidates on the bench | one replacement path | three to rule out, plus the fault site |
 
-So `IncorrectToolSelected` is structurally impossible on **both** benches. The only
-failure route both benches share is a failed device test.
+Three parts were switched back on, none of them where it had been: `fan.faulty-fuse` in
+the spares tray 120 mm from the working fuse, `fan.motor-module` on the service mat right
+of the unit, `fan.non-target-module` on the mat to its left. The two fuse cartridges are
+identical in glass, ferrules and printed rating — which is sound can only be settled by
+picking each up and looking at the element, and that inspection *is* the diagnosis 9.3.2
+asks for.
 
-### Which commit
+**What this does to the research, and it is a gain.** `fan.faulty-fuse` is a repair action
+that is not the required one, so the fan task can record an incorrect-component
+interaction again — the direct counterpart of `computer.ram` on the computer bench. Both
+benches now offer exactly one wrong repair and one failed device test as failure routes.
+The asymmetry that made `incorrect_component_interaction_count` unusable on the fan task
+is gone.
 
-`de7d5fd`. The commit message states the cost explicitly: *"fan.faulty-fuse was that
-scene's only repair action besides the correct one, so the fan task can no longer record
-an incorrect repair. That is the direct cost of one installed fuse and one spare."*
+No object id, click target, interaction kind, required repair or fault id changed.
 
-### Exactly which columns of `task_summary.csv` this affects
-
-| Column | Computer task | Fan task | Consequence |
-|---|---|---|---|
-| `incorrect_component_interaction_count` | Can be 0 or more | **Always 0** | Not comparable between conditions. Any between-condition test on this column measures the bench layout, not the participant. |
-| `incorrect_tool_selected_count` | **Always 0** | **Always 0** | Dead column in this build. Safe to compare — both are structurally zero — but it carries no information. |
-| `unsuccessful_action_count` | Wrong repair **or** failed device test | **Failed device test only** | The same number means different things on the two benches. On the fan task it is a count of failed device tests; on the computer task it is failed device tests **plus** wrong-part selections. |
-| `device_test_failed_count` | Available | Available | Comparable. This is the only failure count that means the same thing on both benches. |
-| `returned_to_information_after_unsuccessful_action` | Triggered by a wrong repair or a failed test | Triggered **only** by a failed test | The trigger differs, so the two conditions are answering slightly different questions. |
-| `first_meaningful_action`, `first_meaningful_action_timestamp_seconds` | A wrong repair can be the first meaningful action | It cannot | A small bias in which action gets recorded first. |
-
-`unsuccessful_action_count` is the one that will silently mislead, because it is a single
-number that looks comparable and is not.
-
-### What was not chosen
-
-1. **Switching `fan.faulty-fuse` back on.** This restores symmetry in one step, but puts a
-   second loose fuse back on a bench that §3 deliberately cleared, and re-opens the "is
-   this an assembly task" reading. It is one of the two things you can choose.
-2. **Stowing `computer.ram` to match the fan bench.** This makes both conditions
-   symmetrical at zero — no wrong-part action is possible anywhere. The columns become
-   dead but honest. It also removes the most realistic misdiagnosis in the study.
-3. **Adding a wrong tool to both benches.** Rejected without asking: it adds an object to
-   both benches, which is a protocol change.
-4. **Doing nothing and handling it in analysis.** Possible — the columns are separable —
-   but it must be a decision on record before data collection, not a discovery
-   afterwards.
-
-### What this does to the research
-
-If nothing changes: any hypothesis about error rates must be tested **within** a
-condition, not across the two, and `unsuccessful_action_count` must be decomposed into
-its parts before use. That is a real constraint on what the study can claim, so it needs
-to be a decision rather than a footnote.
-
-### Pictures
-
-The comparison the fan participant no longer gets to make on the bench:
-
-![Intact fuse element](Screenshots/Audit/After_Fan_ElementGood_Macro.png)
-*The working fuse: a continuous 0.7 mm element across the glass.*
-
-![Blown fuse element](Screenshots/Audit/After_Fan_ElementBlown_Macro.png)
-*The blown fuse: the same glass, the same ferrules, the same printed rating — the
-element has parted, and that is the only difference. This fuse is currently **stowed**,
-so the participant never has two cartridges to compare; the only blown one is the one
-fitted in the holder.*
-
-Whether that 0.7 mm element is even visible on the headset is an open hardware question
-— `QUEST3_NEXT_STEPS.md`, check 4.
-
-### Closed question ค
-
-> **Do you accept that a wrong-part action can only ever be recorded on the computer
-> task, and never on the fan task?**
-> If **no**, state which: switch `fan.faulty-fuse` back on (symmetry at two), or stow
-> `computer.ram` (symmetry at zero). Either is a one-step change and neither touches an
-> object id or a data column.
+> ### Question ฌ
+> **Do you accept the two work-order goal sentences, and the three parts restored to the
+> fan bench?**
+> If **no**, say which sentence or which part; the sentences live in one method in all
+> three languages, and each part is one switch.
 
 ---
 
-## 5. ง — The part that is the answer to the computer task was rotated 44°
+## 4. ญ — Both tasks stop at 600 s; the proposal says 960 and 1200
 
-### What changed
+**This is the largest deliberate difference from the proposal in the build.**
 
-`computer.internal-cable` is the 24-pin power plug hanging unplugged inside the machine.
-It **is** the fault in the computer task: the whole of that task is noticing that this
-plug is not in the socket it belongs to.
-
-Its lean changed from **−18° to +26°** — a 44° rotation. Its position, its size, its
-click target, its object id and its recorded event type are all unchanged.
-
-### Which commit
-
-`0248328`, "Make the parts a participant has to name look like the parts they are".
-
-### Why
-
-At −18° the plug leaned *into* the machine, so a participant standing at the open side
-saw its blank white back. At +26° it leans *out*, so the two rows of twelve bores — the
-thing that makes it recognisable as a power plug, and matches the spare in the tray —
-face the person looking at it. The socket it belongs in opens toward the same side, so a
-lead pulled out of it and left hanging would in reality point up at its own socket.
-
-### What was not chosen
-
-1. **Marking the fault** — a glow, a colour, an arrow, a wider gap. Rejected outright:
-   the task is finding it. Nothing about this plug is brighter, larger or differently
-   coloured than the identical spare lying in the tray.
-2. **Moving the plug somewhere more visible.** Rejected: that would change how far the
-   participant has to travel and where they have to look, which is measured. Only the
-   rotation changed.
-3. **Leaving it at −18°.** Rejected because a participant who cannot tell what the object
-   is cannot form a hypothesis about it, and would fall back on either poking things or
-   opening a manual — and *which of those they do* is one of the study's outcomes.
-
-### What this does to the research
-
-This moves the answer's visibility without moving the answer. It should make the fault
-findable by looking, which is the intended path, and correspondingly reduce the number
-of participants who find it by exhaustive poking or by reading a manual first. Since the
-split between *look*, *poke* and *read* is an outcome, this rotation shifts an outcome
-distribution. It is small and deliberate, but it is not neutral.
-
-**It has not been tested with a person.** No participant has looked at either version.
-
-### Pictures
-
-This is the item where looking is much faster than reading. Both images are the same
-camera position; only the plug's lean differs.
-
-![The fault plug at the previous −18°, leaning into the machine](Screenshots/Recognition/Before_Computer_AtxFault_Inspect.png)
-*Before, at −18°: the plug leans into the machine and shows the participant its blank
-white back. Nothing about it says "power connector".*
-
-![The fault plug at the current +26°, bores facing the open side](Screenshots/Recognition/After_Computer_AtxFault_Inspect.png)
-*After, at +26°: the same plug in the same place, turned so its two rows of twelve bores
-face the person looking in. It is now recognisably the mate of the spare in the tray.*
-
-![The socket the plug belongs in](Screenshots/Recognition/After_Computer_AtxHeader_Inspect.png)
-*The socket on the board that the plug should be in. The task is noticing that these two
-are not joined.*
-
-![The identical spare lying in the tray](Screenshots/Recognition/After_Computer_AtxSpare_Inspect.png)
-*The spare in the tray — same body, same size, same rail colours. Nothing marks either
-one as the answer.*
-
-The same pair from the start pose, before stepping in:
-`Screenshots/Recognition/Before_Computer_AtxFault_StartPose.png` and
-`Screenshots/Recognition/After_Computer_AtxFault_StartPose.png`.
-
-### Closed question ง
-
-> **Do you accept the fault plug being turned so that its bores face the participant's
-> approach, rather than facing away?**
-> If **no**, the rotation reverts to −18° in one line and both benches rebuild.
-
----
-
-## 6. จ — The two device-test controls no longer look alike
-
-### What changed
-
-Every task ends the same way: the participant operates the machine's own control to see
-whether the repair worked. Both conditions used to use **the same shape** — three
-stacked cylinders with a 120 mm disc on top — so the final step looked identical in the
-two conditions.
-
-They are now two different real controls:
-
-| Condition | Object id | Control now | Fitted size |
-|---|---|---|---|
-| Computer | `computer.power-button` | An industrial **push button** — plate and mushroom head | 111 × 100 × 111 mm |
-| Fan | `fan.speed-selector` | A rotary **dial** — plate and knob | 125 × 90 × 125 mm |
-
-A third control changed at the same time: `fan.power-switch`, the switch on the fan's
-base, is now a **slider** with a handle in a travel slot.
-
-All three keep their object ids, their click targets, their recorded event types and
-their positions. Both device-test controls stand on the same pedestal at the same place,
-(1.50, 0.95, 0.20), and both carry the same sign: **INSPECT / PRESS TO CHECK THE UNIT**.
-
-### Which commit
-
-`0248328`.
-
-### Why
-
-The parts were sized from the real components they represent, and a computer's power
-button and a fan's speed control are not the same object. A fan whose only control is a
-push button does not read as a fan.
-
-### What was not chosen
-
-1. **Giving both conditions the push button.** Rejected: it is the honest control for the
-   computer and the wrong one for the fan, so it would make one condition less realistic
-   in exactly the way the recognition pass was trying to fix.
-2. **Giving both conditions the dial.** Same objection, reversed.
-3. **Keeping the old three-cylinder shape in both.** Rejected: neither condition could
-   name it, so in both conditions the last step was "operate the unidentifiable thing".
-
-### What this does to the research
-
-The two conditions now differ in the **motor action** of the final step: pressing versus
-turning. A press is a single, familiar, low-precision action. A turn requires grip and
-rotation and is more sensitive to controller tracking and to hand size. If the fan task
-turns out to have systematically longer completion times or more device-test attempts,
-this difference is a candidate explanation and cannot be separated from it after the
-fact.
-
-The sign above both controls is identical, and the wording says what to do without
-naming what to fix, so the *instruction* is matched even though the control is not.
-
-**Not yet measured:** whether a dial is harder to operate than a button on the actual
-headset. That is on the Quest 3 checklist (`QUEST3_NEXT_STEPS.md`, check 6).
-
-### Pictures
-
-The two controls that end the two tasks, side by side.
-
-![Computer condition: push button](Screenshots/Recognition/After_Computer_PowerButton_Inspect.png)
-*Computer condition — a push button. The participant presses it.*
-
-![Fan condition: rotary dial](Screenshots/Recognition/After_Fan_SpeedSelector_Inspect.png)
-*Fan condition — a rotary dial. The participant turns it. Same pedestal, same position,
-same sign; different hand action.*
-
-![The identical shape both controls used to be](Screenshots/Recognition/Before_Computer_PowerButton_Inspect.png)
-*What both used to be: three stacked cylinders under a 120 mm disc, identical in the two
-conditions and nameable in neither.*
-
-Each in place on its pedestal: `Screenshots/Audit/Approach_Computer_InspectControl.png`
-and `Screenshots/Audit/Approach_Fan_InspectControl.png`.
-
-### Closed question จ
-
-> **Do you accept two different-looking controls — a push button in the computer
-> condition, a dial in the fan condition — for the same final step?**
-> If **no**, both can be set to the same shape; say which shape.
-
----
-
-## 7. ฉ — Data recorded before `743b1c3` filed internal parts under the machine's name
-
-### What happened
-
-Both benches build their internal parts as children of the machine, so their positions
-stay readable relative to it. The interaction toolkit, when a machine's own click-target
-list is left empty, fills it by collecting **every click target underneath that machine,
-including its children's**. The machine registers first, so a pointer aimed at anything
-inside it resolved to the machine.
-
-The result: **every hover and every selection of a part inside a machine was recorded
-against the machine's object id.**
-
-| Scene | Machine that absorbed its children | Child parts recorded as the machine |
+| | Task A | Task B |
 |---|---|---|
-| Computer | `computer.case` | `computer.motherboard`, `computer.psu`, `computer.psu-switch`, `computer.cooling-fan`, `computer.internal-cable`, `computer.ram` (6 parts, 7 targets in total) |
-| Fan | `fan.body` | `fan.blade`, `fan.fastener`, `fan.fuse-holder`, `fan.internal-wire`, `fan.power-switch` (5 parts, 6 targets in total) |
+| Proposal 11.4.2 / 11.8.4 / 11.8.7 | **960 s** (16 min), expected 10 min | **1200 s** (20 min), expected 12 min |
+| Build now | **600 s** | **600 s** |
 
-There was one visible symptom — a single warning line when the scene loaded — and
-nothing else. Both correct repair parts sit out on the bench, outside the machine, so the
-repair loop always completed and every check passed.
+**Why the build does this.** The proposal's caps are pre-study planning estimates and its
+own expected durations sit well below them. The task content is now designed to be
+finished in five to six minutes, and 600 s is a stop for a stalled participant rather than
+a target. Nothing in the room displays the limit, and the participant's clock counts
+elapsed time, not remaining time.
 
-### Which commit fixed it
+**What it costs, and both parts matter.**
 
-`743b1c3`, "Stop the device interactables swallowing their children's colliders". Each
-part's click-target list is now written explicitly to its own target, so the nesting no
-longer matters. Verified at 13/13 and 15/15 parts, with no warning at scene load.
+- A participant who would have finished at 11 minutes under the proposal's Task B cap is
+  recorded as `TimedOut` at 10.
+- **The proposal gave Task B 25 per cent more time than Task A and the build gives them
+  the same.** That allowance presumably reflected Task B being the harder task. A single
+  limit removes it. The argument the other way is that one limit is one fewer difference
+  between the two conditions, and 11.7 asks for the procedure to be standardised. This is
+  a research decision and the build does not settle it.
 
-The defect **pre-dates** the diagnostic re-framing, but `de7d5fd` seating
-`computer.ram` on the board added one more shadowed part to it.
+If the answer is to restore the proposal's figures, the value to change is
+`maximumTimeSeconds` in the two task definition assets and nothing else.
 
-### Why this matters for the data
-
-Any recording made before `743b1c3` has, in its event rows:
-
-* `computer.case` or `fan.body` where the participant actually touched one of the eleven
-  internal parts;
-* correspondingly **inflated** hover and selection counts on `computer.case` and
-  `fan.body`;
-* **zero or near-zero** counts for all eleven internal parts, which reads as "nobody
-  looked at the fuse holder" when in fact they did.
-
-This is not recoverable. The rows do not record which child was actually under the
-pointer, so no filter or re-derivation can separate them.
-
-### What was not chosen
-
-Re-deriving the old sessions from movement data. Rejected: the movement file records
-where the head and hands were, not what the pointer resolved to, so the mapping cannot
-be reconstructed.
-
-### What this does to the research
-
-* Every session recorded before `743b1c3` (2026-08-04) must be treated as pilot or
-  discarded for any analysis involving per-part interaction.
-* **No participant data has been collected**, so at present this costs nothing. It
-  matters only if any earlier development or pilot recording were later pooled in.
-* Session-level columns that do not name a part — total time, information source usage,
-  low-activity periods, completion status — are unaffected.
-
-### Closed question ฉ
-
-> **Do you accept that no session recorded before `743b1c3` (2026-08-04) may be pooled
-> with sessions recorded after it, for any analysis that names an individual part?**
-> If **no**, say what recovery you expect; the data needed for it is not in the files.
+> ### Question ญ
+> **Do you accept 600 s on both tasks, in place of the proposal's 960 s for Task A and
+> 1200 s for Task B?**
+> If **no**, state the two numbers to use.
 
 ---
 
-## 8. ช — Pointing at a part often selects a different part
+## 5. ฏ — The retry sentence is in neither work order
 
-**Found on 2026-08-08 while preparing this package. Not previously reported. Not fixed.**
+Proposal 9.3.2 says Task B may be corrected and retried. 9.3.1 says nothing of the sort
+about Task A. **In the build, retry is available in both tasks** — and *number of retries
+is a primary outcome under 10.2.1.*
 
-### What was measured
+That leaves three options and no neutral one:
 
-A pointer ray was cast from the participant's eye to the centre of what each part
-actually draws — that is, the participant points straight at the part they can see — and
-the software was asked which part it decided had been pointed at. Two standing poses were
-used: where the participant starts, and leaning in over the bench.
+| Option | What it does |
+|---|---|
+| Sentence in Task B's brief only, as the proposal reads | Tells one condition about an affordance the other also has, on the exact variable being measured. Task B participants would retry more because they were told they could. |
+| Sentence in both briefs | Departs from the proposal's wording, but gives both conditions the same information about the same affordance. |
+| **Sentence in neither brief — what the build does** | Both conditions discover retry the same way: by failing a device test and finding they can act again. Departs from the proposal's wording in the other direction. |
 
-**31 of 54 aims resolved to a different part.**
+The build takes the third option because it keeps the two conditions equal on a primary
+outcome. It is not the proposal's wording, and it is not obviously right.
 
-Full output: `Verification/Ray_Aim_Attribution.txt`. It is reproducible from the menu:
-*Tools → VR Maintenance Research → Visual Audit → Report Ray Aim Attribution*.
-
-| Scene | Aims tested | Resolved to a different part |
-|---|---|---|
-| Computer bench | 24 | 14 |
-| Fan bench | 24 | 17 |
-| Training room | 6 | **0** |
-
-### Why
-
-Eleven parts carry the **default click target of a Unity capsule shape: 1 000 mm across
-and 2 000 mm tall**, at a bench where the parts themselves are between 11 mm and 571 mm.
-The builders resize click targets through one helper, and that helper only handles box
-shapes — it returns without doing anything when the shape is a capsule. So every part
-built from a capsule kept a target the size of a person while its visible body was
-rebuilt at true scale.
-
-The eleven: `computer.cooling-fan`, `computer.external-power-cable`,
-`computer.tool.screwdriver`, `fan.blade`, `fan.body`, `fan.fastener`, `fan.front-cover`,
-`fan.internal-wire`, `fan.motor-module`, `fan.power-cord`, `fan.tool.screwdriver`.
-
-Two of them sit in front of everything else and absorb almost all of it:
-`computer.cooling-fan` takes **every** misdirected aim on the computer bench, and
-`fan.blade` takes fifteen of the seventeen on the fan bench.
-
-### The parts that cannot be aimed at
-
-| Part | Resolves to | Why it matters |
-|---|---|---|
-| `computer.internal-cable` | `computer.cooling-fan` | **This is the fault in the computer task.** Pointing at it records the cooling fan. |
-| `computer.ram` | `computer.cooling-fan` | The only wrong-part action in the whole study (§4) cannot be triggered by pointing at it. |
-| `computer.main-power-connector` | `computer.cooling-fan` *(from the bench pose; correct from the start pose)* | **The correct repair.** Reachable from where the participant starts, not from where they will be standing when they reach for it. |
-| `fan.working-fuse` | `fan.front-cover` | **The correct repair on the fan bench**, from both poses. |
-| `fan.fuse-holder`, `fan.internal-wire`, `fan.power-switch`, `fan.power-plug`, `fan.body`, `fan.fastener` | `fan.blade` | The entire fan service bay resolves to the blade. |
-| `computer.motherboard`, `computer.psu`, `computer.psu-switch`, `computer.case`, `computer.side-panel` | `computer.cooling-fan` | The whole computer interior resolves to the cooling fan. |
-
-### Why no existing check caught it
-
-Every check in the project reaches a part by name or by reference and never points at
-anything:
-
-* the scene-integrity tests read settings on components;
-* the visual validator reads appearance;
-* the play-mode runtime checks and the full-flow walkthroughs call the task controller's
-  record-interaction method **directly**, passing the object they looked up by id.
-
-So the repair loop has been verified at the level of *"if this part is selected, the
-right thing happens"* — which is true — and never at the level of *"if the participant
-points at this part, this part is selected"*, which is what fails. `743b1c3` fixed which
-target belongs to which part; it did not change how big the targets are.
-
-### What has **not** been done
-
-The click targets have **not** been resized. Resizing them changes which object id lands
-in the event stream for a given pointing action, which changes what the data means. That
-is a research decision, and this package does not make research decisions.
-
-The fix itself is small and reversible: the resize helper in the two bench builders is
-extended to handle capsule shapes as well as box shapes, then both benches are rebuilt.
-Every object id, event type and data column stays exactly as it is; only the size of
-eleven invisible shapes changes. The report above is the before/after measurement.
-
-### What this does to the research if it is left as it is
-
-Per-part interaction data from both benches would be close to meaningless:
-`computer.cooling-fan` and `fan.blade` would absorb most hovers and selections, and the
-parts the participant was actually investigating would show near-zero counts —
-the same failure mode as §7, from a different cause, and this time still live.
-
-More seriously, the **fan task may not be completable by pointing**: `fan.working-fuse`
-is the required repair and resolves to `fan.front-cover` from both tested poses. There
-may be a pose from which it is reachable; that has not been established, and no person
-has tried it.
-
-### Closed question ช
-
-> **Should the eleven oversized click targets be resized to match their parts, before any
-> participant session?**
-> A **yes** is a one-line change in each of the two bench builders, followed by a rebuild
-> and a full re-verification. Object ids, event types, data columns and the number of
-> parts on each bench are untouched.
-> A **no** means per-part interaction counts are not usable in the analysis and the fan
-> task's completability must be confirmed on the headset first.
+> ### Question ฏ
+> **Do you accept that neither work order mentions retrying?**
+> If **no**, say whether the sentence goes in Task B only, as the proposal reads, or in
+> both briefs.
 
 ---
 
-## 9. ซ — The four information sources moved, and their order is now fixed
+## 6. ฐ — The participant sees a clock, a percentage and a checklist
 
-### What changed
+The participant wears a head-referenced display carrying **elapsed time**, a **completion
+percentage** (0 / 33 / 67 / 100) and a **three-line objectives checklist** that ticks
+itself as steps complete. **None of the three existed in the protocol the task design was
+built around.** All three are on by default.
 
-The study's independent variable is **which kind of information source a participant
-chooses**. Where those four sources sit, and in what order, therefore sits directly on
-top of the thing being measured.
+Each is a separate switch and each is written into `session_manifest.csv` as `show_timer`,
+`show_progress` and `show_objectives`, so **a session is only interpretable against the
+display it was collected under, and no analysis may pool sessions without checking those
+three columns.**
 
-On 2026-08-02 the four sources were a row of large cards on the back wall, spread
-symmetrically to the participant's left **and** right. They are now a single row of small
-cards on a dock at the participant's **left only**, angled toward them.
+**What each one changes.**
 
-| Measure | 2026-08-02 | Now |
-|---|---|---|
-| Position | Back wall, x = −3.3 / −1.1 / +1.1 / +3.3, z = 3.0 | Left-hand dock, (−2.12, 1.30, 0.30) → (−1.43, 1.30, 0.84), angled 38° toward the participant |
-| Card width | 1.2 m | 0.244 m |
-| Distance from the start pose | 4.73 m (inner) to 5.66 m (outer) | **2.80 m to 2.85 m** |
-| Farthest : nearest distance | 1.197 | **1.018** |
-| Apparent width | 14.5° (inner), 12.1° (outer) | **4.9°–5.0°, all four** |
-| Spread across the body | Left and right, symmetric | **All four on the left** |
-| Order | Fixed | Fixed |
+- **A readable clock turns an untimed diagnostic task into a self-paced timed one.** The
+  direction is not uniform — some participants hurry and stop searching earlier, others
+  slow down. Every duration in `task_summary.csv` is therefore measured under a different
+  task than it was before. `low_activity_period_count` is the most exposed: its 30 s
+  inactivity threshold was calibrated without a visible clock.
+- **A checklist that ticks itself is correctness feedback.** The participant learns *at
+  the moment they act* that the repair was the right one. `incorrect_component_interaction_count`
+  and `device_test_failed_count` can no longer be read as a search process, because after
+  the first tick the search is over. The rows never name a part, a tool or a procedure, so
+  the display does not shorten the search *before* the first correct action — it removes
+  the uncertainty after it.
+- **A completion percentage tells the participant how much task structure remains.**
+  Seeing 33 % after a failed device test says "two of three things remain", which
+  participants were previously expected to infer.
+- **The three interact.** A session with all three is not comparable with one that has the
+  timer alone.
 
-### Which commit
+Turning any of them off needs no rebuild: three checkboxes in the researcher setup screen,
+cleared before Start Session, and the manifest records the choice.
 
-`4f4e452` (2026-08-03), refined in `22c7158`. The stated reason: the four cards used to
-sit in a grid on the bench's back edge directly over the spare-parts tray, and an opened
-reader covered the left third of the bench.
+Full detail: `KNOWN_LIMITATIONS.md`, *Participant heads-up display*.
 
-### Why
+> ### Question ฐ
+> **Do you accept all three display elements being on during data collection?**
+> If **no**, name which of the three to clear — timer, percentage, checklist — and whether
+> that holds for the pilot only or for the whole study.
 
-The dock keeps the sources off the bench, so an opened reader can never cover the parts
-the participant is diagnosing, and the dock cannot grow back over the bench.
+---
 
-### What this does to the research — two separate effects
+## 7. ฎ — The work order panel is 23 per cent larger than the one that was cut back
 
-**1. The four sources are now almost perfectly equal in salience.** Distance varies by
-1.8% across the four and apparent width by 2%. For a study whose independent variable is
-source type, that is close to ideal: no source is nearer, larger or easier to reach than
-another. This is a **larger** improvement than the one the 2026-08-02 package flagged as
-worth approving, and it moves in the same direction.
+**Found while checking the translations, and it was a defect.** The panel had been measured
+and sized in English only. The English body copy measured 0.400 m against a 0.410 m box and
+fitted; the same panel measured **0.490 m in Thai and 0.570 m in Japanese**, so the closing
+*Press INSPECT* line was cut off by the plate **in both of the languages this study is
+about**.
 
-**2. Position in the row is completely confounded with source type.** The dock builds
-the row by sorting on source type, so the order is always:
+Shortening a translation to fit was not available: 9.5 requires the same information in all
+three. Two cheaper fixes were measured and rejected — widening to 1.100 m takes Japanese to
+0.470 but leaves Thai at 0.490, because Thai has no spaces to wrap on; dropping line
+spacing to zero saves 10 mm and costs readability. The panel grew, mostly sideways, to
+**1.085 × 0.620 m**, and its anchor moved 70 mm left.
+
+**What this does to the research.** The work order is now the second-largest flat surface
+in the room, and it is 23 per cent larger in area than the version an earlier round cut
+back for pulling the eye off the bench. That is a real salience change. It applies equally
+in all three languages and both tasks, so it cannot differ between the conditions being
+compared — but it is a bigger sign than the one that was judged too big. The alternative
+was a work order that two of the three language conditions could not read to the end.
+
+The validator now measures all three languages on every run, so this cannot regress
+silently.
+
+> ### Question ฎ
+> **Do you accept the enlarged work-order panel?**
+> If **no**, the alternative is shorter copy in all three languages, which means rewriting
+> the one text that states the task.
+
+---
+
+## 8. ซ — The four information sources are always in the same order, and a way to vary it now exists
+
+**This is the longest-standing open item, and it now has a switch attached to it.**
+
+The dock sorts its four cards by source type, so the row reads
 
 > **manual → troubleshooting guide → video → visual guide**
 
-left to right, in both tasks, for every participant. There is one layout identifier in
-the build, `sources-layout-development-a`, and no second layout exists. So:
+left to right, in both tasks, for every participant, always.
 
-* the manual is always the source at one end of the row and the visual guide always at
-  the other;
-* any tendency to reach for the nearest end, or to read a row left to right, adds a
-  constant bias to the same source type in every session;
-* `information_source_layout_id` records the layout faithfully — it will simply record
-  the same value for every participant, so the bias cannot be modelled out afterwards.
+**Position in the row is therefore perfectly confounded with source type.** A participant
+who reaches for the leftmost card because it is leftmost cannot be told apart from one who
+reaches for the manual because it is the manual — and *which source a participant chooses*
+is a primary outcome under proposal 10.2.2.
 
-The protocol log already lists a "source-layout assignment schedule" as a document to
-produce before data collection. Nothing in the build implements one.
+The dock itself is good for the study in every other respect: the four cards are within
+1.8 % of each other in distance and 2 % in apparent size, so no source is nearer, larger or
+easier to reach than another. Only their order is fixed.
 
-### What was not chosen
+**What was built in Round 7.** Four orders — a cyclic Latin square in which each source
+type appears exactly once in each of the four slots — each with its own
+`information_source_layout_id`. A participant is assigned one deterministically from their
+participant code, so the assignment is reproducible from the recorded data alone and needs
+no separate schedule file. The id is written to `session_manifest.csv` and to every event
+row. Nothing about the dock's position, angle, card size, spacing or distance changes; only
+which card sits in which of the four existing slots.
 
-1. **Randomising or counterbalancing the row order per participant.** Not done, because
-   it is a protocol decision and would need an assignment schedule and a second layout
-   identifier so the data can say which participant saw which order.
-2. **Putting the sources back on the back wall.** That restores left/right symmetry but
-   also restores the unequal distances the 2026-08-02 package flagged, and puts the
-   opened reader back over the bench.
-3. **Splitting the four across both sides of the participant.** Would restore symmetry
-   without the reader problem, but doubles the fixture and makes two of the four
-   invisible without a head turn.
+**It is switched off.** The build ships with the fixed order and records the same layout id
+it always has. Turning it on is one boolean, and it is not being turned on here.
 
-### Closed question ซ
+**How the results read if it stays off.**
 
-> **Do you accept a fixed left-to-right order — manual, troubleshooting, video, visual
-> guide — identical in both tasks and for every participant?**
-> If **no**, a counterbalanced order needs an assignment schedule from you and a distinct
-> `information_source_layout_id` per order, so the data records which one each
-> participant saw.
+- Any difference between sources — how often each is opened, how long it is read, which is
+  opened first — **cannot be attributed to source type**. Leftmost-and-nearest and "the
+  manual" are the same thing in this build, and no statistical control separates them
+  afterwards, because there is no variation to model.
+- What still holds is the between-group comparison: if Thai and Japanese participants
+  differ in how they use the leftmost card, that difference is not explained by its
+  position, because its position is identical for both groups. **Objective 5.1 and
+  hypothesis 7.1 survive. The parts of 5.2 and 10.2.2 that concern choice among sources do
+  not.**
+- It would then have to be written up as a stated design limitation. A reader who sees four
+  source types and one layout id will otherwise assume the order was varied.
+
+**If it is switched on**, the design itself is still yours: four orders divide 8
+participants per group evenly where 24 cannot, and a cyclic square balances position but
+preserves relative adjacency — a Williams square would balance adjacency too. Changing that
+means editing one table.
+
+> ### Question ซ
+> **Do you accept a fixed source order for every participant, leaving position confounded
+> with source type — or should the counterbalancing be switched on?**
+> Answering **yes** keeps the build as it ships and requires the confound to be stated as a
+> limitation in the write-up. Answering **no** means switching it on, and naming which
+> design: the cyclic square that is built, or another.
 
 ---
 
-## 10. Where the 2026-08-02 decisions now stand
+## 9. ฑ — Every Thai and Japanese string is a draft
 
-| # | 2026-08-02 item | State today |
+Every participant-visible string is now drafted in all three languages, except six that are
+deliberately untranslated because they are printed on physical objects or are numerals:
+`INSPECT`, `RESET`, `Grip`, `Trigger`, `+10 s`, and the fan's `O F F 1 2 3` legend.
+
+**Every row of `TRANSLATION_REVIEW.md` is marked DRAFT.** No Thai reader and no Japanese
+reader has checked any of it. Proposal 9.13 requires an expert outside the research team to
+check the instruments for suitability, clarity of language and fit with the objectives
+before real data collection, and 9.5 requires the Thai and Japanese manuals to carry
+equivalent meaning, structure, numbers and instructions.
+
+A mechanical check enforces the numeric half of 9.5 — every digit in an English string must
+appear in both translations. **It cannot check meaning**, which is exactly what 9.13 is for.
+
+Until that check happens, the language condition is a condition in name only: the strings
+are in the right language and nobody has confirmed they say the right thing.
+
+> ### Question ฑ
+> **Do you accept that no participant session may run until a Thai reader and a Japanese
+> reader have signed `TRANSLATION_REVIEW.md`?**
+> If **no**, state what standard of checking is sufficient instead.
+
+---
+
+## 10. ฒ — First-person recording now exists, and the consent wording has not caught up
+
+**This was a defect, and it was the serious kind.** The configuration carried
+`firstPersonRecordingConsent` and `firstPersonRecordingEnabled`, they had a checkbox on the
+setup screen, they were validated against each other, and they were written into every
+`session_manifest.csv`. **There was no capture code anywhere in the project.** A session run
+with both switches on produced a manifest stating that first-person recording was consented
+to and enabled, beside a folder containing no footage. **The manifest could lie**, and an
+ethics submission quoting proposal 9.11 would have described something that did not exist.
+
+It exists now: one file per attempt, in the same session folder as the CSVs, during the two
+maintenance tasks only. No file is created unless consent **and** enable are both set.
+Training is never recorded. Any failure writes one `TechnicalError` into the event stream.
+
+**What this does to the research:** nothing on the measured variables — it adds no cue, no
+control and no feedback. What it changes is the ethics position. The proposal already
+describes the recording (9.11) and requires that participants be told beforehand and may
+decline without consequence. The consent materials must now describe a capability that is
+actually present.
+
+> ### Question ฒ
+> **Do you accept that the ethics and consent materials must be updated to match this
+> capability before any session runs?**
+> If **no**, the alternative is to hold both switches off for the whole study, in which case
+> the proposal's 9.11 should be amended rather than the consent form.
+
+---
+
+## 11. ง — The part that is the answer to Task A was turned to face the participant
+
+`computer.internal-cable` — **the fault in Task A** — was rebuilt as a true 24-pin connector
+and **rotated from −18° to +26°**, so its bores face the participant's approach instead of
+facing away.
+
+**What this does to the research.** It moves the answer's *visibility* without moving the
+answer. It should shift the split between finding the fault by **looking**, by **poking**
+and by **reading the manual** — and that split is an outcome under 10.2.2, not a
+side-effect. Nothing marks the part as the answer: the spare lead and the unplugged one
+share body, size and rail colours.
+
+> ### Question ง
+> **Do you accept the fault plug turned toward the participant's approach?**
+> If **no**, the rotation is one value in the computer bench builder.
+
+---
+
+## 12. จ — The two device-test controls do not look alike
+
+The final step of both tasks is the same action — confirm with Inspect — but the control is
+now a **push button** on the computer bench and a **rotary dial** on the fan bench. They
+were previously the same three-cylinder shape in both conditions.
+
+**Why.** Each control now looks like what its object id calls it: `computer.power-button`
+and `fan.speed-selector`. A flat disc read as an indicator lamp as easily as a control.
+
+**What this does to the research.** The two conditions now differ in the **hand action of
+the final step**: pressing versus turning. That is a real difference between the conditions
+on the step that ends the task, and completion time includes it. It is small, but it is not
+nothing, and it is not something the proposal asks for.
+
+> ### Question จ
+> **Do you accept a push button in one condition and a dial in the other?**
+> If **no**, both can be the same shape, at the cost of one of them not matching its own id.
+
+---
+
+## 13. ณ — The INSPECT control no longer glows
+
+**Round 7, and it touches a primary outcome.**
+
+The one control a participant must press to end a task was the brightest saturated object in
+the room: a 190 mm emissive disc on the pedestal cap plus an emissive button cap, both lit
+from inside. It does not reveal the fault — but it says *press this first*, and **where a
+participant goes first is a primary outcome under 10.2.2.**
+
+| Surface | Before | Now |
 |---|---|---|
-| 1 | Researcher-panel key crashed the software every frame | **Fixed.** All three scenes now store the correct key value and the code corrects a wrong one on load. |
-| 2 | First-action metric fires ~14 ms into every task from an incidental pointer hover | **Still open.** Unchanged. Still needs your decision on whether a hover counts as a meaningful action. |
-| 3 | Participant start pose, 2.05 m from the bench | **Still open**, and now folded into ก. |
-| 4 | Information-source salience became more equal | **Superseded by ซ.** The tiles did not stay where that package left them — they moved to a left-hand dock on 2026-08-03 and are now near-identical in distance and apparent size. §9 has the current numbers and a new question about their fixed order. |
-| 5 | Target size | **Superseded by ก**, which has the current numbers. Targets are smaller again. |
-| 6 | Fan fuse initial state — both fuses loose in the tray | **Changed by `de7d5fd`, and now folded into ค.** One fuse is fitted in the holder; the other is stowed. |
-| 7 | Movement file's frame label says `task-local` but records world coordinates | **Still open.** Unchanged. |
-| 8 | The same hover is recorded twice when both controllers point at one object | **Still open.** Unchanged. |
-| 9 | A hand-driven completed run outside the editor | **Done** — `6845fec` drove a whole session end to end with development mode off, both task orders. |
-| 10 | Physical Quest 3 validation | **Still outstanding.** A Quest 3 build was produced (`b152597`) but never installed and never run. See `QUEST3_NEXT_STEPS.md`. |
+| Pedestal cap ring | `Lab_Accent`, saturation 0.80, value 0.90, emitting | `Lab_MetalDark`, saturation 0.12, **not emitting** |
+| Button cap | `Lab_Accent`, saturation 0.80, value 0.90, emitting | `Lab_Trim`, saturation 0.39, value 0.36, **not emitting** |
+| *For comparison — dock cards* | `Lab_Navy`, saturation 0.50, value 0.22 | unchanged |
+| *For comparison — notice board* | `Lab_StationBoard`, saturation 0.29, value 0.28 | unchanged |
 
-Two further changes from rounds 4 and 5 need recording but do not need a decision:
+The button cap now sits inside the range the room's other panels occupy, and nothing at the
+station emits light. **The sign is kept**: the plate still reads *INSPECT* over *PRESS TO
+CHECK THE UNIT*. The control is found by reading, which is the behaviour 10.2.2 is about,
+rather than by being the only lit thing in the room. Paint only — no collider, position,
+scale or id changed, and it applies to both benches.
 
-* **`50ad6fa`** — the researcher's mouse could write into the participant's data. The
-  deployment is a PC running Quest Link, so the game view sits on the researcher's
-  monitor while the participant works; a mouse click over a part recorded a hover, a grab
-  or an information-source open in the participant's event stream. That path is now off
-  during a participant session. Rows already affected are identifiable: they carry
-  `interactor=mouse`.
-* **`a32041c`** — the participant removes the headset between the two tasks for
-  NASA-TLX. A *Continue* button on the participant's status board would have let them
-  load the second task before that questionnaire was administered. The board now carries
-  no control at all and shows a finished notice in the participant's own language.
-  Advancing is the researcher's, from the desktop panel. The session also no longer ends
-  by loading the setup screen, which had no head tracking and displayed the participant
-  code.
+**The cost.** A control that does not announce itself is a control some participants will
+take longer to find, and that time lands in `completion_time_seconds`. The trade is between
+a clean first-action measure and a discoverable final step.
+
+> ### Question ณ
+> **Do you accept the INSPECT control paint-matched to the room's other panels?**
+> If **no**, the value to change is one colour name in the bench dressing builder.
 
 ---
 
-## 11. Answer sheet
+## 14. ด — Two pieces of room dressing were removed
 
-Nothing below has been filled in. Tick or write in the right-hand column.
+A yellow guardrail ran down each side aisle and green ESD matting ran the length of the
+bench. Both are gone, because neither could exist without standing inside something else — a
+new check found **87 intersections across the four scenes**, and there are now none.
 
-| # | Question | Yes | No | If no, what instead |
-|---|---|---|---|---|
-| ก | Accept the current positions and sizes of all 31 parts? | ☐ | ☐ | |
-| ข | Accept diagnosis, with fewer parts on the bench, as the task? | ☐ | ☐ | |
-| ค | Accept that a wrong-part action is only recordable on the computer task? | ☐ | ☐ | |
-| ง | Accept the fault plug turned to face the participant's approach? | ☐ | ☐ | |
-| จ | Accept a push button in one condition and a dial in the other? | ☐ | ☐ | |
-| ฉ | Accept that pre-`743b1c3` sessions cannot be pooled with later ones? | ☐ | ☐ | |
-| ช | Resize the eleven oversized click targets before any participant session? | ☐ | ☐ | |
-| ซ | Accept a fixed source order — manual, troubleshooting, video, visual guide — for every participant? | ☐ | ☐ | |
-| — | Carried over: does an incidental pointer hover count as a meaningful action? | ☐ | ☐ | |
-| — | Carried over: correct the movement file's frame label to `world`? | ☐ | ☐ | |
-| — | Carried over: should a two-controller hover of one object record one event or two? | ☐ | ☐ | |
-| — | Carried over: approve the participant start pose, 2.05 m from the bench? | ☐ | ☐ | |
+The guardrails stood 107 mm in front of the storage unit on one side and 62 mm in front of
+the racking on the other, so they fenced off shelves a participant is meant to walk up to,
+and this room has no fall, machine or vehicle lane for a guardrail to separate anyone from.
+The matting passed 4 mm through both trays and the service pad; stacking it correctly would
+have meant lifting the trays and every part resting in them, which is a change to where task
+apparatus sits, made for a decoration.
+
+**What this does to the research.** Nothing removed is selectable, carries a collider, or is
+an information source, and no id, collider, task definition, event type or CSV column
+changed. The honest caveat is that the room is now slightly **barer** along both side aisles,
+and scene richness is not a variable this study controls. It is identical in both tasks and
+both language conditions, so it cannot differ between the conditions being compared.
+
+Before and after from the start pose: `Screenshots/Audit/Round7Before_*` against
+`Round7After_*`.
+
+> ### Question ด
+> **Do you accept the room without the guardrails and the bench matting?**
+> If **no**, either can be rebuilt, but each needs somewhere to stand that is not inside
+> something else.
 
 ---
 
-## 12. What was verified for this package, and what was not
+## 15. ช — The click targets were resized, and a gate now holds them there
 
-**Verified, in the editor, on 2026-08-08 at commit `0248328`:**
+**The previous package asked whether to do this. It has been done, so the question has
+changed.**
+
+Eleven parts carried a click target 1000 mm across and 2000 mm tall while their visible
+bodies were between 11 mm and 571 mm, because the size helper in both bench builders
+silently skipped anything that was not a box shape. **31 of 54 test aims resolved to a
+different part than the one aimed at**, including the fault in Task A, the only wrong-part
+action in the study, and the correct repair on the fan bench.
+
+They were resized to match their parts. The widest excess either bench now carries is 52 mm,
+on the 200 mm screwdriver. Every object id, event type and data column is unchanged; only
+the size of eleven invisible shapes changed.
+
+**Why this still needs your signature.** Resizing a click target changes **which object id
+lands in the event stream for a given pointing action**. The parts are the same parts, but
+what the data records when a participant points at a crowded area is not what it would have
+recorded before. That is a change to what the data means, and it was made without a
+decision.
+
+**What Round 7 added.** The old check failed only when a part could not be selected **at
+all** — the far end of a long slope, and the slope had already been walked once: putting the
+fan's motor module in the wrong place took `fan.power-plug` from 94 of 135 test aims to 49
+and `fan.power-cord` from 49 to 20, and every check stayed green. A person noticed by reading
+the numbers, which is not a check.
+
+The aim counts for all 31 parts are now committed to a baseline file, and the gate fails when
+any part drops more than 25 per cent below it, when a part cannot be selected at all, or when
+the part list stops matching the baseline. **The baseline is never rewritten automatically** —
+only a person choosing the menu item writes it, so a regression cannot quietly become the new
+normal. Verified by reproducing the original defect: the gate now reports it as −97.9 % and
+−53.1 %.
+
+Measurement: `Verification/Ray_Aim_Attribution.txt` and `Verification/Ray_Aim_Baseline.tsv`.
+
+> ### Question ช
+> **Do you accept the resized click targets as the ones data will be recorded through?**
+> If **no**, name the parts whose targets should differ; the sizes are values in the two
+> bench builders, and the baseline is re-recorded deliberately afterwards.
+
+---
+
+## 16. ฉ — Data recorded before `743b1c3` filed internal parts under the machine's name
+
+Because internal parts are built as children of their machine, and each machine's own
+click-target list was left empty, the interaction toolkit filled that list with every target
+underneath it. The machine registered first, so **every hover and selection of an internal
+part was recorded against the machine's id** — `computer.case` for six parts, `fan.body` for
+five. The only outward symptom was one warning line at scene load, and because both correct
+repair parts sit outside their machine, the repair loop always completed.
+
+**It is fixed.** But data recorded before that commit cannot be pooled with data recorded
+after it for any analysis naming an individual part, and **it is not recoverable** — the rows
+do not record which child was under the pointer.
+
+No participant data exists, so at present this costs nothing. It needs recording so that it
+cannot be discovered later.
+
+> ### Question ฉ
+> **Do you accept that no session recorded before `743b1c3` may be pooled with later ones?**
+
+---
+
+## 17. — Four standing questions, unchanged since 2026-08-02
+
+These have been open through seven rounds and none has been answered.
+
+| # | The question | Why it matters |
+|---|---|---|
+| **1** | Does an incidental pointer hover count as a meaningful first action? | The first-action metric fires about 14 ms into every task from a hover at spawn, so `action_occurred_before_first_information_access` is `true` in every session in which any source is opened — which is the variable the study is designed to measure. |
+| **2** | Should the movement file's frame label be corrected to `world`? | The column reads `task-local` and the values are world coordinates. The data is right and the label is wrong. |
+| **3** | Should a two-controller hover of one object record one event or two? | It currently records two, so hover counts double whenever both pointers rest on one target. |
+| **4** | Do you accept the participant start pose, 2.05 m from the bench edge and 1.05 m outside the marked work zone? | Every task therefore begins with locomotion, which is in every duration measure. |
+
+> ### Questions 1–4
+> Each is answerable yes or no on the sheet below. **Question 1 is the one that changes an
+> outcome variable rather than a label.**
+
+---
+
+## 18. What is no longer a question, and why
+
+The previous package asked three things that no longer describe the build. They are listed
+here so that nothing looks quietly dropped.
+
+| Retired | Was | Why it is gone |
+|---|---|---|
+| **ข** | *Do you accept diagnosis, with fewer parts on the bench, as the task both conditions present?* | Round 6 reversed it. Task A is a replacement task again and the fan parts are back — the question now asks the opposite thing, as **ฌ** in §3. |
+| **ค** | *Do you accept that a wrong-part action is only recordable on the computer task?* | Closed. `fan.faulty-fuse` is back on the bench, so the fan task records incorrect-component interactions again. Both benches now have one wrong repair and one failed device test. |
+| **ช** (old form) | *Should the eleven oversized click targets be resized before any participant session?* | They were resized. The question is now whether you accept the resized targets, in §15. |
+
+---
+
+## 19. What was verified for this package, and what was not
+
+**Verified in the editor on 2026-08-11, on branch `visual-polish-claude`:**
 
 | Check | Result |
 |---|---|
-| Scene integrity, 7 tests | 7/7 pass — `Verification/Scene_Integrity_Tests.txt` |
-| Scene validator, 4 scenes | All pass, no warnings — `Verification/VisualAudit_Validation.txt` |
-| Foundation tests, 6 tests | 6/6 pass |
-| Repair loop, both benches | Fail → repair → pass → reset — `Verification/Runtime_Checks_*.txt` |
-| Training checks | Pass |
-| Full session, both task orders | Pass — `Verification/Full_Flow_Walkthrough_*.txt` |
+| Scene integrity, 9 tests — including the new ray-aim baseline gate | **9 / 9 pass** |
+| Scene validator, 4 scenes | **All pass, no warnings** |
+| Foundation edit-mode tests | **All pass** |
+| Repair loop, computer bench, in play mode | **Pass** — fail → repair → pass → reset |
+| Repair loop, fan bench, in play mode | **Pass** — fail → repair → pass → reset |
+| Training room, four skills and the gated Continue | **Pass**, and relocks after reset |
+| Full session, both task orders | See `Verification/Full_Flow_Walkthrough_*.txt` |
+| Prop intersections, 4 scenes | **None** — was 87 |
+| Ray aim attribution, 31 parts | No part unreachable; no part below its baseline |
 | Object ids | All 31 byte-identical to the baseline |
+| Room dressing | Carries no collider and no interactable |
 | Console | No errors |
-| Pointer attribution | **31 of 54 aims resolve to a different part** — `Verification/Ray_Aim_Attribution.txt` (§8) |
 
-**Not verified, and not claimed anywhere in this document:**
+**Not verified, and claimed nowhere in this document:**
 
-* Anything on a physical Meta Quest 3. A build exists; it has never been installed or
-  run. No frame rate, comfort, legibility or tracking claim is made.
-* Whether any of these changes helps a real participant. No person has been through any
-  version of either bench.
-* Whether the Thai and Japanese wording is correct. It has never been checked by a
-  reader of either language — see `TRANSLATION_REVIEW.md`.
+- **Anything on a physical Meta Quest 3.** A build exists; it has never been installed or
+  run. No frame rate, comfort, legibility or tracking claim is made anywhere here. The
+  head-locked display in §6 is the most exposed: it sits 1.15 m from the eye and has never
+  been worn.
+- **Whether any of this helps a real participant.** No person has been through any version
+  of either bench.
+- **Whether the Thai and Japanese wording is correct.** See §9.
+
+---
+
+## 20. Answer sheet
+
+Nothing below is filled in. One signature per decision.
+
+| # | Question | Yes | No | Signature | Date |
+|---|---|---|---|---|---|
+| ก | Accept the current positions and sizes of all 31 parts? | ☐ | ☐ | | |
+| ฌ | Accept the two work-order goal sentences and the three restored fan parts? | ☐ | ☐ | | |
+| ญ | Accept 600 s on both tasks instead of 960 s and 1200 s? | ☐ | ☐ | | |
+| ฏ | Accept that neither work order mentions retrying? | ☐ | ☐ | | |
+| ฐ | Accept the timer, the percentage and the checklist being on? | ☐ | ☐ | | |
+| ฎ | Accept the enlarged work-order panel? | ☐ | ☐ | | |
+| ซ | Accept a fixed source order, leaving position confounded with source type? | ☐ | ☐ | | |
+| ฑ | Accept that no session runs until both translations are signed? | ☐ | ☐ | | |
+| ฒ | Accept that consent materials must be updated before any session? | ☐ | ☐ | | |
+| ง | Accept the fault plug turned toward the participant's approach? | ☐ | ☐ | | |
+| จ | Accept a push button in one condition and a dial in the other? | ☐ | ☐ | | |
+| ณ | Accept the INSPECT control paint-matched to the other panels? | ☐ | ☐ | | |
+| ด | Accept the room without the guardrails and the bench matting? | ☐ | ☐ | | |
+| ช | Accept the resized click targets as the ones data is recorded through? | ☐ | ☐ | | |
+| ฉ | Accept that pre-`743b1c3` sessions cannot be pooled with later ones? | ☐ | ☐ | | |
+| 1 | Does an incidental pointer hover count as a meaningful first action? | ☐ | ☐ | | |
+| 2 | Correct the movement file's frame label to `world`? | ☐ | ☐ | | |
+| 3 | Should a two-controller hover record one event instead of two? | ☐ | ☐ | | |
+| 4 | Accept the participant start pose, 2.05 m from the bench? | ☐ | ☐ | | |
+
+**Where an answer is "no", the change it implies:**
+
+_________________________________________________________________________________
+
+_________________________________________________________________________________
+
+_________________________________________________________________________________
+
+**Reviewer name:** _______________________________
+
+**Signature:** _______________________________  **Date:** _______________
+
+---
+
+*Prepared on branch `visual-polish-claude`. Not merged to `main`. The companion record of
+what changed and when is [`PROTOCOL_CHANGE_LOG.md`](PROTOCOL_CHANGE_LOG.md); the standing
+list of costs the build carries is [`KNOWN_LIMITATIONS.md`](KNOWN_LIMITATIONS.md).*
