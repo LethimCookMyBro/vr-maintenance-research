@@ -115,8 +115,8 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ["Lab_StatusRed"] = new Surface { Color = "#E0524A", Metallic = 0f, Smoothness = 0.70f, Emission = "#E0524A", EmissionBoost = 1.1f },
 
             // --- industrial dressing -------------------------------------------
-            // One yellow for every safety marking in the room: floor lines, the
-            // guardrail and the wall stripe. Deliberately not emissive and
+            // One yellow for every safety marking in the room: the floor aisle lines,
+            // the work zone box and the wall stripe. Deliberately not emissive and
             // deliberately not Lab_Warning, which is the amber the UI reserves for a
             // warning state — a painted line that glows reads as a signal.
             ["Lab_SafetyYellow"] = new Surface { Color = "#D9A81C", Metallic = 0f, Smoothness = 0.32f },

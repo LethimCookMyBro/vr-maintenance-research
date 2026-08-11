@@ -6,9 +6,9 @@ namespace TMUVR.MaintenanceResearch.EditorTools
 {
     /// <summary>
     /// Turns the greybox shell into the industrial service bay the reference asks
-    /// for: two-tone walls, yellow floor marking and guardrails, steel racking with
-    /// stacking crates, a wall control cabinet with a live-looking display and
-    /// status lamps, shape-only safety signage, and green ESD matting on the bench.
+    /// for: two-tone walls, yellow floor marking, steel racking with stacking crates,
+    /// a wall control cabinet with a live-looking display and status lamps, and
+    /// shape-only safety signage.
     ///
     /// It writes into the <c>LabEnvironment</c> prefab rather than into four scenes,
     /// so Training, Computer, Fan and ResearcherSetup get exactly the same room and
@@ -21,8 +21,35 @@ namespace TMUVR.MaintenanceResearch.EditorTools
     ///   nothing here can answer a controller ray aimed at a part.
     /// * Nothing stands between the participant pose and the workstation. The two
     ///   free bands of far wall are the ones the work order and the notice board do
-    ///   not already occupy, and the racking, rails and cabinet sit in those; the
-    ///   rails run down the side aisles outside the bench.
+    ///   not already occupy, and the racking and cabinet sit in those.
+    ///
+    /// == what came out, and why ==
+    ///
+    /// A guardrail used to run down each side aisle, and green ESD matting used to
+    /// run the length of the bench. Both are gone, because both could only exist by
+    /// standing inside something else.
+    ///
+    /// The rails were the clearer case. A guardrail in a real bay separates people
+    /// from a fall, a machine or a vehicle lane, and this room has none of the three:
+    /// it is a flat 9 x 8 m floor with a bench in the middle. What the rails actually
+    /// did was fence off the storage — the west run stood 107 mm in front of the
+    /// storage unit and the east run 62 mm in front of the racking — so they read as
+    /// barriers penning in the shelves a participant is meant to be able to walk up
+    /// to. The painted aisle lines already say "keep this lane clear", which is the
+    /// only thing the rails were communicating, and they say it without blocking a
+    /// shelf.
+    ///
+    /// The matting could not be stacked correctly. An ESD mat is the bottom layer of
+    /// a bench: mat down first, then the trays and the service pad on top of it. Here
+    /// the trays and the service pad both start at the bench top (y = 0.920), so any
+    /// mat laid on that surface passes through all three. Putting it right would mean
+    /// lifting the trays 4 mm, which moves <see cref="BenchDressing.TrayFloor"/> and
+    /// with it every part resting in a tray — a change to where task apparatus sits,
+    /// made for a decoration. The dark service pad and the ESD CONTROL notice already
+    /// say the bench is ESD-controlled.
+    ///
+    /// <see cref="ResearchPropIntersectionAudit"/> is what found both, and is what
+    /// will find the next one.
     ///
     /// Marked batching-static, because sixty-odd small props at one draw call each
     /// is the thing that would actually cost a Quest frame.
@@ -52,17 +79,19 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 var root = Group(k_RootName, prefab.transform);
                 TwoToneWalls(root);
                 FloorMarking(root);
-                Guardrail(root, "Guardrail West", -3.88f);
-                Guardrail(root, "Guardrail East", 3.88f);
                 // Both bays are in the far right corner, meeting at a right angle. The
                 // first attempt put one at x = 0.55 — the middle of the free wall band —
                 // and it stood directly behind the device on both benches. The band
                 // behind the workstation stays empty on purpose.
+                //
+                // The north bay's x was 4.05, which put its 0.92 m shelves out to
+                // x = 4.51 — past the skirting's inner face at 4.4625 and into the wall
+                // itself. It stands at 3.99 so the shelf ends 12 mm clear of the
+                // skirting, which is the closest a shelf can sit to that wall.
                 Racking(root, "Racking East", new Vector3(4.20f, 0f, 3.00f), 90f);
-                Racking(root, "Racking North", new Vector3(4.05f, 0f, 4.20f), 0f);
+                Racking(root, "Racking North", new Vector3(3.99f, 0f, 4.20f), 0f);
                 ControlCabinet(root);
                 SafetySigns(root);
-                BenchMatting(root);
 
                 RepaintWorkZoneLines(prefab.transform);
                 MarkStatic(root);
@@ -100,12 +129,22 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             Box("Stripe East", t, new Vector3(k_WallEast - 0.019f, k_DadoTop + 0.025f, 0.50f), new Vector3(0.036f, 0.050f, 8.00f), "Lab_SafetyYellow");
         }
 
-        /// <summary>Two aisle lines just inboard of the guardrails; the work-zone box is the existing marking, repainted.</summary>
+        /// <summary>
+        /// An aisle line down each side of the room; the work-zone box is the existing
+        /// marking, repainted.
+        ///
+        /// They stop at z = 3.90 rather than running to the end wall, because the
+        /// racking bay starts at z = 3.97 and a painted lane that disappears under a
+        /// shelf is marking a lane nobody can walk. They used to end at 4.40 and clear
+        /// the racking by 5 mm, which is not clearance, it is luck.
+        /// </summary>
         static void FloorMarking(Transform root)
         {
             var t = Group("Floor Marking", root);
-            Box("Aisle Line West", t, new Vector3(-3.55f, 0.005f, 0.50f), new Vector3(0.070f, 0.010f, 7.80f), "Lab_SafetyYellow");
-            Box("Aisle Line East", t, new Vector3(3.55f, 0.005f, 0.50f), new Vector3(0.070f, 0.010f, 7.80f), "Lab_SafetyYellow");
+            const float length = 7.30f;
+            const float zCentre = 0.25f;
+            Box("Aisle Line West", t, new Vector3(-3.55f, 0.005f, zCentre), new Vector3(0.070f, 0.010f, length), "Lab_SafetyYellow");
+            Box("Aisle Line East", t, new Vector3(3.55f, 0.005f, zCentre), new Vector3(0.070f, 0.010f, length), "Lab_SafetyYellow");
         }
 
         /// <summary>
@@ -127,24 +166,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
                 if (renderer != null)
                     renderer.sharedMaterial = yellow;
             }
-        }
-
-        /// <summary>A 3 m run of yellow barrier down one side aisle: posts, two rails, kick plate.</summary>
-        static void Guardrail(Transform root, string name, float x)
-        {
-            var t = Group(name, root);
-            const float zCentre = 2.10f;
-            const float length = 3.00f;
-
-            for (var i = 0; i < 5; i++)
-            {
-                var z = zCentre - length * 0.5f + i * (length / 4f);
-                Cyl($"Post {i + 1}", t, new Vector3(x, 0.525f, z), new Vector3(0.055f, 0.525f, 0.055f), "Lab_SafetyYellow");
-            }
-
-            Box("Rail Top", t, new Vector3(x, 1.020f, zCentre), new Vector3(0.055f, 0.055f, length + 0.055f), "Lab_SafetyYellow");
-            Box("Rail Mid", t, new Vector3(x, 0.600f, zCentre), new Vector3(0.055f, 0.055f, length + 0.055f), "Lab_SafetyYellow");
-            Box("Kick Plate", t, new Vector3(x, 0.090f, zCentre), new Vector3(0.020f, 0.160f, length + 0.055f), "Lab_SafetyYellow");
         }
 
         /// <summary>One bay of steel racking with blue stacking crates on it.</summary>
@@ -271,20 +292,6 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             // First aid: the one safe-condition pictogram nobody has to be taught.
             Box("Cross Vertical", condition, new Vector3(0f, 0f, -0.014f), new Vector3(0.070f, 0.220f, 0.008f), "Lab_LabelPlate");
             Box("Cross Horizontal", condition, new Vector3(0f, 0f, -0.014f), new Vector3(0.220f, 0.070f, 0.008f), "Lab_LabelPlate");
-        }
-
-        /// <summary>
-        /// Green ESD matting the length of the bench. It sits 2 mm above the bench top
-        /// and 2 mm below the per-scene Service Mat, so the darker service pad still
-        /// reads as the service area and neither surface z-fights the other.
-        ///
-        /// Sized to 2.60 m so it fits the 3.60 m bench the scenes use, not the 4.60 m
-        /// one authored in this prefab.
-        /// </summary>
-        static void BenchMatting(Transform root)
-        {
-            Box("ESD Bench Matting", Group("Bench", root), new Vector3(0f, 0.9225f, 0.900f),
-                new Vector3(2.600f, 0.004f, 0.640f), "Lab_Pcb");
         }
 
         static void MarkStatic(Transform root)

@@ -1,0 +1,37 @@
+=== prop intersections ===
+Every solid the participant can see but not select, tested against every
+other one as an oriented box. Touching is allowed; interpenetration deeper
+than 2 mm on all three axes at once is a clash.
+
+Joints the room is built from are not clashes and are listed separately
+below, so that the list of what is deliberately fastened to what stays
+visible rather than turning into a silent filter.
+
+=== ComputerRepairTask: clear
+
+=== FanRepairTask: clear
+
+=== VRTraining: clear
+
+=== ResearcherSetup: clear
+
+NO PROP INTERSECTS ANOTHER
+
+=== joints treated as intended ===
+  Shell/Wall* + Shell/Wall* — walls meet at the room corners
+  Shell/Skirting* + Shell/Skirting* — skirting mitred at the corners
+  Shell/Skirting* + Shell/Wall* — skirting bedded into the wall
+  Shell/Skirting* + Industrial Dressing/Two Tone Walls — dado runs down behind the skirting
+  Shell/Wall* + Industrial Dressing/Two Tone Walls — dado is a facing on the wall
+  Furniture/Workbench* + Furniture/Workbench* — bench is one weldment
+  Furniture/Work Zone Line* + Furniture/Work Zone Line* — painted lines meet at the box corners
+  Information Dock/* + Information Dock/* — dock is one fabrication
+  Task Brief/* + Task Brief/* — brief board is one fabrication
+  Information Station/* + Information Station/* — station board is one fabrication
+  Inspect Station Sign/* + Inspect Station Sign/* — sign is one fabrication
+  Information Dock/Clamp + Furniture/Workbench* — the dock clamps to the bench
+  Lab Notice Board/* + Information Station/Station Backing — notices are mounted on the board
+  Task Brief/Clamp + Furniture/Workbench* — the brief clamps to the bench
+  Workstation Dressing/Service Mat + Workstation Dressing/Mat Edge — the edge is inset in the mat
+  Workstation Dressing/Tool Set + Furniture/Tool Tray — the tool kit sits in the tray
+  Workstation Dressing/Placard* + Furniture/* — placards stand on the tray rims
