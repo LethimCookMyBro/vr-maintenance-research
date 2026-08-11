@@ -104,6 +104,17 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             ["Lab_AntiStatic"] = new Surface { Color = "#3E5166", Metallic = 0.05f, Smoothness = 0.30f },
             ["Lab_LabelPlate"] = new Surface { Color = "#EDEFF2", Metallic = 0f, Smoothness = 0.35f },
             ["Lab_Line"] = new Surface { Color = "#BFC6CE", Metallic = 0f, Smoothness = 0.20f },
+            // Opaque on purpose, despite the name — this is smoked glass, faked the way
+            // a tinted tempered panel is normally faked: near-black, half metallic and
+            // very smooth, so it carries a reflection instead of a view. It is the
+            // closed right side of the case, the window in the removed panel on the
+            // shelf, and the headset lens face. Nothing a participant has to diagnose
+            // sits behind any of the three: the case is worked through the open left
+            // side, and a see-through right panel would show the lab wall through the
+            // machine. Transparency is bought here only where it changes what can be
+            // diagnosed — that is Lab_FuseGlass below, and on Quest a transparent
+            // surface costs a sorted, overdrawn pass that this one would waste.
+            // Do not give this an Alpha without re-reading that.
             ["Lab_GlassPanel"] = new Surface { Color = "#20242B", Metallic = 0.40f, Smoothness = 0.92f },
 
             // Actually transparent, because the fuse element has to be visible
@@ -248,6 +259,18 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             changed |= SetFloat(material, "_ZWrite", 0f);
             changed |= SetFloat(material, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
             changed |= SetFloat(material, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            // Without this, _SrcBlend above does not stick. URP re-derives the blend
+            // factors from _Surface/_Blend every time it validates a material — which
+            // includes every import — in BaseShaderGUI.SetupMaterialBlendMode. When
+            // _BlendModePreserveSpecular is on it lifts the alpha multiply out of the
+            // ROP and into the shader, which means SrcAlpha is replaced by One and the
+            // _ALPHAPREMULTIPLY_ON keyword is set. So the material loaded as _SrcBlend
+            // 1 no matter what the file said, and the next builder that dirtied it
+            // wrote that 1 back to disk. Reverting the file alone never held, because
+            // the value was recomputed rather than remembered. Turning preserve-specular
+            // off makes SrcAlpha the value URP derives too, so file and engine agree.
+            changed |= SetFloat(material, "_BlendModePreserveSpecular", 0f);
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             material.SetOverrideTag("RenderType", "Transparent");
             if (!material.IsKeywordEnabled("_SURFACE_TYPE_TRANSPARENT"))
             {

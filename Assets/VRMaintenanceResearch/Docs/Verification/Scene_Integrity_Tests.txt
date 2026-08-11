@@ -8,4 +8,5 @@ PASS BothTaskOrdersResolveToEnabledBuildScenes
 PASS EveryInformationSourceCarriesAllThreeLanguages
 PASS BothTaskScenesCanLocalizeTheWorkOrder
 PASS EveryTaskDefinitionCarriesItsEnglishFallback
-ALL 9 PASS
+PASS TransparentMaterialsKeepTheirBlendState
+ALL 10 PASS

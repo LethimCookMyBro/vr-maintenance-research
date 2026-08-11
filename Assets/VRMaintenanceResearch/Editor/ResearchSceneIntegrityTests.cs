@@ -24,6 +24,28 @@ namespace TMUVR.MaintenanceResearch
         static readonly string[] TaskScenes = { "ComputerRepairTask", "FanRepairTask" };
         static readonly string[] AllScenes = { "ResearcherSetup", "VRTraining", "ComputerRepairTask", "FanRepairTask" };
 
+        /// <summary>
+        /// Every material the scenes depend on being see-through. This is the list —
+        /// add a name here when a material is meant to be transparent, and nowhere else.
+        ///
+        /// Lab_FuseGlass is the one that carries a measure: Task B's fault is diagnosed
+        /// by looking at the fuse element through the glass, so if this material goes
+        /// opaque the two fuses become identical cylinders and the diagnosis silently
+        /// stops existing. The UI_* materials are the panel glass the participant reads
+        /// the work order through. Lab_GlassPanel is deliberately NOT here; see the note
+        /// on it in ResearchMaterialPalette.
+        /// </summary>
+        static readonly string[] MustBeTransparent =
+        {
+            "Lab_FuseGlass",
+            "UI_PanelSurface",
+            "UI_CardFace",
+            "UI_PanelBorder",
+            "UI_ButtonPrimary",
+            "UI_ButtonSecondary",
+            "UI_Divider",
+        };
+
         static void Open(string scene) => EditorSceneManager.OpenScene(k_SceneFolder + scene + ".unity", OpenSceneMode.Single);
 
         static ResearchInteractable[] Interactables() =>
@@ -362,6 +384,52 @@ namespace TMUVR.MaintenanceResearch
         }
 
         /// <summary>
+        /// Transparency in URP is not one property, and setting the colour's alpha does
+        /// not buy it. A material only renders see-through if _Surface is Transparent
+        /// and the blend factors are SrcAlpha/OneMinusSrcAlpha with depth writes off;
+        /// miss one and the surface goes solid while still looking correct in the
+        /// inspector's colour swatch.
+        ///
+        /// This exists because Lab_FuseGlass lost _SrcBlend repeatedly. URP re-derives
+        /// the blend factors on every material import, and _BlendModePreserveSpecular
+        /// forces SrcAlpha to One when it is on, so the file was being corrected back to
+        /// a value nobody wanted and a hand-revert of the .mat never survived the next
+        /// import. _BlendModePreserveSpecular is asserted here too: it is the cause, and
+        /// checking only the symptom would let the same drift return silently.
+        /// </summary>
+        [Test]
+        public void TransparentMaterialsKeepTheirBlendState()
+        {
+            foreach (var name in MustBeTransparent)
+            {
+                var material = LoadMaterial(name);
+                Assert.That(material, Is.Not.Null, name + ": no such material under Assets/VRMaintenanceResearch");
+
+                Assert.That(material.GetFloat("_Surface"), Is.EqualTo(1f),
+                    name + ": _Surface is Opaque, so it renders solid whatever its colour alpha says");
+                Assert.That(material.GetFloat("_SrcBlend"), Is.EqualTo((float)UnityEngine.Rendering.BlendMode.SrcAlpha),
+                    name + ": _SrcBlend is not SrcAlpha(5), so the surface does not blend with what is behind it");
+                Assert.That(material.GetFloat("_DstBlend"), Is.EqualTo((float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha),
+                    name + ": _DstBlend is not OneMinusSrcAlpha(10)");
+                Assert.That(material.GetFloat("_ZWrite"), Is.EqualTo(0f),
+                    name + ": _ZWrite is on, so this writes depth and hides what is behind it");
+
+                // The cause, not the symptom. URP only lands on SrcAlpha if this is off.
+                if (material.HasProperty("_BlendModePreserveSpecular"))
+                    Assert.That(material.GetFloat("_BlendModePreserveSpecular"), Is.EqualTo(0f),
+                        name + ": _BlendModePreserveSpecular is on, so URP will rewrite _SrcBlend to One(1) on the next "
+                             + "import and the fix will come undone. Clear it in ResearchMaterialPalette.SetTransparent, "
+                             + "do not edit the .mat by hand.");
+            }
+        }
+
+        static Material LoadMaterial(string name) =>
+            AssetDatabase.FindAssets(name + " t:Material", new[] { "Assets/VRMaintenanceResearch" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<Material>)
+                .FirstOrDefault(asset => asset != null && asset.name == name);
+
+        /// <summary>
         /// Runs every test above and reports all failures rather than stopping at the
         /// first, which matters here because one rebuild tends to break several scenes
         /// the same way. Mirrors ResearchFoundationDirectTestRunner: the project drives
@@ -382,6 +450,7 @@ namespace TMUVR.MaintenanceResearch
                 (nameof(EveryInformationSourceCarriesAllThreeLanguages), tests.EveryInformationSourceCarriesAllThreeLanguages),
                 (nameof(BothTaskScenesCanLocalizeTheWorkOrder), tests.BothTaskScenesCanLocalizeTheWorkOrder),
                 (nameof(EveryTaskDefinitionCarriesItsEnglishFallback), tests.EveryTaskDefinitionCarriesItsEnglishFallback),
+                (nameof(TransparentMaterialsKeepTheirBlendState), tests.TransparentMaterialsKeepTheirBlendState),
             };
 
             var report = new System.Text.StringBuilder("=== scene integrity tests ===\n");
