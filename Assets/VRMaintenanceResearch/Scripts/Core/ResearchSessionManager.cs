@@ -66,6 +66,13 @@ namespace TMUVR.MaintenanceResearch
                 return false;
 
             IsConfigured = true;
+
+            // Resolved once, before the first row is written, so the manifest and every
+            // event row agree about which arrangement of the information sources this
+            // session ran under. With counterbalancing off this is the fixed id the
+            // build has always recorded.
+            configuration.informationSourceLayoutId = InformationSourceLayouts.Resolve(configuration).Id;
+
             if (!logger.BeginSession(configuration, out error))
                 return false;
 

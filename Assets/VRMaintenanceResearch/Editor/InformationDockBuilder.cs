@@ -61,7 +61,14 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             }
 
             var rotation = Quaternion.Euler(0f, DockYaw, 0f);
-            BuildFixture(rotation, sources.Count);
+            var fixture = BuildFixture(rotation, sources.Count);
+
+            // The cards' order is authored here and baked into the scene, so the one
+            // thing that can change it at run time rides on the dock it rearranges.
+            // It is inert unless ResearchSessionConfig.counterbalanceInformationSourceOrder
+            // is set, which it is not.
+            if (fixture != null && fixture.GetComponent<InformationSourceLayoutApplier>() == null)
+                fixture.AddComponent<InformationSourceLayoutApplier>();
 
             // One scale for every reader. Measuring each panel separately gave the
             // visual guide a different size (its sprite art changes the measured
@@ -113,7 +120,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
         }
 
         /// <summary>Bench-clamped arm so the dock reads as lab equipment, not a floating decal.</summary>
-        static void BuildFixture(Quaternion rotation, int cardCount)
+        static GameObject BuildFixture(Quaternion rotation, int cardCount)
         {
             var root = Root("Information Dock", Dock, new Vector3(0f, DockYaw, 0f));
             var t = root.transform;
@@ -155,6 +162,7 @@ namespace TMUVR.MaintenanceResearch.EditorTools
             header.fontStyle = TMPro.FontStyles.Bold;
             header.characterSpacing = 10f;
 
+            return root;
         }
 
         static void TidyCard(InformationSourceController source)

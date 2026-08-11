@@ -55,6 +55,23 @@ namespace TMUVR.MaintenanceResearch
         public bool showProgress = true;
         public bool showObjectives = true;
 
+        /// <summary>
+        /// Whether the four information sources are laid out in a per-participant order
+        /// instead of the fixed one.
+        ///
+        /// Off, and it must stay off until a supervisor says otherwise: turning it on
+        /// changes which source a participant reaches for first, and that is a primary
+        /// outcome under proposal 10.2.2. The capability exists so that the decision is
+        /// a switch rather than a rebuild. See <see cref="InformationSourceLayouts"/>
+        /// and PROTOCOL_CHANGE_LOG.md.
+        ///
+        /// Whatever this is set to, the layout actually used is resolved once at
+        /// StartSession and written to `information_source_layout_id` in
+        /// session_manifest.csv and on every event row, so no session's data can be read
+        /// without knowing which arrangement produced it.
+        /// </summary>
+        public bool counterbalanceInformationSourceOrder;
+
         [UnityEngine.TextArea] public string technicalNotes = "";
 
         public bool Validate(out string reason)
